@@ -1,0 +1,61 @@
+"""
+Modèles SQLAlchemy — Clients
+"""
+from sqlalchemy import BigInteger, Boolean, Column, Date, Integer, Numeric, SmallInteger, String, text as sa_text
+from app.models.base import Base
+
+
+class Client(Base):
+    __tablename__ = "clients"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=False)
+    client = Column(String(100), index=True)
+    code_barre_client = Column(String(100))
+    adresse = Column(String(200))
+    ville = Column(String(100))
+    telephone = Column(String(100))
+    fax = Column(String(100))
+    email = Column(String(100))
+    ventes = Column(Numeric(15, 4))
+    versements = Column(Numeric(15, 4))
+    credit = Column(Numeric(15, 4))
+    solde_initial = Column(Numeric(15, 4))
+    n_assure_chifa = Column(String(20), index=True)
+    num_assure_cvm = Column(String(30), index=True)
+    num_ccp = Column(String(30))
+    date_naissance = Column(Date)
+    sexe = Column(SmallInteger)
+    situation_familiale = Column(SmallInteger)
+    type_militaire = Column(SmallInteger)
+    date_ctl = Column(Date)
+    chronique = Column(SmallInteger)
+    date_exp_droits = Column(Date)
+    num_carte_chronique = Column(String(30))
+    date_deliv_carte_chronique = Column(Date)
+    pathologie = Column(String(200))
+    nom_cvm = Column(String(100))
+    prenom_cvm = Column(String(100))
+    num_assure_pharmnos = Column(String(30))
+    num_carte_chronique2 = Column(String(30))
+    num_carte_chronique3 = Column(String(30))
+    num_carte_chronique4 = Column(String(30))
+    num_carte_chronique5 = Column(String(30))
+    date_exp_droits2 = Column(Date)
+    date_exp_droits3 = Column(Date)
+    date_exp_droits4 = Column(Date)
+    date_exp_droits5 = Column(Date)
+    blk_comptoir = Column(SmallInteger)
+    blk_chifa = Column(SmallInteger)
+    blk_cvm = Column(SmallInteger)
+    blk_instance = Column(SmallInteger)
+    reg_com = Column(String(30))
+    nif = Column(String(30))
+    ai = Column(String(30))
+    nis = Column(String(30))
+    solde_max = Column(Numeric(15, 4))
+    activer_solde_max = Column(SmallInteger)
+
+    # Archivage (décès, doublon, inactif définitif…)
+    is_archive    = Column(Boolean, nullable=False, server_default=sa_text('false'), default=False)
+    date_archive  = Column(Date,        nullable=True)
+    motif_archive = Column(String(200), nullable=True)

@@ -1,0 +1,86 @@
+"""
+Modèles SQLAlchemy — Ventes
+Tables: sorties, sorties_produits
+"""
+from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String
+from app.models.base import Base
+
+
+class Sortie(Base):
+    __tablename__ = "sorties"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=False)
+    type = Column(String(5))
+    date = Column(Date, index=True)
+    id_client = Column(BigInteger)
+    client = Column(String(100), index=True)
+    total = Column(Numeric(15, 4))
+    remise = Column(Numeric(15, 4))
+    total_a_payer = Column(Numeric(15, 4))
+    versement = Column(Numeric(15, 4))
+    utilisateur = Column(String(50), index=True)
+    poste = Column(Integer, index=True)
+    modif = Column(SmallInteger)
+    heure = Column(String(10))
+    benefices = Column(Numeric(15, 4))
+    type_versement = Column(String(10))
+    no_facture_chifa = Column(String(50))
+    montant_cnas = Column(Numeric(15, 4))
+    montant_assure = Column(Numeric(15, 4))
+    n_assure = Column(String(50), index=True)
+    etat_cloture = Column(SmallInteger)
+    reglement_ult = Column(Numeric(15, 4))
+    num_assure_cvm = Column(String(30))
+    ayant_droit_cvm = Column(BigInteger)
+    rang_cvm = Column(String(10))
+    cabinet_medical_cvm = Column(String(200))
+    date_soins_cvm = Column(Date)
+    chronique_cvm = Column(SmallInteger)
+    mld_cvm1 = Column(String(10))
+    mld_cvm2 = Column(String(10))
+    mld_cvm3 = Column(String(10))
+    mld_cvm4 = Column(String(10))
+    mld_cvm5 = Column(String(10))
+    id_facture_cvm = Column(BigInteger)
+    pharmnos_num_fact = Column(String(50))
+    pharmnos_num_assure = Column(String(50))
+    pharmnos_total_remb = Column(Numeric(15, 4))
+    pharmnos_total_non_remb = Column(Numeric(15, 4))
+    num_fact = Column(Integer)
+    specialite_cvm = Column(String(100))
+    caisse = Column(String(50), index=True)
+    id_session = Column(BigInteger, index=True)
+    mdc = Column(String(200))
+    majoration = Column(Numeric(15, 4))
+    observation = Column(String(200))
+
+
+class SortieProduit(Base):
+    __tablename__ = "sorties_produits"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=False)
+    id_sortie = Column(BigInteger)
+    date = Column(Date)
+    type_sortie = Column(String(5))
+    id_client = Column(BigInteger)
+    client = Column(String(100))
+    id_nom = Column(BigInteger)
+    nom = Column(String(150))
+    id_famille = Column(Integer)
+    famille = Column(String(50))
+    prix_vente = Column(Numeric(15, 4))
+    qte_sortie = Column(BigInteger)
+    heure = Column(String(10))
+    poste = Column(Integer)
+    prix_achat_ttc = Column(Numeric(15, 4))
+    id_produit = Column(BigInteger)
+    lot = Column(String(50))
+    peremption = Column(String(10))
+    no_facture_chifa = Column(String(50))
+    psychotrope = Column(SmallInteger)
+    remb_cvm = Column(SmallInteger)
+    pharmnos_num_fact = Column(String(50))
+    caisse = Column(String(50), index=True)
+    id_session = Column(BigInteger, index=True)
+    utilisateur = Column(String(50))
+    mdc = Column(String(200))

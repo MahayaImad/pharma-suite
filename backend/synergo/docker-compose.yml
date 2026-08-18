@@ -1,0 +1,56 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: synergo_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-synergo}
+      POSTGRES_USER: ${DB_USER:-synergo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-synergo_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-synergo} -d ${DB_NAME:-synergo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      network: host
+      dockerfile: Dockerfile
+    container_name: synergo_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: synergo_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@synergo.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+  pgadmin_data:
