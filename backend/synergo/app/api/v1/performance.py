@@ -3,7 +3,7 @@ Module Performance — Bénéfice mensuel, KPIs employés, Primes de rendement
 """
 from datetime import date as PyDate
 from typing import Optional, List
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, func, extract, text, and_
@@ -678,46 +678,73 @@ _BASE_CA_SQL = """
 """
 
 
-async def _calc_enveloppe_prime(db: AsyncSession, annee: int, mois: int) -> float:
-    """
-    Enveloppe = Σ (CA par catégorie × taux%) sur les catégories actives.
+_CENTIME = Decimal("0.01")
 
-    filtre_famille values:
-      NULL                  → tous les produits
-      'gentype:princeps'    → nomenclature.generique = 0
-      'gentype:generique'   → nomenclature.generique = 1
-      'gentype:generique_remb' → generique = 1 AND remb_cvm = 1  (Générique++)
-      '%...'                → ILIKE sur sorties_produits.famille (catégorie commerciale)
+
+def _d(valeur) -> Decimal:
+    """
+    Convertit en Decimal sans jamais passer par float.
+
+    asyncpg renvoie déjà des Decimal pour les colonnes NUMERIC ; ce helper
+    couvre les cas None et les entiers, et refuse implicitement de dégrader
+    un Decimal existant.
+    """
+    if valeur is None:
+        return Decimal(0)
+    if isinstance(valeur, Decimal):
+        return valeur
+    return Decimal(str(valeur))
+
+
+def _ca_sql_pour_filtre(filtre: Optional[str]) -> tuple[str, dict]:
+    """
+    Construit la requête de CA correspondant à un `prime_taux_config.filtre_famille`.
+
+    Retourne (sql, params_supplémentaires). La valeur du filtre commercial est
+    toujours passée en paramètre lié, jamais interpolée dans le SQL.
+
+    Valeurs reconnues :
+      None / ""                 → tous les produits
+      'gentype:princeps'        → nomenclature.categorie = 'princeps'
+      'gentype:generique'       → nomenclature.categorie = 'generique'
+      'gentype:generique_remb'  → nomenclature.categorie = 'generique++'
+      autre                     → ILIKE sur sorties_produits.famille
+    """
+    if not filtre:
+        return _BASE_CA_SQL, {}
+    if filtre == "gentype:princeps":
+        return _BASE_CA_SQL + " AND n.categorie = 'princeps'", {}
+    if filtre == "gentype:generique":
+        return _BASE_CA_SQL + " AND n.categorie = 'generique'", {}
+    if filtre == "gentype:generique_remb":
+        return _BASE_CA_SQL + " AND n.categorie = 'generique++'", {}
+    return _BASE_CA_SQL + " AND sp.famille ILIKE :filtre", {"filtre": filtre}
+
+
+async def _calc_enveloppe_prime(db: AsyncSession, annee: int, mois: int) -> Decimal:
+    """
+    Enveloppe = Σ (CA de la catégorie × taux_pct) sur les catégories actives.
+
+    Renvoie un Decimal quantifié à 2 décimales (ROUND_HALF_UP), aligné sur le
+    stockage `objectifs_mensuels.enveloppe_calculee` en Numeric(14, 2).
+
+    Aucun float n'intervient dans la chaîne : c'est de l'argent, voir la règle
+    « Argent » du CLAUDE.md. Ne jamais réintroduire de `float()` ici, y compris
+    pour la sérialisation — la conversion se fait au bord, dans le endpoint.
     """
     configs_res = await db.execute(
         select(PrimeTauxConfig).where(PrimeTauxConfig.actif == True)
     )
     configs = configs_res.scalars().all()
-    if not configs:
-        return 0.0
 
     total = Decimal(0)
     for cfg in configs:
-        f = cfg.filtre_famille
-        params: dict = {"annee": annee, "mois": mois}
-
-        if not f:
-            sql = _BASE_CA_SQL
-        elif f == "gentype:princeps":
-            sql = _BASE_CA_SQL + " AND n.categorie = 'princeps'"
-        elif f == "gentype:generique_remb":
-            sql = _BASE_CA_SQL + " AND n.categorie = 'generique++'"
-        elif f == "gentype:generique":
-            sql = _BASE_CA_SQL + " AND n.categorie = 'generique'"
-        else:
-            sql = _BASE_CA_SQL + " AND sp.famille ILIKE :filtre"
-            params["filtre"] = f
-
+        sql, extra = _ca_sql_pour_filtre(cfg.filtre_famille)
+        params: dict = {"annee": annee, "mois": mois, **extra}
         r = await db.execute(text(sql), params)
-        ca = Decimal(str(r.scalar() or 0))
-        total += ca * Decimal(str(cfg.taux_pct)) / 100
+        total += _d(r.scalar()) * _d(cfg.taux_pct) / 100
 
-    return float(total)
+    return total.quantize(_CENTIME, rounding=ROUND_HALF_UP)
 
 
 @router.get("/performance/kpis/{annee}/{mois}/{employe_id}")
@@ -861,31 +888,22 @@ async def debug_primes(
     )
     employes = [{"id": e.id, "username": e.username} for e in emp_res.scalars().all()]
 
-    # Vérification CA par catégorie
+    # Vérification CA par catégorie — même chemin de calcul que l'enveloppe,
+    # sinon le diagnostic et le calcul réel peuvent diverger.
     ca_par_config = []
     for cfg_row in await db.execute(select(PrimeTauxConfig).where(PrimeTauxConfig.actif == True)):
         cfg = cfg_row[0]
-        f = cfg.filtre_famille
-        params: dict = {"annee": annee, "mois": mois}
-        if not f:
-            sql = _BASE_CA_SQL
-        elif f == "gentype:princeps":
-            sql = _BASE_CA_SQL + " AND n.categorie = 'princeps'"
-        elif f == "gentype:generique_remb":
-            sql = _BASE_CA_SQL + " AND n.categorie = 'generique++'"
-        elif f == "gentype:generique":
-            sql = _BASE_CA_SQL + " AND n.categorie = 'generique'"
-        else:
-            sql = _BASE_CA_SQL + " AND sp.famille ILIKE :filtre"
-            params["filtre"] = f
+        sql, extra = _ca_sql_pour_filtre(cfg.filtre_famille)
+        params: dict = {"annee": annee, "mois": mois, **extra}
         r = await db.execute(text(sql), params)
-        ca = float(r.scalar() or 0)
-        ca_par_config.append({"nom": cfg.nom, "filtre": f, "ca": ca,
-                               "contribution": round(ca * float(cfg.taux_pct) / 100, 2)})
+        ca = _d(r.scalar())
+        contribution = (ca * _d(cfg.taux_pct) / 100).quantize(_CENTIME, rounding=ROUND_HALF_UP)
+        ca_par_config.append({"nom": cfg.nom, "filtre": cfg.filtre_famille,
+                               "ca": float(ca), "contribution": float(contribution)})
 
     return {
         "annee": annee, "mois": mois,
-        "enveloppe_totale": round(enveloppe, 2),
+        "enveloppe_totale": float(enveloppe),
         "configs_actives": configs,
         "ca_par_config": ca_par_config,
         "nb_kpis_actifs": len(kpis),
@@ -917,7 +935,7 @@ async def calculer_primes(
         raise HTTPException(status_code=403, detail="Réservé aux administrateurs")
 
     # 1. Enveloppe basée sur les ventes produits du mois
-    enveloppe = Decimal(str(await _calc_enveloppe_prime(db, annee, mois)))
+    enveloppe = await _calc_enveloppe_prime(db, annee, mois)
     if enveloppe <= 0:
         raise HTTPException(
             status_code=400,
