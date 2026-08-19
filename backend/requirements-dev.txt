@@ -1,0 +1,5 @@
+# Dépendances de test uniquement. Les tests de paie n'ont pas besoin de
+# postgres : la session est simulée (voir tests/paie/conftest.py).
+-r synergo/requirements.txt
+pytest==8.3.3
+pytest-asyncio==0.24.0
