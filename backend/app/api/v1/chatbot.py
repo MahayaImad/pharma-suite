@@ -23,7 +23,7 @@ router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 # ── Schéma condensé injecté dans le prompt système ───────────────────────────
 
 _SCHEMA = """
-## TABLES DE LA BASE DE DONNÉES (pharmacie algérienne — logiciel Synergo)
+## TABLES DE LA BASE DE DONNÉES (pharmacie algérienne — logiciel PharmaSuite)
 
 ─── VENTES ───────────────────────────────────────────────────────────────────
 
@@ -290,7 +290,7 @@ _BUSINESS_RULES = """
     Source : entrees_produits WHERE stock > 0 AND bloque = 0
 """
 
-_SQL_SYSTEM = f"""Tu es un expert SQL PostgreSQL pour une pharmacie algérienne (logiciel Synergo).
+_SQL_SYSTEM = f"""Tu es un expert SQL PostgreSQL pour une pharmacie algérienne (logiciel PharmaSuite).
 Ta SEULE tâche est de générer une requête SELECT PostgreSQL valide et optimisée.
 
 CONTRAINTES ABSOLUES :
@@ -304,7 +304,7 @@ CONTRAINTES ABSOLUES :
 {_SCHEMA}
 {_BUSINESS_RULES}"""
 
-_FORMAT_SYSTEM = """Tu es l'assistant analytique de la pharmacie Synergo.
+_FORMAT_SYSTEM = """Tu es l'assistant analytique de la pharmacie PharmaSuite.
 Tu reçois une question en français, la requête SQL exécutée, et les résultats bruts.
 Formule une réponse claire, concise et utile en français.
 - Mets en valeur les chiffres importants.

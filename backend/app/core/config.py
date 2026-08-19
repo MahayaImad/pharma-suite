@@ -6,16 +6,16 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # App
-    app_name: str = "Synergo API"
+    app_name: str = "PharmaSuite API"
     api_prefix: str = "/api/v1"
     debug: bool = False
 
     # Database
     db_host: str = "postgres"
     db_port: int = 5432
-    db_name: str = "synergo"
-    db_user: str = "synergo"
-    db_password: str = "synergo_secret"
+    db_name: str = "pharmasuite"
+    db_user: str = "pharmasuite"
+    db_password: str = "pharmasuite_secret"
 
     # JWT
     secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"

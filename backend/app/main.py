@@ -14,7 +14,6 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import engine, AsyncSessionLocal
-from app.models.base import Base
 from app.api.v1.router import router
 from app.services.stock_segmentation import compute_abc, compute_xyz
 from app.services import sms_queue
@@ -63,10 +62,11 @@ async def _monthly_segmentation() -> None:
 # ── Startup / Shutdown ─────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Démarrage de l'application — création des tables si nécessaire...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Base de données prête.")
+    # Pas de create_all ici : le schéma appartient à Alembic, et lui seul.
+    # Les deux mécanismes ont longtemps coexisté, ce qui faisait échouer
+    # 5 migrations sur une base neuve (la colonne existait déjà). Toute
+    # modification de schéma passe désormais par une migration.
+    logger.info("Démarrage de l'application.")
 
     # Remet en queue les SMS pending laissés par un redémarrage précédent
     async with AsyncSessionLocal() as db:

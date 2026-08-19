@@ -1,6 +1,6 @@
 """
 Dashboard & KPI endpoints
-Tableaux de bord collectif et individuel — Pharmacie Synergo
+Tableaux de bord collectif et individuel — Pharmacie PharmaSuite
 """
 from datetime import date, timedelta
 from typing import Optional

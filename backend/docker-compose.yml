@@ -2,18 +2,18 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: synergo_db
+    container_name: pharmasuite_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-synergo}
-      POSTGRES_USER: ${DB_USER:-synergo}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-synergo_secret}
+      POSTGRES_DB: ${DB_NAME:-pharmasuite}
+      POSTGRES_USER: ${DB_USER:-pharmasuite}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-pharmasuite_secret}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-synergo} -d ${DB_NAME:-synergo}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pharmasuite} -d ${DB_NAME:-pharmasuite}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -23,7 +23,7 @@ services:
       context: .
       network: host
       dockerfile: Dockerfile
-    container_name: synergo_api
+    container_name: pharmasuite_api
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -39,10 +39,10 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: synergo_pgadmin
+    container_name: pharmasuite_pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@synergo.local}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@pharmasuite.local}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
     ports:
       - "5050:80"

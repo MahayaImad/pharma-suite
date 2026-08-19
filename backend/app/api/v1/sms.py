@@ -45,6 +45,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sms", tags=["sms"])
 
 # Token partagé entre le backend et l'app Android (variable d'environnement)
+# Secret partagé avec le boîtier SMS : sa valeur est un contrat avec un
+# appareil externe, elle ne suit pas le renommage du produit. À rotationner
+# délibérément, via la variable d'environnement.
 SMS_GATEWAY_TOKEN = os.getenv("SMS_GATEWAY_TOKEN", "synergo-sms-gateway-secret-2026")
 
 
