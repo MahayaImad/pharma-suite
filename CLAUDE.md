@@ -130,9 +130,6 @@ router au passage.
   d'Alembic. Les deux mécanismes coexistent : un modèle ajouté crée sa table
   au boot, sans migration. Ne pas s'appuyer là-dessus pour une modification de
   schéma — écrire la migration.
-- **`.gitignore` contient `lib/` sans slash initial**, hérité du template
-  Python. Ce motif ignorerait `mobile/lib/` en entier le jour où le front
-  Flutter arrive. À corriger en `/lib/` avant de créer `mobile/`.
 - **CORS `allow_origins=["*"]`** avec `allow_credentials=True` dans `main.py`.
 - **`app/core/config.py` porte des secrets par défaut fonctionnels**
   (`secret_key`, `sync_agent_password`). Une clé API Anthropic y a été
