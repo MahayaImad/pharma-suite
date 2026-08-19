@@ -137,11 +137,24 @@ router au passage.
   doit être vidée et lue depuis `.env`.
 - **`_calc_enveloppe_prime` renvoie un `float`** (`performance.py`), alors que
   tout le reste de la chaîne est en `Decimal`.
+- **Le score de prime est *distributif*, pas absolu.** `performance.py` calcule
+  `score_kpi = (valeur_employé / total_équipe) × poids`, puis
+  `part = score / Σ scores`. Trois conséquences contre-intuitives :
+  1. `score_global` n'est **pas** une note sur 100 — malgré le commentaire du
+     modèle — mais un cumul de parts d'équipe, borné par Σ des poids ;
+  2. la somme des poids **n'a pas besoin de faire 100** : le facteur d'échelle
+     s'annule à la normalisation (aujourd'hui les 8 KPIs actifs totalisent 95) ;
+  3. l'enveloppe est **toujours distribuée en entier**, même si toute l'équipe
+     sous-performe. Il n'y a pas de mécanisme d'enveloppe non consommée.
+- **Docstring fausse dans `_calc_enveloppe_prime`** : elle annonce
+  `'gentype:generique_remb' → generique = 1 AND remb_cvm = 1`, alors que le SQL
+  filtre sur `nomenclature.categorie = 'generique++'`.
 - **Le chatbot envoie des données à l'API Anthropic** : schéma complet de la
   base, SQL généré et jusqu'à 50 lignes de résultats, sur des tables qui
   contiennent des noms de clients et des instances d'ordonnance. C'est en
-  contradiction directe avec la règle de confidentialité ci-dessous — voir
-  « Décisions à trancher ».
+  contradiction directe avec la règle de confidentialité ci-dessous —
+  **tranché** : voir Partie 4, règle 6. `chatbot.py` n'est pas déployable en
+  production tant que ce n'est pas corrigé.
 
 ---
 
@@ -212,7 +225,7 @@ Valables dans les deux parties, sans exception.
 - **Confidentialité patient.** Aucune donnée patient ou d'ordonnance ne sort du
   réseau local vers une API tierce. Pour tout traitement d'ordonnance, proposer
   une solution locale (OCR on-premise). *Le chatbot viole cette règle
-  aujourd'hui — voir « Décisions à trancher ».*
+  aujourd'hui — correctif spécifié en Partie 4, règle 6.*
 - **Secrets.** Ne jamais committer de `.env`, de dump SQL, de données réelles
   d'employés, ni de clé API en dur dans le code.
 - **Argent.** Toujours `Numeric`, jamais `float`, ni en base ni dans les
@@ -270,7 +283,9 @@ ancienneté calculée, demandes de congé avec workflow d'approbation.
 - **Prorata** : employé arrivé ou parti en cours de mois → au prorata des jours.
 - **Congé annuel, maladie, jour férié** : comptés comme travaillés pour le
   calcul de la part variable.
-- **Plancher** : un employé éligible ne peut pas tomber à 0 de part variable.
+- **Plancher** : tout employé éligible et présent reçoit au minimum **50 % de
+  la part égalitaire** (`enveloppe ÷ nombre d'éligibles`). Le solde de
+  l'enveloppe est distribué au mérite.
 - **Plafond** : la part variable peut dépasser une cible, il n'y a pas de
   plafond dur.
 - **Contestation** : l'historique des recalculs doit être conservé. Seule la
@@ -278,32 +293,130 @@ ancienneté calculée, demandes de congé avec workflow d'approbation.
   `performance_mensuelle` est unique par (employé, année, mois) et écrase le
   calcul précédent. L'historisation reste à faire.
 
-## ⛔ Décisions à trancher — ne pas implémenter sans réponse
+## ✅ Règles arbitrées (2026-08-19)
 
-Ces points sont ambigus ou contradictoires. **Demander l'arbitrage avant
-d'écrire du code qui en dépend**, ne pas choisir une valeur par défaut.
+Les sept points laissés ouverts sont tranchés. Ce qui suit fait foi ; en cas de
+contradiction avec une note antérieure, **c'est ce fichier qui gagne**.
 
-1. **Prime d'ancienneté.** La formule notée « 1000 % par année, plafonnée à
-   15 000 » est incohérente. 1 000 DA par année d'ancienneté, plafond
-   15 000 DA (soit 15 ans) ? Ou un pourcentage du salaire de base ?
-2. **Taux de prime par catégorie.** La base contient 0,5 / 1 / 3 %
-   (migration 038). Une note antérieure mentionnait 2 / 1 / 0,5 %. Laquelle
-   fait foi, et à quoi correspond le troisième taux ?
-3. **Poids des critères.** Une répartition CA 50 % / tâches 30 % /
-   ponctualité 10 % / autre 10 % a été évoquée, mais les poids réels vivent
-   dans `kpi_definitions.poids`. Faut-il aligner la base sur cette
-   répartition, et que recouvre exactement « autre » ?
-4. **Plancher de la part variable.** Un employé ne peut pas tomber à 0 : quel
-   est alors le minimum garanti, en montant ou en % de l'enveloppe ?
-5. **Absence non justifiée.** L'impact sur la part fixe est acté dans le
-   principe, pas dans le calcul. Retenue de 1/30ᵉ par jour, ou autre règle ?
-6. **Chatbot et données patient.** Soit la règle de confidentialité
-   s'applique et il faut restreindre ou anonymiser ce que `chatbot.py` envoie
-   à l'API Anthropic, soit elle est assouplie et il faut l'écrire ici.
-7. **Part fixe.** Rien n'est implémenté aujourd'hui : ni salaire de base, ni
-   ancienneté, ni transport, ni panier. Seule la part variable existe.
+### 1. Prime d'ancienneté — **1 000 DA par année, plafond 15 000 DA**
+
+Le « 1000 % » était une coquille. Plafond atteint à 15 ans d'ancienneté.
+Ancienneté calculée depuis `employes.date_entree`, en années révolues.
+
+### 2. Taux de prime par catégorie — **la base fait foi : 0,5 / 1 / 3 %**
+
+`prime_taux_config` (migration 038) l'emporte sur la note « 2 / 1 / 0,5 % »,
+pour deux raisons : c'est la source la plus récente, et c'est la seule
+cohérente sur le plan économique — récompenser le générique plus que le
+princeps va dans le sens de la substitution générique encouragée par la CNAS.
+La note inversait l'incitation.
+
+Le troisième taux, **Générique++ à 3 %**, correspond à la catégorie
+`nomenclature.categorie = 'generique++'`, renommée depuis `'promotion'` par la
+migration 017 : les génériques aux meilleures conditions commerciales.
+
+Ces taux restent configurables à chaud via `/performance/prime-config` — le
+code ne doit jamais les coder en dur.
+
+### 3. Poids des critères — **ajouter tâches et ponctualité, rééquilibrer à 100**
+
+La note (CA 50 / tâches 30 / ponctualité 10 / autre 10) n'était pas
+applicable : aucun KPI `tâches` ni `ponctualité` n'existe dans
+`kpi_definitions`, alors que les modules `tasks` et `grh_presence` ont les
+données. On crée les deux KPIs manquants et on réduit les 8 existants au
+prorata :
+
+| Code | Poids | Source |
+|---|---|---|
+| `ca_realise` | 20 | existant |
+| `taches_completees` | 20 | **à créer** — `tasks`, terminées dans les délais |
+| `nb_ventes` | 12 | existant |
+| `ponctualite` | 10 | **à créer** — `grh_presence`, tolérance 45 min |
+| `panier_moyen` | 7 | existant |
+| `ca_complement_alim` | 7 | existant |
+| `ventes_peremption_3` | 7 | existant |
+| `nouveaux_clients` | 7 | existant |
+| `clients_recuperes` | 7 | existant |
+| `taux_recouvrement` | 3 | existant |
+| **Total** | **100** | |
+
+Le total à 100 est une **convention de lisibilité, pas une contrainte du
+code** : le scoring étant distributif, le facteur d'échelle s'annule (voir
+« Pièges connus »). Les deux nouveaux KPIs doivent être « plus haut = mieux »
+et positifs, comme tous les autres, sinon le calcul relatif est faussé.
+
+### 4. Plancher de la part variable — **50 % de la part égalitaire**
+
+```
+part_egalitaire = enveloppe / nb_eligibles_presents
+plancher_i      = part_egalitaire * 0.5
+reste           = enveloppe - Σ plancher_i
+prime_i         = plancher_i + (score_i / Σ scores) * reste
+```
+
+Le plancher n'est dû qu'aux employés **éligibles et présents** sur le mois. Il
+divise mécaniquement par deux l'écart de mérite : c'est le prix à payer pour
+la garantie, et c'est assumé.
+
+### 5. Absence non justifiée — **retenue de 1/30ᵉ du salaire de base par jour**
+
+Sur la **part fixe uniquement**, et sur le seul salaire de base. Ni transport
+ni panier ne sont retenus : ils sont déjà calculés par jour travaillé, donc
+une absence les annule d'elle-même. La part variable n'est pas pénalisée non
+plus : un jour d'absence fait mécaniquement baisser les KPIs. Retenir sur les
+trois reviendrait à sanctionner trois fois le même jour.
+
+### 6. Chatbot et données patient — **la règle de confidentialité s'applique**
+
+Elle n'est pas assouplie. `chatbot.py` doit cesser d'envoyer à l'API Anthropic
+toute donnée nominative : noms de clients, `id_client`, et le contenu de
+`instance_produits` (patients en attente d'ordonnance).
+
+Le schéma de la base et le SQL généré peuvent continuer à sortir — ce sont des
+métadonnées, pas des données patient. Ce sont **les résultats** qui doivent
+être filtrés avant l'étape 3 de formatage. Deux pistes, à arbitrer au moment
+de l'implémentation : liste blanche de colonnes autorisées, ou formatage local
+des résultats sans troisième appel au modèle.
+
+Tant que ce n'est pas corrigé, considérer `chatbot.py` comme **non déployable
+en production**.
+
+### 7. Part fixe — **débloquée, reste à implémenter**
+
+Ce n'était pas un arbitrage mais un chantier, désormais spécifié en entier :
+
+```
+part_fixe = salaire_base_poste
+          + prime_anciennete            (règle 1)
+          + 300 * jours_travailles      (transport)
+          + 600 * jours_travailles      (panier)
+          - (salaire_base / 30) * jours_absence_injustifiee   (règle 5)
+```
+
+Au prorata des jours si l'employé arrive ou part en cours de mois. Congé,
+maladie et jour férié comptent comme travaillés pour la part variable — mais
+**pas** comme jours ouvrant droit à transport et panier, qui rémunèrent une
+présence effective.
+
+Rien de tout cela n'existe aujourd'hui : ni table, ni migration, ni endpoint.
 
 ---
+
+## Travaux induits par ces arbitrages
+
+Aucun n'est fait. Dans l'ordre de dépendance :
+
+1. **Créer `backend/tests/paie/`** — préalable non négociable à tout le reste
+   (voir Partie 3). La première modification de calcul l'accompagne, pas
+   l'inverse.
+2. Corriger `_calc_enveloppe_prime` : `Decimal` de bout en bout, plus de
+   `float`.
+3. Migration : KPIs `taches_completees` et `ponctualite`, plus les nouveaux
+   poids du tableau de la règle 3.
+4. Implémenter le plancher (règle 4) dans la distribution de `performance.py`.
+5. Historiser les recalculs de `performance_mensuelle` (aujourd'hui écrasés).
+6. Assainir `chatbot.py` (règle 6).
+7. Part fixe (règle 7) : tables, migration, endpoints, calcul.
 
 ## Étiquette Git
 
