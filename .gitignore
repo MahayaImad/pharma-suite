@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Agent EASYPHARM — secrets et état local
+agent-easypharm/config.toml
+agent-easypharm/agent_state.json
+agent-easypharm/*.log

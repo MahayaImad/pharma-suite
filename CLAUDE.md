@@ -52,6 +52,12 @@ Le produit s'appelle **PharmaSuite**. Le nom « synergo » est mort : il ne doit
 plus apparaître nulle part, sauf dans `SMS_GATEWAY_TOKEN`, dont la valeur est
 un contrat avec le boîtier SMS.
 
+Second composant : `agent-easypharm/` — l'agent de synchronisation qui tourne
+sur le PC Windows de l'officine. Lit EASYPHARM par ODBC (driver HFSQL) et
+pousse vers `POST /sync/{table}`. Flux à sens unique, l'agent n'écrit jamais
+dans EASYPHARM. Curseur de reprise gardé côté serveur, pas en local. Ses tests
+tournent sans ODBC ni réseau (`cd agent-easypharm && pytest`).
+
 **N'existe pas** (ne pas y faire référence, ne pas supposer que ça marche) :
 `Makefile` · `docs/` · `mobile/` · `ml/` · aucune CI.
 
