@@ -19,7 +19,7 @@
 3. [Le protocole](#3--le-protocole) — authentification, corps, clé de conflit, réponse, pipeline `instance_produits`
 4. [Comment le nom de table est validé](#4--comment-le-nom-de-table-est-validé) — liste blanche, et les vrais risques
 5. [Les empreintes HFSQL](#5--les-empreintes-hfsql) — dates en texte, montants, blobs encodés
-6. [Ambiguïtés à lever](#6--ambiguïtés-à-lever) — 12 questions ouvertes
+6. [Ambiguïtés à lever](#6--ambiguïtés-à-lever) — 11 questions ouvertes
    · [Annexe : ce qui n'est pas dans le contrat](#annexe--ce-qui-nest-pas-dans-le-contrat-de-sync)
 
 ---
@@ -1054,7 +1054,7 @@ VARCHAR(50).
 
 ## §6 — Ambiguïtés à lever
 
-Douze points que le dépôt ne permet pas de trancher. Chacun bloque soit la
+Onze points que le dépôt ne permet pas de trancher. Chacun bloque soit la
 réécriture de l'agent, soit la confiance dans les données déjà synchronisées.
 Classés par ce qu'ils coûtent s'ils restent ouverts.
 
@@ -1181,10 +1181,13 @@ secrets par défaut fonctionnels de `config.py` — dont
 capable d'écrire dans les 39 tables — et dont la valeur par défaut est
 fonctionnelle telle quelle.
 
-**6.12 — Numérotation de ce document.**
-La Partie 2 de CLAUDE.md réserve `docs/02-` à `02-chifa-integration.md`. Ce
-fichier occupe le numéro. **À trancher : renuméroter la cible, ou décaler ce
-document ?**
+### Tranché
+
+**Numérotation — ce document garde `02`.**
+La Partie 2 de CLAUDE.md réservait `docs/02-` à `02-chifa-integration.md`. La
+cible a été renumérotée : l'intégration Chifa passe en `03-chifa-integration.md`
+et les règles de paie en `04-paie-regles.md`. `02-sync-contrat.md` est donc
+stable, et les liens vers ce fichier ne bougeront plus.
 
 ---
 
