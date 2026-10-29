@@ -46,6 +46,9 @@ backend/
     ├── models/               # 16 modules SQLAlchemy (~1 240 lignes)
     ├── schemas/              # auth.py, sync.py uniquement (38 lignes)
     └── services/             # sms_queue, stock_segmentation, purchase_engine/
+
+docs/
+└── 02-sync-contrat.md        # contrat de l'agent EASYPHARM, reconstitué depuis le code
 ```
 
 Le produit s'appelle **PharmaSuite**. Le nom « synergo » est mort : il ne doit
@@ -236,9 +239,11 @@ part entière, pas des effets de bord.
 
 - `Makefile` : `make dev`, `make test`, `make api-client`.
 - `backend/tests/` avec pytest, dont `backend/tests/paie/`.
-- `docs/00-domaine.md`, `01-schema-db.md`, `02-chifa-integration.md`,
-  `03-paie-regles.md`. Tant qu'ils n'existent pas, la référence métier est la
-  Partie 3 de ce fichier.
+- `docs/` : `00-domaine.md`, `01-schema-db.md`, `03-chifa-integration.md`,
+  `04-paie-regles.md`. Le numéro **02** est pris par `02-sync-contrat.md`, qui
+  existe déjà (Partie 1) — l'intégration Chifa et les règles de paie sont
+  décalées d'un cran. Tant que ces quatre fichiers n'existent pas, la référence
+  métier est la Partie 3 de ce fichier.
 
 ---
 
