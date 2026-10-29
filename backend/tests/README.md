@@ -6,7 +6,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-`pytest.ini` met `backend/synergo` sur le `pythonpath`, donc les tests
+`pytest.ini` met `backend/pharmasuite` sur le `pythonpath`, donc les tests
 importent `app.…` directement.
 
 ## `tests/paie/` — non négociable
