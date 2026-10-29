@@ -1,0 +1,26 @@
+# Copier en config.toml et adapter. Ne jamais committer config.toml.
+
+[source]
+# DSN ODBC HFSQL configuré sur le poste Windows (Panneau de configuration →
+# Sources de données ODBC → onglet Système).
+dsn = "EASYPHARM"
+user = ""
+password = ""
+# Le driver HFSQL ne tolère pas les gros fetch : on lit par tranches.
+fetch_size = 500
+
+[api]
+base_url = "http://192.168.1.10:8000/api/v1"
+username = "sync_agent"
+password = ""          # settings.sync_agent_password côté backend
+timeout_seconds = 60
+batch_size = 500
+
+[agent]
+# Intervalle entre deux passes complètes.
+interval_seconds = 300
+# Les tables de référence changent sur place sans que l'id bouge : elles sont
+# relues en entier toutes les N passes.
+full_resync_every = 12
+state_file = "agent_state.json"
+log_file = "agent.log"

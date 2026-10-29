@@ -26,16 +26,19 @@ existant, la cible gagne pour le code nouveau.
 
 ## Ce que contient le dépôt
 
-Deux composants : `backend/synergo/` — une API FastAPI, ~98 fichiers Python — et
-`docs/`, qui ne contient pour l'instant qu'un fichier.
+Un seul composant : `backend/` — une API FastAPI, ~98 fichiers Python.
 
 ```
-backend/synergo/
+backend/
 ├── Dockerfile
 ├── docker-compose.yml        # postgres 16-alpine + api + pgadmin
-├── requirements.txt
+├── requirements.txt          # + requirements-dev.txt pour les tests
+├── pytest.ini
 ├── alembic.ini
-├── alembic/versions/         # 39 migrations, 001 → 039
+├── alembic/versions/
+│   ├── 001_baseline.py       # migration de référence unique
+│   └── baseline/             # schema.sql + seeds.sql
+├── tests/paie/               # pytest, sans base : session simulée
 └── app/
     ├── main.py               # app FastAPI, logging loguru, scheduler APScheduler
     ├── core/                 # config.py, database.py, security.py
@@ -48,20 +51,30 @@ docs/
 └── 02-sync-contrat.md        # contrat de l'agent EASYPHARM, reconstitué depuis le code
 ```
 
-**N'existe pas** (ne pas y faire référence, ne pas supposer que ça marche) :
-`Makefile` · `mobile/` · `ml/` · aucun test, aucun pytest, aucune CI.
+Le produit s'appelle **PharmaSuite**. Le nom « synergo » est mort : il ne doit
+plus apparaître nulle part, sauf dans `SMS_GATEWAY_TOKEN`, dont la valeur est
+un contrat avec le boîtier SMS.
 
-`docs/` existe, mais ne contient que `02-sync-contrat.md` : les autres fichiers
-listés en Partie 2 restent à écrire.
+Second composant : `agent-easypharm/` — l'agent de synchronisation qui tourne
+sur le PC Windows de l'officine. Lit EASYPHARM par ODBC (driver HFSQL) et
+pousse vers `POST /sync/{table}`. Flux à sens unique, l'agent n'écrit jamais
+dans EASYPHARM. Curseur de reprise gardé côté serveur, pas en local. Ses tests
+tournent sans ODBC ni réseau (`cd agent-easypharm && pytest`).
+
+**N'existe pas** (ne pas y faire référence, ne pas supposer que ça marche) :
+`Makefile` · `docs/` · `mobile/` · `ml/` · aucune CI.
 
 ## Commandes réelles
 
 ```bash
-cd backend/synergo
+cd backend
 docker compose up -d               # postgres + api + pgadmin
 docker compose logs -f api
-alembic upgrade head               # migrations
+alembic upgrade head               # schéma (baseline 001)
 alembic current                    # révision courante
+
+pip install -r requirements-dev.txt
+pytest                             # tests, sans postgres
 ```
 
 L'API expose `/api/v1/docs` (Swagger) et `/health`.
@@ -103,12 +116,15 @@ router au passage.
 - **Horodatages** : `DateTime(timezone=True)` + `server_default=func.now()`
   côté modèles ; `datetime.now(timezone.utc)` côté Python. Stockage UTC,
   affichage `Africa/Algiers`.
-- **Migrations écrites à la main**, numérotées séquentiellement
-  (`039_...py`, `revision = "039"`, `down_revision = "038"`). Deux styles
-  cohabitent : les ops Alembic (`op.create_table`, `op.add_column`) et le SQL
-  brut via `conn.execute(sa.text(...))` avec `CREATE TABLE IF NOT EXISTS` /
-  `ADD COLUMN IF NOT EXISTS` pour rester idempotentes. Autogenerate n'est pas
-  utilisé : suivre le style du voisin et continuer la numérotation.
+- **Migrations écrites à la main**, numérotées séquentiellement à partir de la
+  baseline (`002_...py`, `revision = "002"`, `down_revision = "001"`). Les ops
+  Alembic (`op.create_table`, `op.add_column`) comme le SQL brut via
+  `conn.execute(sa.text(...))` sont acceptés. Autogenerate reste inutilisable :
+  `alembic/env.py` n'importe que 10 des 16 modules de modèles, donc son
+  `target_metadata` est incomplet.
+- **`001_baseline.py` ne se rejoue jamais sur une base existante.** Elle fige
+  le schéma issu des 39 migrations historiques. Base déjà en service :
+  `alembic stamp 001`.
 - **Langue** : docstrings, commentaires et noms de colonnes en français ;
   messages de commit en anglais.
 
@@ -133,10 +149,14 @@ router au passage.
 
 ## Pièges connus (ne pas se faire avoir)
 
-- **`main.py` appelle `Base.metadata.create_all` au démarrage** en plus
-  d'Alembic. Les deux mécanismes coexistent : un modèle ajouté crée sa table
-  au boot, sans migration. Ne pas s'appuyer là-dessus pour une modification de
-  schéma — écrire la migration.
+- **`crm_clients` et `tasks` n'existent dans aucune migration ni aucun
+  modèle**, alors que `crm.py` et `tasks.py` les interrogent. Sur une base
+  reconstruite depuis la baseline, ces deux modules échouent. Les tables de
+  production ont dû être créées à la main. À reprendre.
+- **Sept tables n'ont aucun modèle SQLAlchemy** et ne vivent que par la
+  baseline : `demandes_conge`, `historique_stock_jour`, `holidays`,
+  `presences_overrides`, `sms_logs`, `task_assignments`, `task_templates`.
+  Ne jamais supposer que les modèles décrivent le schéma en entier.
 - **CORS `allow_origins=["*"]`** avec `allow_credentials=True` dans `main.py`.
 - **`app/core/config.py` porte des secrets par défaut fonctionnels**
   (`secret_key`, `sync_agent_password`). Une clé API Anthropic y a été
@@ -247,7 +267,7 @@ Valables dans les deux parties, sans exception.
   du projet.
 - **Schéma.** Toute modification de schéma passe par une migration Alembic
   versionnée, jamais par `create_all` seul.
-- **Code existant.** Le code de `backend/synergo/` encode la connaissance du
+- **Code existant.** Le code de `backend/app/` encode la connaissance du
   schéma EASYPHARM/Chifa. En préserver le maximum : corriger et étendre plutôt
   que réécrire.
 
