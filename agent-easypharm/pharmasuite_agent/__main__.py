@@ -6,6 +6,7 @@ Point d'entrée de l'agent.
     python -m pharmasuite_agent --config config.toml --table sorties
     python -m pharmasuite_agent --config config.toml --tester
     python -m pharmasuite_agent --config config.toml --lister
+    python -m pharmasuite_agent --config config.toml --verifier
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from logging.handlers import RotatingFileHandler
 from .client import ClientPharmaSuite
 from .config import Config
 from .runner import Etat, passe, synchroniser_une_table
+from .verification import afficher, verifier
 from .source import SourceHFSQL
 from .tables import TABLES, par_nom
 
@@ -65,13 +67,15 @@ def _tester(config: Config) -> int:
 
 def _lister() -> int:
     """Affiche les tables configurées."""
-    print("\nTables configurées (31 tables):\n")
+    print(f"\nTables configurées ({len(TABLES)} tables):\n")
     print(f"{'Table':<35} {'Stratégie':<12} {'Intervalle':<12} {'Sensible'}")
     print("-" * 70)
 
     for table in TABLES:
         intervalle = f"{table.intervalle_minutes} min"
         sensible = "⚠️ RGPD" if table.sensible else ""
+        if table.optionnelle:
+            sensible = (sensible + " (optionnelle)").strip()
         print(f"{table.cible:<35} {table.strategie:<12} {intervalle:<12} {sensible}")
 
     print("\nStratégies:")
@@ -92,6 +96,8 @@ def main(argv: list[str] | None = None) -> int:
                          help="teste les deux connexions et sort")
     parseur.add_argument("--lister", action="store_true",
                          help="affiche les tables configurées")
+    parseur.add_argument("--verifier", action="store_true",
+                         help="compare HFSQL et PostgreSQL (tables, colonnes, volumes) et sort")
     parseur.add_argument("--table", type=str,
                          help="synchronise une table spécifique (ex: sorties)")
     args = parseur.parse_args(argv)
@@ -104,6 +110,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.tester:
         return _tester(config)
+
+    if args.verifier:
+        source = SourceHFSQL(config.source.dsn, config.source.user,
+                             config.source.password, config.source.fetch_size)
+        client = ClientPharmaSuite(config.api.base_url, config.api.username,
+                                   config.api.password, config.api.timeout_seconds)
+        try:
+            rapport = verifier(source, client)
+        finally:
+            source.fermer()
+            client.fermer()
+        afficher(rapport)
+        return 0 if rapport.complet else 1
 
     source = SourceHFSQL(config.source.dsn, config.source.user,
                          config.source.password, config.source.fetch_size)

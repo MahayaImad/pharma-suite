@@ -16,19 +16,25 @@ Windows (officine)                     Ubuntu (serveur)
 └──────────────────────┘
 ```
 
-## Tables synchronisées (31 tables)
+## Tables synchronisées (39 tables)
+
+Les 39 tables miroir attendues par le serveur (`SYNC_REGISTRY` dans
+`backend/app/api/v1/sync.py`) ; un test vérifie que les deux listes restent
+identiques.
 
 | Stratégie | Tables | Intervalle |
 |-----------|--------|------------|
-| **incremental** | sorties_produits, entrees_produits, mouchard, factures_chifa_produits, ordonnancier, commandes_fournisseurs_produits, echanges_sorties_produits | 15-30 min |
+| **incremental** | sorties_produits, entrees_produits, mouchard, factures_chifa_produits, ordonnancier, commandes_fournisseurs_produits, echanges_sorties_produits, + optionnelles : chifa_rejet_partiel, mouchard_details, reg_client_association, reg_fourn_association | 15-60 min |
 | **window** | sorties, entrees, operations, factures_chifa, commandes_fournisseurs, echanges | 30-60 min |
-| **full** | nomenclature, clients, fournisseurs, groupware, bordereaux_chifa, suivi_caisses, familles, formes, laboratoires, etc. | 4h-24h |
+| **full** | nomenclature, clients, fournisseurs, groupware, bordereaux_chifa, suivi_caisses, familles, formes, laboratoires, etc. + optionnelles : pharmnos_factures, caisses_regies, inventaires, inventaires_produits | 4h-24h |
 | **pipeline** | instance_produits (+ instance_produits_trt) | 15 min |
 
 ### Stratégies de synchronisation
 
 - **incremental** : `id > last_id` — pour les tables qui ne font que grossir
-- **window** : fenêtre glissante sur `date` + champ `modif` — pour les tables modifiées sur place
+- **window** : rattrapage `id > last_id` (donc **tout l'historique** au premier
+  lancement), puis relecture de la fenêtre glissante sur `date` + champ `modif`
+  — pour les en-têtes modifiés sur place
 - **full** : relecture complète périodique — pour les référentiels
 - **pipeline** : cas spécial `instance_produits` (seule table avec DELETE)
 
@@ -68,13 +74,45 @@ Teste les deux extrémités séparément et dit laquelle échoue :
   PharmaSuite (http://192.168.1.10:8000/api/v1) : OK — sorties last_id = 184203
 ```
 
+## Vérifier que tout arrive
+
+```bat
+python -m pharmasuite_agent --config config.toml --verifier
+```
+
+Ne synchronise rien. Pour chaque table, compare HFSQL et PostgreSQL :
+
+- la table existe-t-elle côté HFSQL sous le nom configuré ;
+- **colonnes perdues** : présentes dans HFSQL, sans colonne PostgreSQL — leur
+  contenu n'est pas importé ;
+- **jamais remplies** : colonnes PostgreSQL qu'aucune colonne HFSQL n'alimente
+  (souvent un nom de colonne qui diffère) ;
+- l'**écart** de lignes HFSQL − PostgreSQL : positif = pas encore synchronisé,
+  négatif = lignes supprimées dans EASYPHARM et restées en base.
+
+Liste aussi les tables HFSQL que l'agent ne lit pas du tout. Code de sortie 1
+tant que le résultat n'est pas « COMPLET ».
+
+Les tables marquées **optionnelles** ont un nom HFSQL non attesté : si elles
+sont introuvables, la passe continue avec un avertissement, et `--verifier`
+dit s'il faut corriger leur nom `source` dans `tables.py`.
+
+## Premier chargement complet
+
+1. `--tester` : les deux connexions répondent.
+2. `--verifier` : corriger dans `tables.py` les noms `source` introuvables.
+3. `--une-passe` : charge tout l'historique. Peut être long sur
+   `sorties_produits` et `mouchard`, mais reprenable à tout moment : le
+   relancer repart du dernier lot accepté.
+4. `--verifier` à nouveau : écart 0 et aucune colonne perdue sur chaque table.
+
 ## Lister les tables
 
 ```bat
 python -m pharmasuite_agent --lister
 ```
 
-Affiche les 31 tables avec leur stratégie et intervalle.
+Affiche les 39 tables avec leur stratégie et intervalle.
 
 ## Lancer
 
@@ -111,6 +149,15 @@ sont des upserts, rejouer un lot est sans effet de bord.
 
 Une table qui échoue n'interrompt pas les autres : un fichier verrouillé par
 EASYPHARM ne doit pas bloquer la synchronisation des ventes.
+
+**Un lot partiellement refusé bloque le curseur.** Si PostgreSQL refuse des
+lignes (texte trop long, valeur hors type…), le serveur les rejoue une par une,
+importe les saines et renvoie les ids refusés avec leur cause. L'agent n'avance
+alors pas son curseur et journalise l'erreur : la table reste en échec, visible,
+jusqu'à correction — plutôt que de sauter ces lignes pour toujours.
+
+Les noms de colonnes HFSQL sont normalisés (minuscules, sans accents :
+`cloturé` → `cloture`) pour correspondre au schéma PostgreSQL.
 
 ## Mode intervalles par table
 

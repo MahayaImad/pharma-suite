@@ -8,8 +8,11 @@ Quatre stratégies :
 
 - ``incremental`` : la table ne fait que grossir (ventes, achats, mouvements).
   On ne relit que les lignes dont l'id dépasse le dernier synchronisé.
-- ``window`` : fenêtre glissante sur la date + champ modif. Pour les tables
-  dont les enregistrements sont modifiés sur place (sorties ouvertes, etc.)
+- ``window`` : en-têtes modifiés sur place (sorties ouvertes, etc.). Chaque
+  passe rattrape d'abord tout ce qui dépasse le curseur (``id > last_id``,
+  donc **tout l'historique** au premier lancement), puis relit la fenêtre
+  glissante (date récente, ``modif > 0``, ``condition_extra``) pour capter
+  les modifications.
 - ``full`` : la table est modifiée sur place sans que l'id change (stock d'un
   produit, solde d'un client). L'incrémental raterait ces mises à jour, donc
   on la relit en entier — moins souvent, via ``full_resync_every``.
@@ -38,6 +41,10 @@ class Table:
     champ_modif: str | None = None      # champ indiquant une modification
     condition_extra: str | None = None  # condition SQL supplémentaire
     sensible: bool = False              # données RGPD
+    # Table dont l'existence côté HFSQL n'est pas attestée (voir
+    # docs/02-sync-contrat.md §6.1) : un échec de lecture est un avertissement,
+    # pas une erreur de passe. `--verifier` dit si elle existe vraiment.
+    optionnelle: bool = False
 
     @property
     def incrementale(self) -> bool:
@@ -57,7 +64,7 @@ class Table:
 
 
 # =============================================================================
-# TABLES SYNCHRONISÉES (31 tables - version HFSQL correcte)
+# TABLES SYNCHRONISÉES — les 39 tables miroir de SYNC_REGISTRY (backend)
 # =============================================================================
 # Ordre respectant les dépendances FK
 
@@ -278,6 +285,68 @@ TABLES: tuple[Table, ...] = (
         source="motif_instance",
         strategie="full",
         intervalle_minutes=1440,
+    ),
+
+    # ── COMPLÉMENTS : présentes côté serveur, nom HFSQL non attesté ──────────
+    # Lignes de détail en insertion pure (docs/02-sync-contrat.md §2.10).
+    Table(
+        cible="chifa_rejet_partiel",
+        source="chifa_rejet_partiel",
+        strategie="incremental",
+        intervalle_minutes=60,
+        optionnelle=True,
+    ),
+    Table(
+        cible="mouchard_details",
+        source="mouchard_details",
+        strategie="incremental",
+        intervalle_minutes=60,
+        taille_lot=1000,
+        optionnelle=True,
+    ),
+    Table(
+        cible="reg_client_association",
+        source="reg_client_association",
+        strategie="incremental",
+        intervalle_minutes=60,
+        optionnelle=True,
+    ),
+    Table(
+        cible="reg_fourn_association",
+        source="reg_fourn_association",
+        strategie="incremental",
+        intervalle_minutes=60,
+        optionnelle=True,
+    ),
+    Table(
+        cible="pharmnos_factures",
+        source="pharmnos_factures",
+        strategie="full",
+        intervalle_minutes=240,
+        optionnelle=True,
+    ),
+    # Signalées vides par docs/SYNC_MAPPING.md §5 : coût nul si c'est le cas,
+    # et rien n'est perdu le jour où elles se remplissent.
+    Table(
+        cible="caisses_regies",
+        source="caisses_régies",  # Nom HFSQL avec accent
+        strategie="full",
+        intervalle_minutes=1440,
+        optionnelle=True,
+    ),
+    Table(
+        cible="inventaires",
+        source="inventaires",
+        strategie="full",
+        intervalle_minutes=1440,
+        optionnelle=True,
+    ),
+    Table(
+        cible="inventaires_produits",
+        source="inventaires_produits",
+        strategie="full",
+        intervalle_minutes=1440,
+        optionnelle=True,
     ),
 
     # ── PIPELINE DÉDIÉ (15 min) ──────────────────────────────────────────────

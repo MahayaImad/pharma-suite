@@ -705,6 +705,18 @@ proportionnel au nombre total de comptes, pas à la taille du batch.
 
 ### 3.3 — Cinq exigences que le code impose sans les documenter
 
+> **Mise à jour (2026-11-08)** — les exigences 1, 3, 4 et 5 sont levées côté
+> serveur : les lignes d'un lot sont alignées sur l'union des clés ; les dates
+> acceptent `YYYY-MM-DD`, l'ISO avec heure, `YYYYMMDD` et `DD/MM/YYYY`, et une
+> valeur illisible est renvoyée dans `invalid_values` au lieu de disparaître ;
+> les colonnes `DateTime`, entières et texte sont converties ; un sous-lot
+> refusé est rejoué ligne par ligne, les lignes refusées sont renvoyées dans
+> `rejected`, et l'agent n'avance pas son curseur tant que `errors > 0`. Les
+> clés sans colonne PostgreSQL sont renvoyées dans `ignored_columns`.
+> L'exigence 2 (montants en chaînes) reste la règle ; un float reçu est
+> converti depuis sa représentation décimale. Le texte ci-dessous décrit
+> l'état antérieur.
+
 Chacune est vérifiable ; aucune n'est signalée à l'agent en cas de violation.
 
 **1. Toutes les lignes d'un batch doivent porter exactement le même jeu de clés.**
@@ -776,7 +788,12 @@ L'agent doit avoir **déjà parsé** la colonne HFSQL `info_trt` en trois champs
 Les trois sont écrits en `COALESCE(EXCLUDED.x, instance_produits.x)`
 (`sync.py:448-450`) : une valeur nulle ne détruit pas une trace existante.
 
-> ⚠️ **Asymétrie à connaître** : cet endpoint ne convertit **ni les dates ni les
+> ✅ **Corrigé le 2026-11-08** : `/batch` et `/trt` typent désormais les 23
+> colonnes par le même chemin que la route générique, et une clé absente vaut
+> `NULL` au lieu de faire échouer le lot. L'agent appelle bien `/batch` pour
+> les actives (il passait auparavant par la route générique).
+>
+> ⚠️ **Asymétrie à connaître** (état antérieur) : cet endpoint ne convertit **ni les dates ni les
 > décimaux** des 23 colonnes standard — contrairement à `/batch`. Les valeurs
 > sont passées telles quelles à un `text()` sans typage (`sync.py:452-453`), donc
 > asyncpg reçoit une `str` pour une colonne `DATE` ou `NUMERIC`. Voir §6.6.

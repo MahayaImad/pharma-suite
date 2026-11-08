@@ -14,7 +14,7 @@ milieu d'une grosse table ne fait reperdre que le lot en cours. Les upserts
 
 Stratégies supportées :
 - incremental : id > last_id
-- window : fenêtre glissante (date + modif)
+- window : rattrapage id > last_id, puis fenêtre glissante (date + modif)
 - full : relecture complète périodique
 - pipeline : spécial instance_produits (avec archive)
 """
@@ -24,9 +24,9 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator, Any
+from typing import Any, Callable, Iterable, Iterator
 
-from .client import ClientPharmaSuite
+from .client import ClientPharmaSuite, ErreurApi, LotRejete
 from .source import Source
 from .tables import TABLES, Table
 
@@ -39,9 +39,12 @@ class Bilan:
     tables_en_erreur: int = 0
     lignes: int = 0
     erreurs: list[str] = field(default_factory=list)
+    tables_absentes: list[str] = field(default_factory=list)
 
     def resume(self) -> str:
         base = f"{self.lignes} ligne(s) sur {self.tables_ok} table(s)"
+        if self.tables_absentes:
+            base += f", {len(self.tables_absentes)} table(s) optionnelle(s) absente(s)"
         if self.tables_en_erreur:
             return f"{base}, {self.tables_en_erreur} table(s) en erreur"
         return base
@@ -100,200 +103,155 @@ def _doit_tout_relire(table: Table, passes: int, tous_les: int) -> bool:
 # SYNCHRONISATION PAR STRATÉGIE
 # =============================================================================
 
-def _sync_incremental(
-    table: Table,
-    source: Source,
-    client: ClientPharmaSuite,
-) -> int:
-    """Synchronisation incrémentale (id > last_id)."""
-    depuis = client.statut(table.cible)
-    logger.info("[%s] lecture incrémentale depuis id > %d", table.cible, depuis)
+def _cle_entiere(enregistrement: dict, cle: str) -> int | None:
+    valeur = enregistrement.get(cle)
+    if valeur is None:
+        return None
+    try:
+        return int(float(valeur)) if isinstance(valeur, str) else int(valeur)
+    except (TypeError, ValueError):
+        return None
 
+
+def _pousser_par_lots(
+    lignes: Iterable[dict],
+    taille_lot: int,
+    envoyer: Callable[[list[dict]], Any],
+    cle: str = "id",
+    avancer: Callable[[int, int], None] | None = None,
+) -> int:
+    """
+    Envoie `lignes` par lots. Si `avancer` est fourni, il est appelé avec
+    (plus grand id du lot, taille du lot) **après** chaque lot accepté : c'est
+    ce qui rend la reprise sûre. Un lot refusé lève avant d'avancer.
+    """
     envoyees = 0
     lot: list[dict] = []
-    dernier_id = max(depuis, 0)
+    plus_grand = 0
 
     def vider() -> None:
-        nonlocal lot, envoyees, dernier_id
+        nonlocal lot, envoyees
         if not lot:
             return
-        client.pousser(table.cible, lot)
+        envoyer(lot)
         envoyees += len(lot)
-        client.maj_statut(table.cible, dernier_id, len(lot))
+        if avancer is not None and plus_grand > 0:
+            avancer(plus_grand, len(lot))
         lot = []
 
-    for enregistrement in source.lire(table.source, table.cle, depuis, table.taille_lot):
-        valeur_cle = enregistrement.get(table.cle)
-        if valeur_cle is not None:
-            try:
-                dernier_id = max(dernier_id, int(valeur_cle))
-            except (TypeError, ValueError):
-                pass
+    for enregistrement in lignes:
+        valeur = _cle_entiere(enregistrement, cle)
+        if valeur is not None:
+            plus_grand = max(plus_grand, valeur)
         lot.append(enregistrement)
-        if len(lot) >= table.taille_lot:
+        if len(lot) >= taille_lot:
             vider()
-
     vider()
+    return envoyees
+
+
+def _rattraper(table: Table, source: Source, client: ClientPharmaSuite) -> tuple[int, int]:
+    """
+    Lit tout ce qui dépasse le curseur serveur et avance ce curseur lot par lot.
+    Rend (curseur de départ, lignes envoyées).
+    """
+    depuis = max(client.statut(table.cible), 0)
+    logger.info("[%s] rattrapage depuis id > %d", table.cible, depuis)
+    envoyees = _pousser_par_lots(
+        source.lire(table.source, table.cle, depuis, table.taille_lot),
+        table.taille_lot,
+        lambda lot: client.pousser(table.cible, lot),
+        table.cle,
+        lambda dernier, n: client.maj_statut(table.cible, dernier, n),
+    )
+    return depuis, envoyees
+
+
+def _sync_incremental(table: Table, source: Source, client: ClientPharmaSuite) -> int:
+    """Synchronisation incrémentale (id > last_id)."""
+    _, envoyees = _rattraper(table, source, client)
     logger.info("[%s] %d ligne(s) synchronisée(s)", table.cible, envoyees)
     return envoyees
 
 
-def _sync_window(
-    table: Table,
-    source: Source,
-    client: ClientPharmaSuite,
-) -> int:
-    """Synchronisation par fenêtre glissante."""
-    logger.info(
-        "[%s] lecture fenêtre glissante (%d jours, modif=%s)",
-        table.cible, table.fenetre_jours, table.champ_modif
+def _sync_window(table: Table, source: Source, client: ClientPharmaSuite) -> int:
+    """
+    Fenêtre glissante, en deux temps :
+
+    1. rattrapage ``id > last_id`` — au premier lancement, c'est **tout
+       l'historique** ; ensuite, les seules nouvelles lignes ;
+    2. relecture de la fenêtre (date récente, ``modif > 0``,
+       ``condition_extra``) pour capter les en-têtes modifiés sur place.
+       Les lignes déjà envoyées à l'étape 1 sont sautées.
+    """
+    depuis, envoyees = _rattraper(table, source, client)
+
+    def deja_connues() -> Iterator[dict]:
+        for enregistrement in source.lire_fenetre(
+            table.source, table.cle, table.taille_lot, table.fenetre_jours,
+            table.champ_modif, table.condition_extra,
+        ):
+            valeur = _cle_entiere(enregistrement, table.cle)
+            if valeur is None or valeur <= depuis:
+                yield enregistrement
+
+    relues = _pousser_par_lots(
+        deja_connues(), table.taille_lot,
+        lambda lot: client.pousser(table.cible, lot), table.cle,
     )
-
-    envoyees = 0
-    lot: list[dict] = []
-    dernier_id = 0
-
-    def vider() -> None:
-        nonlocal lot, envoyees
-        if not lot:
-            return
-        client.pousser(table.cible, lot)
-        envoyees += len(lot)
-        lot = []
-
-    for enregistrement in source.lire_fenetre(
-        table.source,
-        table.cle,
-        table.taille_lot,
-        table.fenetre_jours,
-        table.champ_modif,
-        table.condition_extra,
-    ):
-        valeur_cle = enregistrement.get(table.cle)
-        if valeur_cle is not None:
-            try:
-                dernier_id = max(dernier_id, int(valeur_cle))
-            except (TypeError, ValueError):
-                pass
-        lot.append(enregistrement)
-        if len(lot) >= table.taille_lot:
-            vider()
-
-    vider()
-
-    # Mettre à jour le statut avec le dernier id vu
-    if envoyees > 0 and dernier_id > 0:
-        client.maj_statut(table.cible, dernier_id, envoyees)
-
-    logger.info("[%s] %d ligne(s) synchronisée(s) (fenêtre)", table.cible, envoyees)
-    return envoyees
+    logger.info("[%s] %d nouvelle(s), %d relue(s) dans la fenêtre de %d jours",
+                table.cible, envoyees, relues, table.fenetre_jours)
+    return envoyees + relues
 
 
-def _sync_full(
-    table: Table,
-    source: Source,
-    client: ClientPharmaSuite,
-) -> int:
+def _sync_full(table: Table, source: Source, client: ClientPharmaSuite) -> int:
     """Synchronisation complète."""
     logger.info("[%s] lecture complète", table.cible)
-
-    envoyees = 0
-    lot: list[dict] = []
-    dernier_id = 0
-
-    def vider() -> None:
-        nonlocal lot, envoyees
-        if not lot:
-            return
-        client.pousser(table.cible, lot)
-        envoyees += len(lot)
-        lot = []
-
-    for enregistrement in source.lire(table.source, table.cle, -1, table.taille_lot):
-        valeur_cle = enregistrement.get(table.cle)
-        if valeur_cle is not None:
-            try:
-                dernier_id = max(dernier_id, int(valeur_cle))
-            except (TypeError, ValueError):
-                pass
-        lot.append(enregistrement)
-        if len(lot) >= table.taille_lot:
-            vider()
-
-    vider()
-
-    # Mettre à jour le statut
-    if envoyees > 0 and dernier_id > 0:
-        client.maj_statut(table.cible, dernier_id, envoyees)
-
+    envoyees = _pousser_par_lots(
+        source.lire(table.source, table.cle, -1, table.taille_lot),
+        table.taille_lot,
+        lambda lot: client.pousser(table.cible, lot),
+        table.cle,
+    )
     logger.info("[%s] %d ligne(s) synchronisée(s) (full)", table.cible, envoyees)
     return envoyees
 
 
-def _sync_pipeline(
-    table: Table,
-    source: Source,
-    client: ClientPharmaSuite,
-) -> int:
+def _sync_pipeline(table: Table, source: Source, client: ClientPharmaSuite) -> int:
     """
     Pipeline spécial pour instance_produits.
 
     Cette table est la SEULE où des enregistrements sont SUPPRIMÉS
-    (déplacés vers instance_produits_trt après vente).
+    (déplacés vers instance_produits_trt après vente). Chaque étape a son
+    endpoint dédié :
 
-    1. Sync des instances actives (instance_produits)
-    2. Sync des instances traitées (instance_produits_trt)
+    1. instances actives → ``/sync/instance_produits/batch`` (archive=FALSE) ;
+    2. instances traitées → ``/sync/instance_produits_trt`` (archive=TRUE).
+
+    La route générique ne doit pas servir ici : elle ne remet pas
+    ``archive`` à FALSE pour une instance réactivée.
     """
     logger.info("[%s] pipeline instance_produits", table.cible)
 
-    total = 0
+    actives = _pousser_par_lots(
+        source.lire(table.source, table.cle, -1, table.taille_lot),
+        table.taille_lot, client.pousser_instance_produits, table.cle,
+    )
+    logger.info("[instance_produits] %d instance(s) active(s)", actives)
 
-    # 1. Instances actives
-    envoyees = 0
-    lot: list[dict] = []
-
-    def vider() -> None:
-        nonlocal lot, envoyees
-        if not lot:
-            return
-        client.pousser(table.cible, lot)
-        envoyees += len(lot)
-        lot = []
-
-    for enregistrement in source.lire(table.source, table.cle, -1, table.taille_lot):
-        lot.append(enregistrement)
-        if len(lot) >= table.taille_lot:
-            vider()
-
-    vider()
-    total += envoyees
-    logger.info("[instance_produits] %d instances actives", envoyees)
-
-    # 2. Instances traitées (archive)
     try:
-        envoyees_trt = 0
-        lot_trt: list[dict] = []
-
-        def vider_trt() -> None:
-            nonlocal lot_trt, envoyees_trt
-            if not lot_trt:
-                return
-            client.pousser("instance_produits_trt", lot_trt)
-            envoyees_trt += len(lot_trt)
-            lot_trt = []
-
-        for enregistrement in source.lire("instance_produits_trt", table.cle, -1, table.taille_lot):
-            lot_trt.append(enregistrement)
-            if len(lot_trt) >= table.taille_lot:
-                vider_trt()
-
-        vider_trt()
-        total += envoyees_trt
-        logger.info("[instance_produits_trt] %d instances archivées", envoyees_trt)
+        lignes_trt = source.lire("instance_produits_trt", table.cle, -1, table.taille_lot)
+        traitees = _pousser_par_lots(
+            lignes_trt, table.taille_lot, client.pousser_instance_produits_trt, table.cle,
+        )
+    except LotRejete:
+        raise
     except Exception as erreur:
         logger.warning("[instance_produits_trt] non disponible : %s", erreur)
+        traitees = 0
+    logger.info("[instance_produits_trt] %d instance(s) traitée(s)", traitees)
 
-    return total
+    return actives + traitees
 
 
 def synchroniser_table(
@@ -346,6 +304,14 @@ def passe(
             bilan.tables_ok += 1
             etat.marquer_synchronise(table)
         except Exception as erreur:
+            if table.optionnelle and not isinstance(erreur, (LotRejete, ErreurApi)):
+                # Erreur de lecture HFSQL sur une table non attestée : sans
+                # doute absente. On le dit, sans faire échouer la passe.
+                logger.warning("[%s] table optionnelle illisible côté HFSQL : %s",
+                               table.cible, erreur)
+                bilan.tables_absentes.append(table.cible)
+                etat.marquer_synchronise(table)
+                continue
             bilan.tables_en_erreur += 1
             bilan.erreurs.append(f"{table.cible}: {erreur}")
             logger.error("[%s] échec : %s", table.cible, erreur)

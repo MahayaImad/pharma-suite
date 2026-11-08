@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, Iterator, Protocol, Sequence
 
-from .serialisation import ligne_json
+from .serialisation import ligne_json, nom_colonne
 
 
 class Source(Protocol):
@@ -148,6 +148,23 @@ class SourceHFSQL:
     def lire_tout(self, table: str, cle: str, taille: int) -> Iterator[dict[str, Any]]:
         """Alias pour lecture complète."""
         yield from self.lire(table, cle, -1, taille)
+
+    def colonnes(self, table: str) -> list[str]:
+        """Colonnes de `table`, normalisées comme dans les lignes envoyées."""
+        curseur = self._connexion().cursor()
+        try:
+            curseur.execute(f"SELECT TOP 1 * FROM {table}")
+            return [nom_colonne(c[0]) for c in curseur.description]
+        finally:
+            curseur.close()
+
+    def lister_tables(self) -> list[str]:
+        """Tables exposées par le DSN, d'après le catalogue ODBC."""
+        curseur = self._connexion().cursor()
+        try:
+            return sorted(t.table_name for t in curseur.tables(tableType="TABLE"))
+        finally:
+            curseur.close()
 
     def compter(self, table: str) -> int:
         """Retourne le nombre total d'enregistrements."""

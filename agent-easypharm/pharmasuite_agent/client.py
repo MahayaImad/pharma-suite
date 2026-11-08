@@ -17,6 +17,24 @@ class ErreurApi(RuntimeError):
     pass
 
 
+class LotRejete(ErreurApi):
+    """
+    Le serveur a accepté la requête mais refusé des lignes du lot.
+
+    Levée pour que le curseur n'avance pas : sinon les lignes refusées
+    seraient sautées pour toujours, sans trace.
+    """
+
+    def __init__(self, table: str, reponse: dict):
+        self.table = table
+        self.rejets = reponse.get("rejected") or []
+        exemples = "; ".join(f"id={r.get('id')}: {r.get('erreur')}" for r in self.rejets[:3])
+        super().__init__(
+            f"{reponse.get('errors')} ligne(s) refusée(s) par le serveur sur {table}"
+            + (f" — {exemples}" if exemples else "")
+        )
+
+
 class ClientPharmaSuite:
     """
     Enveloppe les endpoints dont l'agent a besoin.
@@ -32,6 +50,8 @@ class ClientPharmaSuite:
         self._password = password
         self._http = httpx.Client(timeout=timeout)
         self._jeton: str | None = None
+        # Un avertissement par table et par colonne, pas un par lot.
+        self._colonnes_signalees: set[tuple[str, str]] = set()
 
     def fermer(self) -> None:
         self._http.close()
@@ -102,9 +122,27 @@ class ClientPharmaSuite:
         """Dernier id synchronisé pour cette table, 0 si jamais synchronisée."""
         return int(self._appeler("GET", f"/sync/status/{table}")["last_id"])
 
+    def _controler(self, table: str, reponse: dict) -> dict:
+        """Lit le bilan du lot : `errors > 0` arrive avec un HTTP 200."""
+        for colonne in reponse.get("ignored_columns") or []:
+            if (table, colonne) not in self._colonnes_signalees:
+                self._colonnes_signalees.add((table, colonne))
+                logger.warning("[%s] colonne HFSQL sans équivalent PostgreSQL, non importée : %s",
+                               table, colonne)
+        for anomalie in (reponse.get("invalid_values") or [])[:5]:
+            logger.warning("[%s] valeur invalide écrite à NULL : %s", table, anomalie)
+        if reponse.get("errors"):
+            raise LotRejete(table, reponse)
+        return reponse
+
     def pousser(self, table: str, enregistrements: list[dict]) -> dict:
         """Envoie un lot d'enregistrements."""
-        return self._appeler("POST", f"/sync/{table}", json={"records": enregistrements})
+        reponse = self._appeler("POST", f"/sync/{table}", json={"records": enregistrements})
+        return self._controler(table, reponse)
+
+    def schema(self) -> list[dict]:
+        """Colonnes et nombre de lignes de chaque table miroir côté serveur."""
+        return self._appeler("GET", "/sync/schema")
 
     def maj_statut(self, table: str, last_id: int, count: int) -> None:
         """Met à jour le curseur de synchronisation."""
@@ -116,14 +154,16 @@ class ClientPharmaSuite:
 
     def pousser_instance_produits(self, enregistrements: list[dict]) -> dict:
         """Endpoint dédié pour instance_produits (gère le pipeline)."""
-        return self._appeler(
+        reponse = self._appeler(
             "POST", "/sync/instance_produits/batch",
             json={"records": enregistrements}
         )
+        return self._controler("instance_produits", reponse)
 
     def pousser_instance_produits_trt(self, enregistrements: list[dict]) -> dict:
         """Endpoint pour les instances archivées."""
-        return self._appeler(
+        reponse = self._appeler(
             "POST", "/sync/instance_produits_trt",
             json={"records": enregistrements}
         )
+        return self._controler("instance_produits_trt", reponse)

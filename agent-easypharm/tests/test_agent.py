@@ -39,6 +39,18 @@ class SourceFactice:
         lignes = self.lignes.get(table, [])
         return max((l[cle] for l in lignes), default=0)
 
+    def colonnes(self, table):
+        if table not in self.lignes:
+            raise RuntimeError(f"table {table} inconnue")
+        lignes = self.lignes[table]
+        return sorted({k for l in lignes for k in l}) if lignes else []
+
+    def compter(self, table):
+        return len(self.lignes[table])
+
+    def lister_tables(self):
+        return sorted(self.lignes)
+
 
 class ClientFactice:
     def __init__(self, statuts=None, casse_sur=None):
@@ -55,6 +67,12 @@ class ClientFactice:
             raise RuntimeError("réseau coupé")
         self.pousses.append((table, list(enregistrements)))
         return {"table": table, "synced": len(enregistrements), "errors": 0}
+
+    def pousser_instance_produits(self, enregistrements):
+        return self.pousser("instance_produits/batch", enregistrements)
+
+    def pousser_instance_produits_trt(self, enregistrements):
+        return self.pousser("instance_produits_trt", enregistrements)
 
     def maj_statut(self, table, last_id, count):
         self.majs.append((table, last_id, count))
@@ -177,7 +195,7 @@ def test_full_resync_seulement_sur_les_tables_completes():
 
 
 def test_une_table_en_erreur_n_arrete_pas_les_autres(tmp_path):
-    source = SourceFactice({t.source: [{"id": 1}] for t in TABLES})
+    source = SourceFactice({t.source: [{"id": 1}] for t in TABLES} | {"instance_produits_trt": []})
     client = ClientFactice(casse_sur="sorties")
     etat = Etat(tmp_path / "etat.json")
 
@@ -213,9 +231,9 @@ def test_pas_de_doublon_de_cible():
     assert len(cibles) == len(set(cibles))
 
 
-def test_31_tables_configurees():
-    """On doit avoir exactement 31 tables."""
-    assert len(TABLES) == 31
+def test_39_tables_configurees():
+    """Les 39 tables miroir du serveur sont toutes lues."""
+    assert len(TABLES) == 39
 
 
 def test_strategies_connues():
@@ -229,7 +247,7 @@ def test_par_strategie():
     """par_strategie retourne les bonnes tables."""
     incrementales = par_strategie("incremental")
     assert all(t.strategie == "incremental" for t in incrementales)
-    assert len(incrementales) == 7
+    assert len(incrementales) == 11
 
     fenetres = par_strategie("window")
     assert all(t.strategie == "window" for t in fenetres)
