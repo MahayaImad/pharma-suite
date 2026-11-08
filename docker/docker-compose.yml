@@ -1,0 +1,52 @@
+# Services d'infrastructure de PharmaSuite : PostgreSQL, Redis, pgAdmin.
+# Les identifiants sont lus depuis docker/.env (non versionné) :
+#   cp .env.example .env   puis renseigner les mots de passe.
+# Les scripts .sql / .sh placés dans init/ ne s'exécutent qu'à la création
+# du volume postgres_data (premier démarrage).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pharmasuite_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pharmasuite_db}
+      POSTGRES_USER: ${POSTGRES_USER:-pharmasuite_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans docker/.env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d/
+    ports:
+      - "5439:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: pharmasuite_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pharmasuite_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@pharmasuite.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD manquant dans docker/.env}
+    ports:
+      - "8085:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
