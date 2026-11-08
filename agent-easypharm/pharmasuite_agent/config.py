@@ -29,6 +29,7 @@ class AgentConfig:
     full_resync_every: int = 12
     state_file: str = "agent_state.json"
     log_file: str = "agent.log"
+    respecter_intervalles: bool = True  # Utilise les intervalles par table
 
 
 @dataclass(frozen=True)

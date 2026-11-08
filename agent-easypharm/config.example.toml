@@ -17,10 +17,22 @@ timeout_seconds = 60
 batch_size = 500
 
 [agent]
-# Intervalle entre deux passes complètes.
+# Intervalle entre deux passes complètes (en secondes).
+# Si respecter_intervalles = true, cet intervalle est le minimum entre passes,
+# et chaque table respecte son propre intervalle (défini dans tables.py).
 interval_seconds = 300
-# Les tables de référence changent sur place sans que l'id bouge : elles sont
-# relues en entier toutes les N passes.
+
+# Mode legacy : les tables 'full' sont relues en entier toutes les N passes.
+# Ignoré si respecter_intervalles = true (on utilise alors intervalle_minutes par table).
 full_resync_every = 12
+
+# Utilise les intervalles définis par table (true) ou mode legacy (false).
+# En mode intervalles :
+#   - sorties_produits, entrees_produits : 15 min
+#   - sorties, entrees, operations : 30 min
+#   - nomenclature, clients : 4h
+#   - familles, formes, etc. : 24h (nightly)
+respecter_intervalles = true
+
 state_file = "agent_state.json"
 log_file = "agent.log"

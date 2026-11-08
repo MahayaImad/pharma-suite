@@ -7,6 +7,7 @@ l'agent sans driver installé.
 """
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any, Iterator, Protocol, Sequence
 
 from .serialisation import ligne_json
@@ -16,9 +17,23 @@ class Source(Protocol):
     """Ce dont le moteur de synchronisation a besoin. Permet de le tester."""
 
     def lire(self, table: str, cle: str, depuis: int, taille: int) -> Iterator[dict[str, Any]]:
+        """Lecture incrémentale (depuis > 0) ou complète (depuis < 0)."""
+        ...
+
+    def lire_fenetre(
+        self,
+        table: str,
+        cle: str,
+        taille: int,
+        fenetre_jours: int,
+        champ_modif: str | None = None,
+        condition_extra: str | None = None,
+    ) -> Iterator[dict[str, Any]]:
+        """Lecture par fenêtre glissante."""
         ...
 
     def max_cle(self, table: str, cle: str) -> int:
+        """Retourne la valeur maximale de la clé."""
         ...
 
 
@@ -83,5 +98,62 @@ class SourceHFSQL:
                     return
                 for ligne in lignes:
                     yield ligne_json(colonnes, ligne)
+        finally:
+            curseur.close()
+
+    def lire_fenetre(
+        self,
+        table: str,
+        cle: str,
+        taille: int,
+        fenetre_jours: int,
+        champ_modif: str | None = None,
+        condition_extra: str | None = None,
+    ) -> Iterator[dict[str, Any]]:
+        """
+        Lecture par fenêtre glissante.
+
+        Récupère les enregistrements:
+        - Avec date >= (aujourd'hui - fenetre_jours)
+        - OU avec champ_modif > 0 (si spécifié)
+        - OU vérifiant condition_extra (si spécifiée)
+        """
+        curseur = self._connexion().cursor()
+        try:
+            # Date au format HFSQL (YYYYMMDD)
+            date_limite = (datetime.now() - timedelta(days=fenetre_jours)).strftime('%Y%m%d')
+
+            conditions = [f"date >= '{date_limite}'"]
+
+            if champ_modif:
+                conditions.append(f"{champ_modif} > 0")
+
+            if condition_extra:
+                conditions.append(condition_extra)
+
+            where_clause = " OR ".join(conditions)
+            requete = f"SELECT * FROM {table} WHERE {where_clause} ORDER BY {cle}"
+
+            curseur.execute(requete)
+            colonnes: Sequence[str] = [c[0] for c in curseur.description]
+            while True:
+                lignes = curseur.fetchmany(taille)
+                if not lignes:
+                    return
+                for ligne in lignes:
+                    yield ligne_json(colonnes, ligne)
+        finally:
+            curseur.close()
+
+    def lire_tout(self, table: str, cle: str, taille: int) -> Iterator[dict[str, Any]]:
+        """Alias pour lecture complète."""
+        yield from self.lire(table, cle, -1, taille)
+
+    def compter(self, table: str) -> int:
+        """Retourne le nombre total d'enregistrements."""
+        curseur = self._connexion().cursor()
+        try:
+            curseur.execute(f"SELECT COUNT(*) FROM {table}")
+            return curseur.fetchone()[0] or 0
         finally:
             curseur.close()

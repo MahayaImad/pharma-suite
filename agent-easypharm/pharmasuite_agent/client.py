@@ -19,7 +19,7 @@ class ErreurApi(RuntimeError):
 
 class ClientPharmaSuite:
     """
-    Enveloppe les trois endpoints dont l'agent a besoin.
+    Enveloppe les endpoints dont l'agent a besoin.
 
     Le jeton JWT expire (60 min par défaut) : un 401 déclenche une
     reconnexion et un seul réessai, pour ne pas boucler sur de vrais
@@ -103,9 +103,27 @@ class ClientPharmaSuite:
         return int(self._appeler("GET", f"/sync/status/{table}")["last_id"])
 
     def pousser(self, table: str, enregistrements: list[dict]) -> dict:
+        """Envoie un lot d'enregistrements."""
         return self._appeler("POST", f"/sync/{table}", json={"records": enregistrements})
 
     def maj_statut(self, table: str, last_id: int, count: int) -> None:
+        """Met à jour le curseur de synchronisation."""
         self._appeler(
             "POST", f"/sync/status/{table}", json={"last_id": last_id, "count": count}
+        )
+
+    # ── Endpoints spéciaux ───────────────────────────────────────────────────
+
+    def pousser_instance_produits(self, enregistrements: list[dict]) -> dict:
+        """Endpoint dédié pour instance_produits (gère le pipeline)."""
+        return self._appeler(
+            "POST", "/sync/instance_produits/batch",
+            json={"records": enregistrements}
+        )
+
+    def pousser_instance_produits_trt(self, enregistrements: list[dict]) -> dict:
+        """Endpoint pour les instances archivées."""
+        return self._appeler(
+            "POST", "/sync/instance_produits_trt",
+            json={"records": enregistrements}
         )

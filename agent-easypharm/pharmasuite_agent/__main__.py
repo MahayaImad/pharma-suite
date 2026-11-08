@@ -3,7 +3,9 @@ Point d'entrée de l'agent.
 
     python -m pharmasuite_agent --config config.toml
     python -m pharmasuite_agent --config config.toml --une-passe
+    python -m pharmasuite_agent --config config.toml --table sorties
     python -m pharmasuite_agent --config config.toml --tester
+    python -m pharmasuite_agent --config config.toml --lister
 """
 from __future__ import annotations
 
@@ -15,8 +17,9 @@ from logging.handlers import RotatingFileHandler
 
 from .client import ClientPharmaSuite
 from .config import Config
-from .runner import Etat, passe
+from .runner import Etat, passe, synchroniser_une_table
 from .source import SourceHFSQL
+from .tables import TABLES, par_nom
 
 logger = logging.getLogger("pharmasuite_agent")
 
@@ -60,6 +63,25 @@ def _tester(config: Config) -> int:
     return 0 if ok else 1
 
 
+def _lister() -> int:
+    """Affiche les tables configurées."""
+    print("\nTables configurées (31 tables):\n")
+    print(f"{'Table':<35} {'Stratégie':<12} {'Intervalle':<12} {'Sensible'}")
+    print("-" * 70)
+
+    for table in TABLES:
+        intervalle = f"{table.intervalle_minutes} min"
+        sensible = "⚠️ RGPD" if table.sensible else ""
+        print(f"{table.cible:<35} {table.strategie:<12} {intervalle:<12} {sensible}")
+
+    print("\nStratégies:")
+    print("  incremental : id > last_id (ventes, achats)")
+    print("  window      : fenêtre glissante (date + modif)")
+    print("  full        : relecture complète périodique")
+    print("  pipeline    : spécial instance_produits")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parseur = argparse.ArgumentParser(prog="pharmasuite_agent",
                                       description="Synchronise EASYPHARM vers PharmaSuite.")
@@ -68,7 +90,14 @@ def main(argv: list[str] | None = None) -> int:
                          help="une seule passe puis sortie (pour le planificateur Windows)")
     parseur.add_argument("--tester", action="store_true",
                          help="teste les deux connexions et sort")
+    parseur.add_argument("--lister", action="store_true",
+                         help="affiche les tables configurées")
+    parseur.add_argument("--table", type=str,
+                         help="synchronise une table spécifique (ex: sorties)")
     args = parseur.parse_args(argv)
+
+    if args.lister:
+        return _lister()
 
     config = Config.charger(args.config)
     _installer_logs(config.agent.log_file)
@@ -83,10 +112,29 @@ def main(argv: list[str] | None = None) -> int:
     etat = Etat(config.agent.state_file)
 
     try:
+        # Mode table unique
+        if args.table:
+            try:
+                table = par_nom(args.table)
+                logger.info("Synchronisation de la table : %s", args.table)
+                lignes = synchroniser_une_table(args.table, source, client)
+                logger.info("Terminé : %d ligne(s)", lignes)
+                return 0
+            except KeyError:
+                logger.error("Table inconnue : %s", args.table)
+                print(f"Table inconnue : {args.table}")
+                print("Utilisez --lister pour voir les tables disponibles.")
+                return 1
+
+        # Mode passe complète
         while True:
             debut = time.monotonic()
-            bilan = passe(source, client, etat, config.api.batch_size,
-                          config.agent.full_resync_every)
+            bilan = passe(
+                source, client, etat,
+                config.api.batch_size,
+                config.agent.full_resync_every,
+                respecter_intervalles=config.agent.respecter_intervalles,
+            )
             logger.info("Passe terminée en %.1fs — %s",
                         time.monotonic() - debut, bilan.resume())
 

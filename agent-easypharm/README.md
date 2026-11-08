@@ -16,6 +16,22 @@ Windows (officine)                     Ubuntu (serveur)
 └──────────────────────┘
 ```
 
+## Tables synchronisées (31 tables)
+
+| Stratégie | Tables | Intervalle |
+|-----------|--------|------------|
+| **incremental** | sorties_produits, entrees_produits, mouchard, factures_chifa_produits, ordonnancier, commandes_fournisseurs_produits, echanges_sorties_produits | 15-30 min |
+| **window** | sorties, entrees, operations, factures_chifa, commandes_fournisseurs, echanges | 30-60 min |
+| **full** | nomenclature, clients, fournisseurs, groupware, bordereaux_chifa, suivi_caisses, familles, formes, laboratoires, etc. | 4h-24h |
+| **pipeline** | instance_produits (+ instance_produits_trt) | 15 min |
+
+### Stratégies de synchronisation
+
+- **incremental** : `id > last_id` — pour les tables qui ne font que grossir
+- **window** : fenêtre glissante sur `date` + champ `modif` — pour les tables modifiées sur place
+- **full** : relecture complète périodique — pour les référentiels
+- **pipeline** : cas spécial `instance_produits` (seule table avec DELETE)
+
 ## Pourquoi un agent, plutôt qu'une connexion directe
 
 Le serveur Ubuntu ne peut pas lire HyperFileSQL : le driver est Windows. En
@@ -52,6 +68,14 @@ Teste les deux extrémités séparément et dit laquelle échoue :
   PharmaSuite (http://192.168.1.10:8000/api/v1) : OK — sorties last_id = 184203
 ```
 
+## Lister les tables
+
+```bat
+python -m pharmasuite_agent --lister
+```
+
+Affiche les 31 tables avec leur stratégie et intervalle.
+
 ## Lancer
 
 En continu, une passe toutes les `interval_seconds` :
@@ -64,6 +88,12 @@ En une passe, pour le Planificateur de tâches Windows :
 
 ```bat
 python -m pharmasuite_agent --config config.toml --une-passe
+```
+
+Synchroniser une table spécifique :
+
+```bat
+python -m pharmasuite_agent --config config.toml --table sorties
 ```
 
 Le code de sortie vaut 1 si au moins une table a échoué, ce qui permet au
@@ -82,15 +112,18 @@ sont des upserts, rejouer un lot est sans effet de bord.
 Une table qui échoue n'interrompt pas les autres : un fichier verrouillé par
 EASYPHARM ne doit pas bloquer la synchronisation des ventes.
 
-## Tables complètes et tables incrémentales
+## Mode intervalles par table
 
-Les ventes et les achats ne font que grossir : on ne relit que ce qui dépasse
-le dernier id connu.
+Par défaut (`respecter_intervalles = true` dans config.toml), chaque table
+respecte son propre intervalle :
 
-Les référentiels (nomenclature, clients, fournisseurs…) sont modifiés **sur
-place** — un stock qui change ne change pas l'id. L'incrémental les raterait,
-donc ils sont relus en entier toutes les `full_resync_every` passes (12 par
-défaut, soit une heure avec l'intervalle de 5 minutes).
+- **15 min** : sorties_produits, entrees_produits, mouchard, instance_produits
+- **30 min** : sorties, entrees, operations
+- **4h** : nomenclature, clients, fournisseurs
+- **24h** : familles, formes, laboratoires (nightly)
+
+En mode legacy (`respecter_intervalles = false`), toutes les tables sont
+synchronisées à chaque passe, avec `full_resync_every` pour les full syncs.
 
 ## Tests
 
@@ -109,3 +142,4 @@ Ils ne demandent ni ODBC ni réseau : la source et le client sont doublés.
   de précision avant PostgreSQL.
 - Aucune donnée patient ne quitte le réseau local : l'agent parle uniquement
   au serveur de l'officine.
+- Les tables sensibles (ordonnancier, clients, groupware) sont marquées RGPD.
