@@ -1,0 +1,388 @@
+# Logique Métier EasyPharm - Documentation
+
+> Ce document capture les règles métier essentielles de l'application EasyPharm
+> pour référence lors du développement de Synergo.
+
+---
+
+## 1. Gestion des Instances (Produits en Attente)
+
+### 1.1 Flux Instance Produits
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    CYCLE DE VIE - INSTANCE PRODUITS                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Client avec ordonnance                                                │
+│          │                                                              │
+│          ▼                                                              │
+│   ┌──────────────┐                                                      │
+│   │  Vérification │                                                      │
+│   │    CHIFA      │                                                      │
+│   └──────┬───────┘                                                      │
+│          │                                                              │
+│    ┌─────┴─────┐                                                        │
+│    │           │                                                        │
+│    ▼           ▼                                                        │
+│  [OK]      [BLOCAGE]                                                    │
+│    │           │                                                        │
+│    │           │  Motifs possibles:                                     │
+│    │           │  • Carte CHIFA bloquée                                 │
+│    │           │  • Médicament en rupture                               │
+│    │           │  • Contrôle médical requis                             │
+│    │           │  • Droits expirés                                      │
+│    │           │                                                        │
+│    ▼           ▼                                                        │
+│ ┌──────┐   ┌──────────────────┐                                         │
+│ │VENTE │   │ INSTANCE_PRODUITS │  ← Sortie stock SANS paiement          │
+│ │direct│   │ (mise en attente) │                                        │
+│ └──────┘   └────────┬─────────┘                                         │
+│                     │                                                   │
+│                     │ Plus tard (problème résolu)                       │
+│                     ▼                                                   │
+│              ┌──────────────┐                                           │
+│              │ VENTE finale │  ← Paiement effectué                      │
+│              │ (CHIFA/Libre)│                                           │
+│              └──────┬───────┘                                           │
+│                     │                                                   │
+│         ┌───────────┴───────────┐                                       │
+│         │                       │                                       │
+│         ▼                       ▼                                       │
+│   ┌──────────┐         ┌────────────────────┐                           │
+│   │ SORTIES  │         │ INSTANCE_PRODUITS_ │                           │
+│   │ (ventes) │         │ TRT (archive)      │                           │
+│   └──────────┘         └────────────────────┘                           │
+│                                                                         │
+│   IMPORTANT: La ligne est SUPPRIMÉE de instance_produits                │
+│              (seule table où les lignes disparaissent)                  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.2 Champs Clés - instance_produits
+
+| Champ | Description |
+|-------|-------------|
+| `id_client`, `client` | Patient concerné |
+| `id_nom`, `nom` | Produit mis en attente |
+| `qte_sortie` | Quantité réservée |
+| `motif` | Raison du blocage (voir table `motif_instance`) |
+| `echeance` | Date limite pour finaliser |
+| `n_assuré_chifa` | Numéro d'assuré CHIFA |
+| `n_assuré_cvm` | Numéro d'assuré CVM |
+
+### 1.3 Motifs d'Instance (Liste Dynamique)
+
+Les motifs de mise en attente sont stockés dans la table **`motif_instance`** :
+
+| Motif | Description |
+|-------|-------------|
+| Contrôle médical | Patient doit passer un contrôle |
+| Carte bloquée | Carte CHIFA suspendue |
+| Rupture stock | Médicament non disponible |
+| Droits expirés | Droits CNAS expirés |
+| Attente ordonnance | Ordonnance à récupérer |
+
+**Note** : Cette liste est **dynamique** et modifiable par l'utilisateur dans EasyPharm.
+
+### 1.3 Table Archive - instance_produits_trt
+
+Quand une instance est vendue ou annulée :
+- Copie dans `instance_produits_trt` avec :
+  - `archive = TRUE`
+  - `archive_trace` = "Vente CHIFA" | "Vente Comptoir" | "Suppression manuelle"
+  - `utilisateur_validation` = employé qui a finalisé
+  - `date_archive` = timestamp de l'action
+
+---
+
+## 2. Types de Ventes
+
+### 2.1 Classification des Ventes
+
+| Type | Code | Description | Particularités |
+|------|------|-------------|----------------|
+| **Vente Libre** | V | Vente comptoir sans assurance | Paiement direct |
+| **CHIFA** | - | Sécurité sociale algérienne | `no_facture_chifa` renseigné |
+| **CVM** | - | Caisse militaire | `num_assuré_cvm` renseigné |
+| **Pharmnos** | - | Autre convention | `Pharmnos_num_fact` renseigné |
+| **Avoir/Retour** | A | Retour produit | `type = 'A'` dans sorties |
+
+### 2.2 Champ `type` dans sorties
+
+- `V` = Vente normale
+- `A` = Avoir/Retour (filtré dans la plupart des calculs)
+
+---
+
+## 3. Gestion des Achats
+
+### 3.1 États d'un Achat
+
+| Champ | Valeur | Signification |
+|-------|--------|---------------|
+| `ouverte` | 1 | Achat en cours de saisie (modifiable) |
+| `ouverte` | 0 | Achat clôturé (figé) |
+| `modif` | > 0 | Achat a été modifié après clôture |
+| `type` | A | Achat normal |
+| `type` | AV | Avoir fournisseur |
+
+### 3.2 Flux de Réception
+
+```
+Commande → Réception BL → Réception Facture → Paiement
+              │                   │
+              ▼                   ▼
+          entrees            entrees (update)
+          (ouverte=1)        (ouverte=0)
+              │
+              ▼
+        entrees_produits
+        (lignes de stock)
+```
+
+---
+
+## 4. Bordereaux CHIFA (CNAS)
+
+### 4.1 Machine à États
+
+```
+dt_creation → dt_cloture → dt_depot → dt_validation → dt_encaisse
+
+   Création      Clôture      Dépôt       Validation    Encaissement
+   du lot        du lot       au centre   par CNAS      reçu
+```
+
+### 4.2 Statuts
+
+| Statut | Description |
+|--------|-------------|
+| `Créé` | Bordereau ouvert, factures en cours d'ajout |
+| `Clôturé` | Bordereau fermé, prêt pour dépôt |
+| `Déposé` | Déposé au centre CNAS |
+| `Validé` | Accepté par la CNAS |
+| `Encaissé` | Paiement reçu |
+| `archive = 1` | Bordereau archivé |
+
+---
+
+## 5. Opérations de Trésorerie
+
+### 5.1 Types d'Opérations
+
+| Opération | Description |
+|-----------|-------------|
+| `Versement Client` | Paiement d'une créance client |
+| `Versement Fournisseur` | Paiement d'une dette fournisseur |
+| `Remboursement Client` | Remboursement d'un avoir client |
+| `Remboursement Fournisseur` | Remboursement d'un avoir fournisseur |
+| `Alimentation` | Apport de fonds en caisse |
+| `Dépense` | Sortie de fonds pour frais |
+| `Virement de fond` | Transfert entre caisses |
+
+### 5.2 Champs Importants
+
+| Champ | Usage |
+|-------|-------|
+| `id_relatif` | Lien vers la vente/achat concerné |
+| `id_tier` | Client ou fournisseur |
+| `cloturé` | 1 = opération dans une session clôturée |
+| `id_session` | Session de caisse |
+| `indice_creation` | Horodatage concaténé (YYYYMMDDHHMMSS) |
+
+---
+
+## 6. Sessions de Caisse
+
+### 6.1 Cycle de Vie
+
+```
+Ouverture → Opérations → Clôture → Validation
+    │            │           │          │
+    ▼            ▼           ▼          ▼
+fond_de_    Ventes,      total_     etat_cloture
+caisse      Versements   calcule,   = 1
+            Dépenses     total_reel
+```
+
+### 6.2 Calcul de l'Écart
+
+```
+écart = total_reel - total_calcule
+```
+
+- `total_calcule` = somme automatique des opérations
+- `total_reel` = comptage physique à la clôture
+
+---
+
+## 7. Audit (Mouchard)
+
+### 7.1 Structure
+
+Le mouchard enregistre les modifications avec un système avant/après :
+
+| Préfixe | Domaine |
+|---------|---------|
+| `vnt_*` | Modifications de ventes |
+| `ach_*` | Modifications d'achats |
+| `stk_*` | Modifications de stock |
+| `op_*` | Modifications d'opérations |
+
+Suffixes :
+- `_ini` = valeur avant modification
+- `_fin` = valeur après modification
+
+### 7.2 Actions Tracées
+
+- Modification de vente (prix, quantité)
+- Modification d'achat
+- Blocage/déblocage de stock
+- Modification d'opération de caisse
+
+---
+
+## 8. Péremptions
+
+### 8.1 Formats
+
+| Table | Format | Exemple |
+|-------|--------|---------|
+| `sorties_produits` | MM/YY | `04/23` |
+| `instance_produits` | MM/YYYY | `04/2023` |
+| `entrees_produits` | MM/YY + Date | `04/23` + `2023-04-30` |
+
+⚠️ **Attention** : Deux formats coexistent dans HFSQL !
+
+### 8.2 Alertes Péremption
+
+- **Proche péremption** : < 3 mois
+- **Très proche** : < 1 mois
+- **Périmé** : Date dépassée
+
+---
+
+## 9. Droits Utilisateurs (Groupware)
+
+### 9.1 Structure des Permissions
+
+Format : `{module}_{action}` où action = add | modif | supp | (vide=lecture)
+
+| Préfixe | Module |
+|---------|--------|
+| `fc_*` | Fiches (nomenclature, familles, etc.) |
+| `ac_*` | Achats |
+| `vnt_*` | Ventes |
+| `stk_*` | Stock |
+| `trs_*` | Trésorerie |
+| `ch_*` | CHIFA |
+| `mil_*` | Militaire |
+| `Ph_*` | Pharmnos |
+
+### 9.2 Exemple de Droits
+
+```
+fc_nom = 1       → Peut voir la nomenclature
+fc_nom_add = 1   → Peut ajouter des produits
+fc_nom_modif = 1 → Peut modifier des produits
+fc_nom_supp = 1  → Peut supprimer des produits
+```
+
+---
+
+## 10. Clients - Données Sensibles (RGPD)
+
+### 10.1 Champs Nominatifs
+
+| Champ | Sensibilité |
+|-------|-------------|
+| `client` | Nom complet |
+| `adresse`, `ville` | Localisation |
+| `téléphone`, `email` | Contact |
+| `n_assuré_chifa` | N° sécurité sociale |
+| `pathologie` | **Donnée de santé** |
+| `chronique` | **Donnée de santé** |
+| `date_naissance` | Identité |
+
+### 10.2 Règles de Traitement
+
+- Ne jamais exposer `pathologie` dans des exports non sécurisés
+- `n_assuré_chifa` = donnée à protéger
+- Logging des accès aux données patients
+
+---
+
+## 11. Synchronisation - Règles Clés
+
+### 11.1 Tables avec Suppression
+
+- **Seule `instance_produits`** peut avoir des lignes supprimées
+- Toutes les autres tables sont en INSERT ou UPDATE uniquement
+
+### 11.2 Détection des Modifications
+
+| Table | Indicateur |
+|-------|------------|
+| `sorties`, `entrees` | `modif > 0` |
+| `entrees` | `ouverte = 1` |
+| `operations` | `cloturé = 0` ou `modif > 0` |
+| `bordereaux_chifa` | Toute date `dt_*` peut changer |
+
+### 11.3 Ordre de Synchronisation
+
+1. `nomenclature` (référentiel produits)
+2. `clients`, `fournisseurs` (tiers)
+3. `entrees`, `entrees_produits` (achats)
+4. `sorties`, `sorties_produits` (ventes)
+5. `instance_produits` (pipeline spécial)
+6. `operations`, `bordereaux_chifa` (trésorerie)
+7. `mouchard` (audit - en dernier)
+
+---
+
+---
+
+## 12. Ordonnancier (Registre Psychotropes)
+
+### 12.1 Obligation Légale
+
+Le registre des psychotropes est **obligatoire** pour toute pharmacie.
+Il doit conserver :
+- Identité du patient (`client`, `num_cin`)
+- Identité du porteur si différent (`porteur`, `Porteur_cin`)
+- Prescripteur (`ordonnateur`, `Adresse_medecin`)
+- Données médicales (`Age_malade`, `poids_malade`, `taille_malade`)
+- Détails de l'ordonnance (`txt_duree`, `structure_ordo`)
+
+### 12.2 Sensibilité RGPD
+
+🔴 **NIVEAU MAXIMAL** - Cette table contient :
+- Pièce d'identité (CIN)
+- Données de santé
+- Informations sur les traitements psychotropes
+
+**Règles** :
+- Accès restreint aux pharmaciens uniquement
+- Pas d'export sans autorisation
+- Logs de tous les accès
+- Conservation légale obligatoire
+
+---
+
+## 13. Tables Non Utilisées
+
+Les tables suivantes existent dans HFSQL mais sont **vides** :
+
+| Table | Raison probable |
+|-------|-----------------|
+| `caisses_régies` | Gestion sessions caisse non activée |
+| `inventaires` | Module inventaire non utilisé |
+| `inventaires_produits` | Idem |
+
+Ces tables peuvent être ignorées dans la synchronisation initiale.
+
+---
+
+*Document créé le 2026-11-07 - À maintenir à jour avec l'évolution du projet*
