@@ -34,6 +34,11 @@ def _installer_logs(fichier: str) -> None:
     except OSError as erreur:
         print(f"Journal fichier indisponible ({erreur}), sortie console seule.")
     logging.basicConfig(level=logging.INFO, format=format_, handlers=handlers)
+    # Une ligne par requête HTTP noierait le journal pendant le premier
+    # chargement (des milliers de lots) ; les échecs restent journalisés
+    # par le client.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 def _tester(config: Config) -> int:
