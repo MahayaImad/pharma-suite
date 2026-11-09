@@ -24,9 +24,9 @@ identiques.
 
 | Stratégie | Tables | Intervalle |
 |-----------|--------|------------|
-| **incremental** | sorties_produits, entrees_produits, mouchard, factures_chifa_produits, ordonnancier, commandes_fournisseurs_produits, echanges_sorties_produits, + optionnelles : chifa_rejet_partiel, mouchard_details, reg_client_association, reg_fourn_association | 15-60 min |
+| **incremental** | sorties_produits, entrees_produits, mouchard, factures_chifa_produits, ordonnancier, commandes_fournisseurs_produits, echanges_sorties_produits, chifa_rejet_partiel, mouchard_details, reg_client_association, reg_fourn_association | 15-60 min |
 | **window** | sorties, entrees, operations, factures_chifa, commandes_fournisseurs, echanges | 30-60 min |
-| **full** | nomenclature, clients, fournisseurs, groupware, bordereaux_chifa, suivi_caisses, familles, formes, laboratoires, etc. + optionnelles : pharmnos_factures, caisses_regies, inventaires, inventaires_produits | 4h-24h |
+| **full** | nomenclature, clients, fournisseurs, groupware, bordereaux_chifa, suivi_caisses, familles, formes, laboratoires, etc., pharmnos_factures, caisses_regies, inventaires, inventaires_produits | 4h-24h |
 | **pipeline** | instance_produits (+ instance_produits_trt) | 15 min |
 
 ### Stratégies de synchronisation
@@ -111,9 +111,18 @@ Ne synchronise rien. Pour chaque table, compare HFSQL et PostgreSQL :
 Liste aussi les tables HFSQL que l'agent ne lit pas du tout. Code de sortie 1
 tant que le résultat n'est pas « COMPLET ».
 
-Les tables marquées **optionnelles** ont un nom HFSQL non attesté : si elles
-sont introuvables, la passe continue avec un avertissement, et `--verifier`
-dit s'il faut corriger leur nom `source` dans `tables.py`.
+Les 39 noms de fichiers HFSQL sont vérifiés sur le dossier de données
+(`entrées`, `entrées_produits`, `opérations`, `dépenses`, `caisses_régies`
+portent un accent). Le mécanisme `optionnelle` de `tables.py` reste
+disponible pour une table dont l'existence serait incertaine.
+
+### Erreur 70207 « Le fichier <X> est déjà décrit »
+
+Le provider OLE DB déclare **chaque fichier** du dossier de la base. Un
+fichier orphelin sans extension à côté de son `.fic` (`Bordereau` et
+`Bordereau.fic`) produit deux déclarations du même nom et bloque la
+connexion. Déplacer les orphelins hors du dossier (sans les supprimer),
+EASYPHARM fermé, puis relancer `--tester`.
 
 ## Premier chargement complet
 

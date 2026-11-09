@@ -121,10 +121,12 @@ def test_pipeline_passe_par_les_endpoints_dedies():
 
 # ── Tables optionnelles ───────────────────────────────────────────────────────
 
-def test_table_optionnelle_absente_ne_fait_pas_echouer_la_passe(tmp_path):
-    lignes = {t.source: [{"id": 1}] for t in TABLES if not t.optionnelle}
-    lignes["instance_produits_trt"] = []
-    source = SourceFactice(lignes)
+def test_table_optionnelle_absente_ne_fait_pas_echouer_la_passe(tmp_path, monkeypatch):
+    from pharmasuite_agent import runner
+    absente = Table(cible="absente", source="absente", strategie="full", optionnelle=True)
+    presente = Table(cible="familles", source="familles", strategie="full")
+    monkeypatch.setattr(runner, "TABLES", (absente, presente))
+    source = SourceFactice({"familles": [{"id": 1}]})
 
     def lire(table, cle, depuis, taille):
         if table not in source.lignes:
@@ -135,7 +137,18 @@ def test_table_optionnelle_absente_ne_fait_pas_echouer_la_passe(tmp_path):
     bilan = passe(source, ClientFactice(), Etat(tmp_path / "e.json"), 500, 12)
 
     assert bilan.tables_en_erreur == 0
-    assert len(bilan.tables_absentes) == sum(t.optionnelle for t in TABLES)
+    assert bilan.tables_absentes == ["absente"]
+    assert bilan.tables_ok == 1
+
+
+def test_noms_hfsql_attestes():
+    """Noms relevés sur le dossier de données EASYPHARM (2026-11-09)."""
+    assert par_nom("entrees").source == "entrées"
+    assert par_nom("entrees_produits").source == "entrées_produits"
+    assert par_nom("operations").source == "opérations"
+    assert par_nom("depenses").source == "dépenses"
+    assert par_nom("caisses_regies").source == "caisses_régies"
+    assert not any(t.optionnelle for t in TABLES)
 
 
 # ── Couverture du registre serveur ────────────────────────────────────────────

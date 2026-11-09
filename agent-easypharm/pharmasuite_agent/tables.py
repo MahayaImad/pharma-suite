@@ -41,9 +41,9 @@ class Table:
     champ_modif: str | None = None      # champ indiquant une modification
     condition_extra: str | None = None  # condition SQL supplémentaire
     sensible: bool = False              # données RGPD
-    # Table dont l'existence côté HFSQL n'est pas attestée (voir
-    # docs/02-sync-contrat.md §6.1) : un échec de lecture est un avertissement,
-    # pas une erreur de passe. `--verifier` dit si elle existe vraiment.
+    # Table dont l'existence côté HFSQL n'est pas attestée : un échec de
+    # lecture est un avertissement, pas une erreur de passe. Aucune ne l'est
+    # aujourd'hui — les 39 noms sont vérifiés sur le listing du 2026-11-09.
     optionnelle: bool = False
 
     @property
@@ -79,7 +79,7 @@ TABLES: tuple[Table, ...] = (
     ),
     Table(
         cible="entrees_produits",
-        source="entrees_produits",
+        source="entrées_produits",  # Nom HFSQL avec accent
         strategie="incremental",
         intervalle_minutes=15,
         taille_lot=1000,
@@ -133,7 +133,7 @@ TABLES: tuple[Table, ...] = (
     ),
     Table(
         cible="entrees",
-        source="entrees",
+        source="entrées",  # Nom HFSQL avec accent
         strategie="window",
         intervalle_minutes=30,
         taille_lot=500,
@@ -287,14 +287,13 @@ TABLES: tuple[Table, ...] = (
         intervalle_minutes=1440,
     ),
 
-    # ── COMPLÉMENTS : présentes côté serveur, nom HFSQL non attesté ──────────
+    # ── COMPLÉMENTS — noms attestés par le listing du dossier HFSQL ─────────
     # Lignes de détail en insertion pure (docs/02-sync-contrat.md §2.10).
     Table(
         cible="chifa_rejet_partiel",
         source="chifa_rejet_partiel",
         strategie="incremental",
         intervalle_minutes=60,
-        optionnelle=True,
     ),
     Table(
         cible="mouchard_details",
@@ -302,51 +301,44 @@ TABLES: tuple[Table, ...] = (
         strategie="incremental",
         intervalle_minutes=60,
         taille_lot=1000,
-        optionnelle=True,
     ),
     Table(
         cible="reg_client_association",
         source="reg_client_association",
         strategie="incremental",
         intervalle_minutes=60,
-        optionnelle=True,
     ),
     Table(
         cible="reg_fourn_association",
         source="reg_fourn_association",
         strategie="incremental",
         intervalle_minutes=60,
-        optionnelle=True,
     ),
     Table(
         cible="pharmnos_factures",
         source="pharmnos_factures",
         strategie="full",
         intervalle_minutes=240,
-        optionnelle=True,
     ),
-    # Signalées vides par docs/SYNC_MAPPING.md §5 : coût nul si c'est le cas,
-    # et rien n'est perdu le jour où elles se remplissent.
+    # Signalées vides par docs/SYNC_MAPPING.md §5, mais le listing du
+    # 2026-11-09 montre inventaires_produits à 15 Mo : elles sont alimentées.
     Table(
         cible="caisses_regies",
         source="caisses_régies",  # Nom HFSQL avec accent
         strategie="full",
         intervalle_minutes=1440,
-        optionnelle=True,
     ),
     Table(
         cible="inventaires",
         source="inventaires",
         strategie="full",
         intervalle_minutes=1440,
-        optionnelle=True,
     ),
     Table(
         cible="inventaires_produits",
         source="inventaires_produits",
         strategie="full",
         intervalle_minutes=1440,
-        optionnelle=True,
     ),
 
     # ── PIPELINE DÉDIÉ (15 min) ──────────────────────────────────────────────
