@@ -57,7 +57,7 @@ un contrat avec le boîtier SMS.
 
 Second composant : `agent-easypharm/` — l'agent de synchronisation qui tourne
 sur le PC Windows de l'officine. Lit EASYPHARM par le connecteur **OLE DB
-HFSQL** (`PCSOFT.HFSQL`, via `adodbapi`) — pas ODBC : le mot de passe des
+HFSQL** (`PCSOFT.HFSQL`, via ADO piloté par `win32com`) — pas ODBC : le mot de passe des
 fichiers passe en `Extended Properties="Password=*:…"` — et
 pousse vers `POST /sync/{table}`. Flux à sens unique, l'agent n'écrit jamais
 dans EASYPHARM. Curseur de reprise gardé côté serveur, pas en local. Ses tests

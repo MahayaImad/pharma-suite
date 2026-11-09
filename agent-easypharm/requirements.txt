@@ -1,4 +1,4 @@
-# Accès OLE DB : adodbapi (ADO sous l'interface DB-API) est fourni par pywin32.
+# Accès OLE DB : ADO piloté par COM (win32com), fourni par pywin32.
 # Windows uniquement ; les tests n'en ont pas besoin.
 pywin32==308; sys_platform == "win32"
 httpx==0.27.2

@@ -71,7 +71,7 @@ Provider=PCSOFT.HFSQL; Data Source=<server>:<port>; Initial Catalog=<database>;
 User ID=<user>; Password=; Extended Properties="Password=*:<password>;"
 ```
 
-(`*` = toutes les tables.) L'agent y accède par ADO, avec `adodbapi`, fourni
+(`*` = toutes les tables.) L'agent y accède par ADO, piloté directement par COM (`win32com`), fourni
 par `pywin32`. Prérequis sur le poste :
 
 - le **provider OLE DB pour HFSQL** de PC SOFT, installé ;

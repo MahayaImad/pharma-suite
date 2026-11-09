@@ -5,9 +5,10 @@ Pas d'ODBC : les fichiers EASYPHARM sont protégés par mot de passe, et seul le
 provider OLE DB permet de le passer pour tous les fichiers d'un coup, via
 `Extended Properties="Password=*:<mdp>;"` (`*` = toutes les tables).
 
-L'accès passe par ADO, avec `adodbapi` (fourni par `pywin32`), qui expose ADO
-sous l'interface DB-API habituelle (`cursor`, `execute`, `fetchmany`).
-`adodbapi` n'est pas importé au chargement du module : les tests, et toute
+L'accès passe par ADO, piloté directement par COM (`ado.py`, `win32com` de
+`pywin32`) — pas par `adodbapi`, qui échoue sur des propriétés ADO que le
+provider HFSQL n'expose pas. `win32com` n'est pas importé au chargement du
+module : les tests, et toute
 machine qui n'est pas le poste Windows de l'officine, doivent pouvoir importer
 l'agent sans provider installé.
 """
@@ -163,10 +164,10 @@ class SourceHFSQL:
 
     def _connexion(self):
         if self._cnx is None:
-            import adodbapi  # importé tard : absent hors du poste Windows
+            from .ado import connecter
 
             try:
-                self._cnx = adodbapi.connect(self._build_provider_string())
+                self._cnx = connecter(self._build_provider_string())
             except Exception as erreur:
                 raise ErreurSource(_message_hfsql(erreur, [self._password])) from None
         return self._cnx
