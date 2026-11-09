@@ -13,6 +13,9 @@ user = "admin"
 password = ""
 # Lecture par tranches.
 fetch_size = 500
+# Propriétés étendues OLE DB supplémentaires, ajoutées telles quelles après
+# Password=*:… dans Extended Properties. Vide par défaut. Sans guillemet ".
+proprietes_extra = ""
 
 [api]
 base_url = "http://192.168.1.10:8000/api/v1"

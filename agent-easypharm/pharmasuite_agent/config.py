@@ -15,6 +15,8 @@ class SourceConfig:
     user: str = "admin"
     password: str = ""      # mot de passe des fichiers (Password=*:…)
     fetch_size: int = 500
+    # Propriétés étendues ajoutées après Password=*:… (ex. "Analysis=C:\\…\\X.wdd").
+    proprietes_extra: str = ""
 
 
 @dataclass(frozen=True)

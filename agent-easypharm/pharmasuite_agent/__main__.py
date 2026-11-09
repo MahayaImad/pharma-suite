@@ -57,6 +57,10 @@ def _tester(config: Config) -> int:
         print(f"  PharmaSuite ({config.api.base_url}) : OK — sorties last_id = {dernier}")
     except Exception as erreur:
         print(f"  PharmaSuite ({config.api.base_url}) : ECHEC — {erreur}")
+        if "10061" in str(erreur) or "refused" in str(erreur).lower():
+            print("    Piste : rien n'écoute à cette adresse. L'API est-elle démarrée "
+                  "(cd backend && docker compose up -d) et le port ouvert dans le "
+                  "pare-feu du serveur ? Tester : curl http://<serveur>:8000/health")
         ok = False
     finally:
         client.fermer()

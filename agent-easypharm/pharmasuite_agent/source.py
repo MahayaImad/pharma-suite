@@ -13,6 +13,7 @@ l'agent sans provider installé.
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta
 from typing import Any, Iterator, Protocol, Sequence
 
@@ -43,6 +44,53 @@ class Source(Protocol):
         ...
 
 
+class ErreurSource(RuntimeError):
+    """Échec côté HFSQL, avec un message lisible et sans mot de passe."""
+
+
+# Codes d'erreur HFSQL fréquents à la connexion, avec la piste à suivre.
+_PISTES = {
+    "70207": (
+        "deux fichiers de la base portent le même nom logique. Le provider OLE DB "
+        "déclare automatiquement chaque fichier de la base : si deux d'entre eux "
+        "(ou un fichier et un sous-dossier) aboutissent au même nom — casse ou "
+        "accent près —, la connexion échoue. Vérifier dans le Centre de Contrôle "
+        "HFSQL les fichiers dont le nom ressemble à celui cité, ou restreindre la "
+        "description via `proprietes_extra` (config.toml)."
+    ),
+}
+
+
+def _message_hfsql(erreur: Exception, secrets: list[str]) -> str:
+    """
+    Extrait d'une `com_error` ADO le texte utile de HFSQL (« Que s'est-il
+    passé ? », code, fichier) et retire tout secret — l'erreur brute recopie
+    la chaîne de connexion, mot de passe compris.
+    """
+    brut = str(erreur)
+    for secret in secrets:
+        if secret:
+            brut = brut.replace(secret, "****")
+    brut = brut.replace("\\r\\n", "\n").replace("\r\n", "\n")
+
+    morceaux = []
+    quoi = re.search(r"Que s'est-il passé \?\s*\n?(.+?)(?:\n|$)", brut)
+    if quoi:
+        morceaux.append(quoi.group(1).strip())
+    code = re.search(r"Code erreur\s*:\s*(\d+)", brut)
+    if code:
+        morceaux.append(f"code HFSQL {code.group(1)}")
+    module = re.search(r"Version=<([\d.]+)>", brut)
+    if module:
+        morceaux.append(f"provider {module.group(1)}")
+    if not morceaux:
+        return brut[:500]
+    message = " — ".join(morceaux)
+    if code and code.group(1) in _PISTES:
+        message += f"\n    Piste : {_PISTES[code.group(1)]}"
+    return message
+
+
 def _echapper(valeur: str) -> str:
     """Une valeur contenant `;` ou `"` casserait la chaîne de connexion."""
     if any(c in valeur for c in ';"'):
@@ -61,6 +109,7 @@ class SourceHFSQL:
         user: str = "admin",
         password: str = "",
         fetch_size: int = 500,
+        proprietes_extra: str = "",
     ):
         self._server = server
         self._port = port
@@ -68,6 +117,7 @@ class SourceHFSQL:
         self._user = user
         self._password = password
         self._fetch_size = fetch_size
+        self._proprietes_extra = proprietes_extra.strip()
         self._cnx = None
 
     @classmethod
@@ -76,6 +126,7 @@ class SourceHFSQL:
         return cls(
             server=config.server, port=config.port, database=config.database,
             user=config.user, password=config.password, fetch_size=config.fetch_size,
+            proprietes_extra=config.proprietes_extra,
         )
 
     @property
@@ -97,14 +148,27 @@ class SourceHFSQL:
             f' Initial Catalog={_echapper(self._database)};'
             f' User ID={_echapper(self._user)};'
             ' Password=;'
-            f' Extended Properties="Password=*:{_echapper(self._password)};"'
+            f' Extended Properties="Password=*:{_echapper(self._password)};'
+            f'{self._extra()}"'
         )
+
+    def _extra(self) -> str:
+        """Propriétés étendues supplémentaires, ajoutées telles quelles."""
+        if not self._proprietes_extra:
+            return ""
+        if '"' in self._proprietes_extra:
+            raise ValueError('le caractère " n\'est pas accepté dans proprietes_extra')
+        extra = self._proprietes_extra
+        return extra if extra.endswith(";") else extra + ";"
 
     def _connexion(self):
         if self._cnx is None:
             import adodbapi  # importé tard : absent hors du poste Windows
 
-            self._cnx = adodbapi.connect(self._build_provider_string())
+            try:
+                self._cnx = adodbapi.connect(self._build_provider_string())
+            except Exception as erreur:
+                raise ErreurSource(_message_hfsql(erreur, [self._password])) from None
         return self._cnx
 
     def fermer(self) -> None:

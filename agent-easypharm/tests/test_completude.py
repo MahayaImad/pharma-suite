@@ -215,3 +215,36 @@ def test_config_exemple_charge(tmp_path):
     config = Config.charger(exemple)
     assert config.source.port == 4900
     assert config.source.database
+
+
+# ── Erreurs de connexion ──────────────────────────────────────────────────────
+
+from pharmasuite_agent.source import _message_hfsql  # noqa: E402
+
+_ERREUR_70207 = (
+    "(com_error(-2147352567, 'Une exception s’est produite.', (0, None, \"Que s'est-il passé ?"
+    "\\r\\nLe fichier <Bordereau> est déjà décrit.\\r\\n\\r\\nCode erreur : 70207\\r\\nNiveau : "
+    "erreur non fatale (EL_ONRETURN)\\r\\nVersion=<17.0.111.5>\", None, 0, -2147467259), None), "
+    "'Error opening connection to \"Provider=PCSOFT.HFSQL; Extended Properties=\"Password=*:s3cret;\"\"')"
+)
+
+
+def test_erreur_de_connexion_ne_montre_pas_le_mot_de_passe():
+    message = _message_hfsql(RuntimeError(_ERREUR_70207), ["s3cret"])
+    assert "s3cret" not in message
+
+
+def test_erreur_70207_lisible_avec_piste():
+    message = _message_hfsql(RuntimeError(_ERREUR_70207), ["s3cret"])
+    assert message.startswith("Le fichier <Bordereau> est déjà décrit. — code HFSQL 70207 — provider 17.0.111.5")
+    assert "même nom logique" in message
+
+
+def test_erreur_inconnue_tronquee_et_masquee():
+    message = _message_hfsql(RuntimeError("boom Password=*:s3cret;"), ["s3cret"])
+    assert message == "boom Password=*:****;"
+
+
+def test_proprietes_extra_ajoutees():
+    source = SourceHFSQL("srv", "BASE", password="p", proprietes_extra="Analysis=C:\\A\\X.wdd")
+    assert source._build_provider_string().endswith('Extended Properties="Password=*:p;Analysis=C:\\A\\X.wdd;"')
