@@ -441,6 +441,7 @@ async def sync_instance_produits_batch(
     Appelé par instance_produits_sync — étape 1 du full sync séquentiel.
     """
     anomalies: list[dict] = []
+    rejets: list[dict] = []
     synced = 0
     ignores = 0
     for rec in payload.records:
@@ -448,55 +449,61 @@ async def sync_instance_produits_batch(
             ignores += 1
             continue
         params = _params_instance(rec, anomalies)
-        await db.execute(text("""
-            INSERT INTO instance_produits (
-                id, date, id_client, client, id_nom, nom, id_famille, famille,
-                prix_vente, qte_sortie, heure, prix_achat_ttc, id_produit, lot,
-                peremption, psychotrope, type, n_assure_chifa, n_assure_cvm,
-                utilisateur, motif, echeance, indice,
-                archive, date_archive, utilisateur_validation, archive_trace
-            ) VALUES (
-                :id, :date, :id_client, :client, :id_nom, :nom, :id_famille, :famille,
-                :prix_vente, :qte_sortie, :heure, :prix_achat_ttc, :id_produit, :lot,
-                :peremption, :psychotrope, :type, :n_assure_chifa, :n_assure_cvm,
-                :utilisateur, :motif, :echeance, :indice,
-                FALSE, NULL, NULL, NULL
-            )
-            ON CONFLICT (id) DO UPDATE SET
-                date                   = EXCLUDED.date,
-                id_client              = EXCLUDED.id_client,
-                client                 = EXCLUDED.client,
-                id_nom                 = EXCLUDED.id_nom,
-                nom                    = EXCLUDED.nom,
-                id_famille             = EXCLUDED.id_famille,
-                famille                = EXCLUDED.famille,
-                prix_vente             = EXCLUDED.prix_vente,
-                qte_sortie             = EXCLUDED.qte_sortie,
-                heure                  = EXCLUDED.heure,
-                prix_achat_ttc         = EXCLUDED.prix_achat_ttc,
-                id_produit             = EXCLUDED.id_produit,
-                lot                    = EXCLUDED.lot,
-                peremption             = EXCLUDED.peremption,
-                psychotrope            = EXCLUDED.psychotrope,
-                type                   = EXCLUDED.type,
-                n_assure_chifa         = EXCLUDED.n_assure_chifa,
-                n_assure_cvm           = EXCLUDED.n_assure_cvm,
-                utilisateur            = EXCLUDED.utilisateur,
-                motif                  = EXCLUDED.motif,
-                echeance               = EXCLUDED.echeance,
-                indice                 = EXCLUDED.indice,
-                archive                = FALSE,
-                date_archive           = NULL,
-                utilisateur_validation = NULL,
-                archive_trace          = NULL
-        """), params)
-        synced += 1
+        try:
+            # Point de sauvegarde par ligne : une ligne refusée (texte trop
+            # long…) est rendue avec son id au lieu de faire échouer le lot.
+            async with db.begin_nested():
+                await db.execute(text("""
+                    INSERT INTO instance_produits (
+                        id, date, id_client, client, id_nom, nom, id_famille, famille,
+                        prix_vente, qte_sortie, heure, prix_achat_ttc, id_produit, lot,
+                        peremption, psychotrope, type, n_assure_chifa, n_assure_cvm,
+                        utilisateur, motif, echeance, indice,
+                        archive, date_archive, utilisateur_validation, archive_trace
+                    ) VALUES (
+                        :id, :date, :id_client, :client, :id_nom, :nom, :id_famille, :famille,
+                        :prix_vente, :qte_sortie, :heure, :prix_achat_ttc, :id_produit, :lot,
+                        :peremption, :psychotrope, :type, :n_assure_chifa, :n_assure_cvm,
+                        :utilisateur, :motif, :echeance, :indice,
+                        FALSE, NULL, NULL, NULL
+                    )
+                    ON CONFLICT (id) DO UPDATE SET
+                        date                   = EXCLUDED.date,
+                        id_client              = EXCLUDED.id_client,
+                        client                 = EXCLUDED.client,
+                        id_nom                 = EXCLUDED.id_nom,
+                        nom                    = EXCLUDED.nom,
+                        id_famille             = EXCLUDED.id_famille,
+                        famille                = EXCLUDED.famille,
+                        prix_vente             = EXCLUDED.prix_vente,
+                        qte_sortie             = EXCLUDED.qte_sortie,
+                        heure                  = EXCLUDED.heure,
+                        prix_achat_ttc         = EXCLUDED.prix_achat_ttc,
+                        id_produit             = EXCLUDED.id_produit,
+                        lot                    = EXCLUDED.lot,
+                        peremption             = EXCLUDED.peremption,
+                        psychotrope            = EXCLUDED.psychotrope,
+                        type                   = EXCLUDED.type,
+                        n_assure_chifa         = EXCLUDED.n_assure_chifa,
+                        n_assure_cvm           = EXCLUDED.n_assure_cvm,
+                        utilisateur            = EXCLUDED.utilisateur,
+                        motif                  = EXCLUDED.motif,
+                        echeance               = EXCLUDED.echeance,
+                        indice                 = EXCLUDED.indice,
+                        archive                = FALSE,
+                        date_archive           = NULL,
+                        utilisateur_validation = NULL,
+                        archive_trace          = NULL
+                """), params)
+            synced += 1
+        except Exception as e:
+            rejets.append({"id": rec.get("id"), "erreur": str(e).splitlines()[0][:300]})
 
     await db.commit()
     logger.info(f"[sync/instance_produits/batch] {synced} actifs upsertés (archive=FALSE)")
     return SyncBatchResult(
-        table="instance_produits", synced=synced, errors=ignores,
-        rejected=[{"id": None, "erreur": f"{ignores} ligne(s) sans id"}] if ignores else [],
+        table="instance_produits", synced=synced, errors=ignores + len(rejets),
+        rejected=([{"id": None, "erreur": f"{ignores} ligne(s) sans id"}] if ignores else []) + rejets[:50],
         invalid_values=anomalies[:50],
         ignored_columns=_colonnes_ignorees(payload.records, InstanceProduit),
     )
@@ -541,6 +548,7 @@ async def sync_instance_produits_trt(
     archive_trace, date_archive, utilisateur_validation parsés depuis info_trt.
     """
     anomalies: list[dict] = []
+    rejets: list[dict] = []
     synced = 0
     ignores = 0
     for rec in payload.records:
@@ -556,60 +564,66 @@ async def sync_instance_produits_trt(
             except ValeurInvalide as e:
                 anomalies.append({"id": rec["id"], "colonne": "date_archive", "erreur": str(e)})
 
-        await db.execute(text("""
-            INSERT INTO instance_produits (
-                id, date, id_client, client, id_nom, nom, id_famille, famille,
-                prix_vente, qte_sortie, heure, prix_achat_ttc, id_produit, lot,
-                peremption, psychotrope, type, n_assure_chifa, n_assure_cvm,
-                utilisateur, motif, echeance, indice,
-                archive, date_archive, utilisateur_validation, archive_trace
-            ) VALUES (
-                :id, :date, :id_client, :client, :id_nom, :nom, :id_famille, :famille,
-                :prix_vente, :qte_sortie, :heure, :prix_achat_ttc, :id_produit, :lot,
-                :peremption, :psychotrope, :type, :n_assure_chifa, :n_assure_cvm,
-                :utilisateur, :motif, :echeance, :indice,
-                TRUE, :date_archive, :utilisateur_validation, :archive_trace
-            )
-            ON CONFLICT (id) DO UPDATE SET
-                date                   = EXCLUDED.date,
-                id_client              = EXCLUDED.id_client,
-                client                 = EXCLUDED.client,
-                id_nom                 = EXCLUDED.id_nom,
-                nom                    = EXCLUDED.nom,
-                id_famille             = EXCLUDED.id_famille,
-                famille                = EXCLUDED.famille,
-                prix_vente             = EXCLUDED.prix_vente,
-                qte_sortie             = EXCLUDED.qte_sortie,
-                heure                  = EXCLUDED.heure,
-                prix_achat_ttc         = EXCLUDED.prix_achat_ttc,
-                id_produit             = EXCLUDED.id_produit,
-                lot                    = EXCLUDED.lot,
-                peremption             = EXCLUDED.peremption,
-                psychotrope            = EXCLUDED.psychotrope,
-                type                   = EXCLUDED.type,
-                n_assure_chifa         = EXCLUDED.n_assure_chifa,
-                n_assure_cvm           = EXCLUDED.n_assure_cvm,
-                utilisateur            = EXCLUDED.utilisateur,
-                motif                  = EXCLUDED.motif,
-                echeance               = EXCLUDED.echeance,
-                indice                 = EXCLUDED.indice,
-                archive                = TRUE,
-                date_archive           = COALESCE(EXCLUDED.date_archive, instance_produits.date_archive),
-                utilisateur_validation = COALESCE(EXCLUDED.utilisateur_validation, instance_produits.utilisateur_validation),
-                archive_trace          = COALESCE(EXCLUDED.archive_trace, instance_produits.archive_trace)
-        """), {
-            **_params_instance(rec, anomalies),
-            "date_archive":           date_archive_dt,
-            "utilisateur_validation": rec.get("utilisateur_validation"),
-            "archive_trace":          rec.get("archive_trace"),
-        })
-        synced += 1
+        try:
+            # Point de sauvegarde par ligne : une ligne refusée (texte trop
+            # long…) est rendue avec son id au lieu de faire échouer le lot.
+            async with db.begin_nested():
+                await db.execute(text("""
+                    INSERT INTO instance_produits (
+                        id, date, id_client, client, id_nom, nom, id_famille, famille,
+                        prix_vente, qte_sortie, heure, prix_achat_ttc, id_produit, lot,
+                        peremption, psychotrope, type, n_assure_chifa, n_assure_cvm,
+                        utilisateur, motif, echeance, indice,
+                        archive, date_archive, utilisateur_validation, archive_trace
+                    ) VALUES (
+                        :id, :date, :id_client, :client, :id_nom, :nom, :id_famille, :famille,
+                        :prix_vente, :qte_sortie, :heure, :prix_achat_ttc, :id_produit, :lot,
+                        :peremption, :psychotrope, :type, :n_assure_chifa, :n_assure_cvm,
+                        :utilisateur, :motif, :echeance, :indice,
+                        TRUE, :date_archive, :utilisateur_validation, :archive_trace
+                    )
+                    ON CONFLICT (id) DO UPDATE SET
+                        date                   = EXCLUDED.date,
+                        id_client              = EXCLUDED.id_client,
+                        client                 = EXCLUDED.client,
+                        id_nom                 = EXCLUDED.id_nom,
+                        nom                    = EXCLUDED.nom,
+                        id_famille             = EXCLUDED.id_famille,
+                        famille                = EXCLUDED.famille,
+                        prix_vente             = EXCLUDED.prix_vente,
+                        qte_sortie             = EXCLUDED.qte_sortie,
+                        heure                  = EXCLUDED.heure,
+                        prix_achat_ttc         = EXCLUDED.prix_achat_ttc,
+                        id_produit             = EXCLUDED.id_produit,
+                        lot                    = EXCLUDED.lot,
+                        peremption             = EXCLUDED.peremption,
+                        psychotrope            = EXCLUDED.psychotrope,
+                        type                   = EXCLUDED.type,
+                        n_assure_chifa         = EXCLUDED.n_assure_chifa,
+                        n_assure_cvm           = EXCLUDED.n_assure_cvm,
+                        utilisateur            = EXCLUDED.utilisateur,
+                        motif                  = EXCLUDED.motif,
+                        echeance               = EXCLUDED.echeance,
+                        indice                 = EXCLUDED.indice,
+                        archive                = TRUE,
+                        date_archive           = COALESCE(EXCLUDED.date_archive, instance_produits.date_archive),
+                        utilisateur_validation = COALESCE(EXCLUDED.utilisateur_validation, instance_produits.utilisateur_validation),
+                        archive_trace          = COALESCE(EXCLUDED.archive_trace, instance_produits.archive_trace)
+                """), {
+                    **_params_instance(rec, anomalies),
+                    "date_archive":           date_archive_dt,
+                    "utilisateur_validation": rec.get("utilisateur_validation"),
+                    "archive_trace":          rec.get("archive_trace"),
+                })
+            synced += 1
+        except Exception as e:
+            rejets.append({"id": rec.get("id"), "erreur": str(e).splitlines()[0][:300]})
 
     await db.commit()
     logger.info(f"[sync/instance_produits_trt] {synced} enregistrements upsertés")
     return SyncBatchResult(
-        table="instance_produits_trt", synced=synced, errors=ignores,
-        rejected=[{"id": None, "erreur": f"{ignores} ligne(s) sans id"}] if ignores else [],
+        table="instance_produits_trt", synced=synced, errors=ignores + len(rejets),
+        rejected=([{"id": None, "erreur": f"{ignores} ligne(s) sans id"}] if ignores else []) + rejets[:50],
         invalid_values=anomalies[:50],
         ignored_columns=_colonnes_ignorees(
             payload.records, InstanceProduit,
