@@ -2,7 +2,7 @@
 Modèles SQLAlchemy — Caisse & Comptabilité
 Tables: caisses, caisses_regies, suivi_caisses, operations, depenses, comptes_bancaires
 """
-from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String
+from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String, Text
 from app.models.base import Base
 
 
@@ -13,6 +13,9 @@ class Caisse(Base):
     caisse = Column(String(50), index=True)
     date_creation = Column(Date)
     etat = Column(SmallInteger)
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    cloture_multisession = Column(SmallInteger)
 
 
 class CaisseRegie(Base):
@@ -72,6 +75,10 @@ class SuiviCaisse(Base):
     caisse = Column(String(50), index=True)
     ecart = Column(Numeric(15, 4))
 
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    det_clot_multisession = Column(Text)
+    observation = Column(Text)
+
 
 class Operation(Base):
     __tablename__ = "operations"
@@ -101,6 +108,10 @@ class Operation(Base):
     id_session = Column(BigInteger, index=True)
     id_ph_echange = Column(Integer)
 
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    avec_tpe = Column(SmallInteger)
+    ref_tpe = Column(Text)
+
 
 class Depense(Base):
     __tablename__ = "depenses"
@@ -115,3 +126,6 @@ class CompteBancaire(Base):
     id = Column(Integer, primary_key=True, autoincrement=False)
     compte = Column(String(500))
     date_creation = Column(Date)
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    tpe = Column(SmallInteger)

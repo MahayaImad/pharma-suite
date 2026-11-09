@@ -2,7 +2,7 @@
 Modèles SQLAlchemy — Inventaires
 Tables: inventaires, inventaires_produits
 """
-from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String
+from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String, Text
 from app.models.base import Base
 
 
@@ -16,6 +16,17 @@ class Inventaire(Base):
     poste = Column(Integer)
     etat = Column(SmallInteger)   # 0=ouvert, 1=validé
     observations = Column(String(500))
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    date_ouverture = Column(Date)
+    date_cloture = Column(Date)
+    description = Column(Text)
+    valeur_achat_initiale = Column(Numeric(15, 4))
+    valeur_achat_inventaire = Column(Numeric(15, 4))
+    valeur_ppa_initiale = Column(Numeric(15, 4))
+    valeur_ppa_inventaire = Column(Numeric(15, 4))
+    ecart_achat = Column(Numeric(15, 4))
+    ecart_ppa = Column(Numeric(15, 4))
 
 
 class InventaireProduit(Base):
@@ -40,3 +51,13 @@ class InventaireProduit(Base):
     motif = Column(String(200))       # 'Péremption', 'Vol', 'Casse', etc.
     utilisateur = Column(String(50))
     poste = Column(Integer)
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    id_produit = Column(BigInteger)
+    produit = Column(Text)
+    heure = Column(Text)
+    quantite_theorique = Column(Numeric(15, 4))
+    quantite_physique = Column(Numeric(15, 4))
+    ppa = Column(Numeric(15, 4))
+    edite = Column(SmallInteger)
+    observation = Column(Text)

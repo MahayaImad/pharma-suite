@@ -3,6 +3,7 @@ Modèles SQLAlchemy — Configuration & Paramétrage
 Tables: pharmacies, postes, groupware, prestations, motif_instance
 """
 from sqlalchemy import BigInteger, Column, Integer, Numeric, SmallInteger, String
+from sqlalchemy.dialects.postgresql import JSONB
 from app.models.base import Base
 
 
@@ -66,6 +67,11 @@ class Groupware(Base):
     prenom = Column(String(100))
     role = Column(Integer)
     actif = Column(SmallInteger)
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    # Droits d'accès EASYPHARM (~300 drapeaux ac_*, vnt_*, stk_*…), regroupés
+    # par le sync en un seul objet plutôt qu'en 300 colonnes.
+    droits = Column(JSONB)
 
 
 class Prestation(Base):

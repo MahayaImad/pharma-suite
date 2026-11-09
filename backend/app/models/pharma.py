@@ -2,7 +2,7 @@
 Modèles SQLAlchemy — Référentiel pharmaceutique
 Tables: nomenclature, familles, formes, laboratoires, instance_produits, nomenclature_chifa
 """
-from sqlalchemy import BigInteger, Boolean, Column, Date, DateTime, Integer, Numeric, SmallInteger, String
+from sqlalchemy import BigInteger, Boolean, Column, Date, DateTime, Integer, Numeric, SmallInteger, String, Text
 from app.models.base import Base
 
 # Valeurs valides pour disponibilite
@@ -63,6 +63,9 @@ class Forme(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=False)
     forme = Column(String(200))
     forme_abr = Column(String(200))
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    id_forme = Column(Text)
 
 
 class Laboratoire(Base):

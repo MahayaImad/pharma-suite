@@ -2,7 +2,7 @@
 Modèles SQLAlchemy — Achats / Fournisseurs
 Tables: entrees, entrees_produits, fournisseurs, commandes_fournisseurs, commandes_fournisseurs_produits
 """
-from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String
+from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String, Text
 from app.models.base import Base
 
 
@@ -87,6 +87,9 @@ class EntreeProduit(Base):
     labo = Column(String(200))
     heure = Column(String(10))
     cls_trp = Column(String(200))
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    id_gst = Column(Text)
 
 
 class Fournisseur(Base):

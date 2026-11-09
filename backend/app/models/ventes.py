@@ -2,7 +2,7 @@
 Modèles SQLAlchemy — Ventes
 Tables: sorties, sorties_produits
 """
-from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String
+from sqlalchemy import BigInteger, Column, Date, Integer, Numeric, SmallInteger, String, Text
 from app.models.base import Base
 
 
@@ -54,6 +54,10 @@ class Sortie(Base):
     majoration = Column(Numeric(15, 4))
     observation = Column(String(200))
 
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    avec_tpe = Column(SmallInteger)
+    ref_tpe = Column(Text)
+
 
 class SortieProduit(Base):
     __tablename__ = "sorties_produits"
@@ -84,3 +88,7 @@ class SortieProduit(Base):
     id_session = Column(BigInteger, index=True)
     utilisateur = Column(String(50))
     mdc = Column(String(200))
+
+    # Colonnes HFSQL ajoutées par la migration 002 (relevées par --verifier)
+    avec_tpe = Column(SmallInteger)
+    ref_tpe = Column(Text)

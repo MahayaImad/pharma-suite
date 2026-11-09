@@ -331,6 +331,21 @@ async def _upsert_batch(
     return synced, errors, rejets, anomalies
 
 
+def _empaqueter_droits(records: list[dict]) -> list[dict]:
+    """
+    groupware : les ~300 drapeaux de droits EASYPHARM (ac_*, vnt_*, stk_*…)
+    n'ont pas de colonne chacun ; tout ce qui n'est pas une colonne du modèle
+    est regroupé dans le JSONB `droits`, au lieu d'être ignoré.
+    """
+    valides = {col.name for col in Groupware.__table__.columns}
+    resultat = []
+    for r in records:
+        ligne = {k: v for k, v in r.items() if k in valides}
+        ligne["droits"] = {k: v for k, v in r.items() if k not in valides} or None
+        resultat.append(ligne)
+    return resultat
+
+
 # Les 23 colonnes HFSQL de instance_produits / instance_produits_trt.
 _COLONNES_INSTANCE = (
     "id", "date", "id_client", "client", "id_nom", "nom", "id_famille", "famille",
@@ -620,8 +635,12 @@ async def sync_table(
     if not payload.records:
         return SyncBatchResult(table=table_name, synced=0)
 
-    synced, errors, rejets, anomalies = await _upsert_batch(db, model, payload.records)
-    ignorees = _colonnes_ignorees(payload.records, model)
+    records = payload.records
+    if table_name == "groupware":
+        records = _empaqueter_droits(records)
+
+    synced, errors, rejets, anomalies = await _upsert_batch(db, model, records)
+    ignorees = _colonnes_ignorees(records, model)
     logger.info(f"[sync/{table_name}] {synced} upserts, {errors} erreurs, {len(anomalies)} valeurs invalides")
     if ignorees:
         logger.warning(f"[sync/{table_name}] colonnes sans équivalent PostgreSQL : {ignorees}")

@@ -144,3 +144,9 @@ async def test_ligne_sans_id_comptee_en_erreur():
     synced, errors, rejets, _ = await _upsert_batch(session, SortieProduit, [{"id": 1}, {"nom": "x"}])
     assert (synced, errors) == (1, 1)
     assert rejets[0]["id"] is None
+
+
+def test_droits_groupware_empaquetes():
+    from app.api.v1.sync import _empaqueter_droits
+    [ligne] = _empaqueter_droits([{"id": 1, "utilisateur": "imad", "vnt_hist": 1, "stk_inv": 0}])
+    assert ligne == {"id": 1, "utilisateur": "imad", "droits": {"vnt_hist": 1, "stk_inv": 0}}
