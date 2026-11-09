@@ -287,3 +287,15 @@ def test_verifier_tient_compte_renommage_et_empaquetage():
     for nom in ("motif_instance", "groupware", "nomenclature"):
         assert lignes[nom].colonnes_perdues == [], nom
         assert lignes[nom].colonnes_jamais_remplies == [], nom
+
+
+def test_erreur_serveur_sur_trt_n_est_pas_masquee():
+    from pharmasuite_agent.client import ErreurApi
+
+    class ClientTrtEnPanne(ClientFactice):
+        def pousser_instance_produits_trt(self, enregistrements):
+            raise ErreurApi("POST /sync/instance_produits_trt a échoué après 5 tentatives : HTTP 500")
+
+    source = SourceFactice({"instance_produits": [{"id": 1}], "instance_produits_trt": [{"id": 2}]})
+    with pytest.raises(ErreurApi):
+        synchroniser_table(par_nom("instance_produits"), source, ClientTrtEnPanne())

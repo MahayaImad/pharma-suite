@@ -254,10 +254,11 @@ def _sync_pipeline(table: Table, source: Source, client: ClientPharmaSuite) -> i
         traitees = _pousser_par_lots(
             lignes_trt, table.taille_lot, client.pousser_instance_produits_trt, table.cle,
         )
-    except LotRejete:
+    except ErreurApi:
+        # Lot refusé ou serveur en erreur : ce n'est pas une table absente.
         raise
     except Exception as erreur:
-        logger.warning("[instance_produits_trt] non disponible : %s", erreur)
+        logger.warning("[instance_produits_trt] illisible côté HFSQL : %s", erreur)
         traitees = 0
     logger.info("[instance_produits_trt] %d instance(s) traitée(s)", traitees)
 

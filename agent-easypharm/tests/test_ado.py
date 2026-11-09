@@ -119,3 +119,12 @@ def test_liste_des_tables_par_le_schema():
                            [("sorties", "TABLE"), ("entrées", "TABLE"), ("vue_x", "VIEW")])
     cnx, _ = _connexion(schema)
     assert cnx.get_table_names() == ["sorties", "entrées"]
+
+
+def test_cache_aligne_sur_les_paquets():
+    """CacheSize=1 par défaut ferait un aller-retour HFSQL par ligne."""
+    rs = FauxRecordset(["id"], [(1,)])
+    rs.CacheSize = 1
+    cnx, _ = _connexion(rs)
+    cnx.cursor().execute("SELECT id FROM sorties")
+    assert rs.CacheSize == 1000

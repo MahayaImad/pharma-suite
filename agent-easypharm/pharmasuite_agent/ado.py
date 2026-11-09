@@ -51,6 +51,8 @@ def _valeur(v: Any) -> Any:
 
 
 class CurseurADO:
+    taille_cache = 1000
+
     def __init__(self, connexion):
         self._cnx = connexion
         self._rs = None
@@ -62,6 +64,12 @@ class CurseurADO:
         # serveur. Le tuple renvoyé par pywin32 est (recordset, nb_affectés).
         resultat = self._cnx.Execute(requete)
         rs = resultat[0] if isinstance(resultat, tuple) else resultat
+        # CacheSize vaut 1 par défaut : un aller-retour vers le serveur HFSQL
+        # par ligne. On l'aligne sur la taille de paquet lue par GetRows.
+        try:
+            rs.CacheSize = self.taille_cache
+        except Exception:
+            pass
         self._rs = rs
         noms = [rs.Fields.Item(i).Name for i in range(rs.Fields.Count)]
         self.description = [(nom, None, None, None, None, None, None) for nom in noms]
