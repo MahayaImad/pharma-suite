@@ -150,3 +150,11 @@ def test_droits_groupware_empaquetes():
     from app.api.v1.sync import _empaqueter_droits
     [ligne] = _empaqueter_droits([{"id": 1, "utilisateur": "imad", "vnt_hist": 1, "stk_inv": 0}])
     assert ligne == {"id": 1, "utilisateur": "imad", "droits": {"vnt_hist": 1, "stk_inv": 0}}
+
+
+def test_texte_trop_long_signale_avec_sa_colonne():
+    anomalies: list = []
+    propre = _clean_record({"id": 1, "heure": "2026-11-10T08:05:03"}, SortieProduit, anomalies)
+    assert propre["heure"] == "2026-11-10T08:05:03"   # jamais tronqué en silence
+    assert anomalies == [{"id": 1, "colonne": "heure",
+                          "erreur": "trop long pour VARCHAR(10) : '2026-11-10T08:05:03'"}]

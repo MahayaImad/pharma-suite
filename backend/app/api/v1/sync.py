@@ -231,6 +231,17 @@ def _clean_record(record: dict, model, anomalies: list | None = None) -> dict:
             result[k] = None
             if anomalies is not None:
                 anomalies.append({"id": record.get("id"), "colonne": k, "erreur": str(e)})
+            continue
+        # Texte trop long : PostgreSQL refusera la ligne sans dire quelle
+        # colonne déborde. On le dit ici ; la valeur est gardée telle quelle,
+        # la ligne sera refusée et rendue dans `rejected`, jamais tronquée.
+        longueur = getattr(col.type, "length", None)
+        if (anomalies is not None and longueur and isinstance(result[k], str)
+                and len(result[k]) > longueur):
+            anomalies.append({
+                "id": record.get("id"), "colonne": k,
+                "erreur": f"trop long pour VARCHAR({longueur}) : {result[k][:40]!r}",
+            })
     return result
 
 
