@@ -261,3 +261,29 @@ def test_erreur_inconnue_tronquee_et_masquee():
 def test_proprietes_extra_ajoutees():
     source = SourceHFSQL("srv", "BASE", password="p", proprietes_extra="Analysis=C:\\A\\X.wdd")
     assert source._build_provider_string().endswith('Extended Properties="Password=*:p;Analysis=C:\\A\\X.wdd;"')
+
+
+# ── Correspondances de colonnes relevées par --verifier ──────────────────────
+
+def test_motif_instance_renomme_en_motif():
+    source = SourceFactice({"motif_instance": [{"id": 1, "motif_instance": "Rupture"}]})
+    client = ClientFactice()
+    synchroniser_table(par_nom("motif_instance"), source, client)
+    assert client.pousses[0][1] == [{"id": 1, "motif": "Rupture"}]
+
+
+def test_verifier_tient_compte_renommage_et_empaquetage():
+    source = SourceFactice({
+        "motif_instance": [{"id": 1, "motif_instance": "x"}],
+        "groupware": [{"id": 1, "utilisateur": "a", "vnt_hist": 1}],
+        "nomenclature": [{"id": 1, "nom": "A"}],
+    })
+    schema = [
+        {"table": "motif_instance", "columns": ["id", "motif"], "count": 1},
+        {"table": "groupware", "columns": ["id", "utilisateur", "droits", "nom"], "count": 1},
+        {"table": "nomenclature", "columns": ["id", "nom", "segment_abc", "categorie"], "count": 1},
+    ]
+    lignes = {l.table: l for l in verifier(source, ClientSchema(schema)).lignes}
+    for nom in ("motif_instance", "groupware", "nomenclature"):
+        assert lignes[nom].colonnes_perdues == [], nom
+        assert lignes[nom].colonnes_jamais_remplies == [], nom

@@ -25,9 +25,18 @@ from .tables import TABLES, Table
 # normale (docs/02-sync-contrat.md §5.4).
 _COLONNES_POSTGRES_SEULEMENT = {
     "instance_produits": {"archive", "date_archive", "utilisateur_validation", "archive_trace"},
-    "nomenclature": {"archive"},
+    # Calculées ou saisies dans PharmaSuite : segmentation ABC/XYZ et
+    # disponibilité (services/stock_segmentation.py), catégorie de prime et
+    # étagère (stock.py).
+    "nomenclature": {"archive", "categorie", "disponibilite", "etagere", "segment_abc", "segment_xyz"},
+    "laboratoires": {"is_generique"},
     "clients": {"is_archive", "date_archive", "motif_archive"},
+    "groupware": {"droits", "nom", "prenom", "role", "actif"},
 }
+
+# Tables dont les colonnes HFSQL sans équivalent sont regroupées par le
+# serveur dans une colonne JSONB, donc conservées.
+_COLONNES_EMPAQUETEES = {"groupware": "droits"}
 
 # Tables HFSQL lues par un autre biais que leur propre entrée de TABLES.
 _SOURCES_ANNEXES = {"instance_produits_trt"}
@@ -83,9 +92,11 @@ def _verifier_table(table: Table, source, schema_serveur: dict) -> LigneRapport:
         ligne.erreur = "table inconnue du serveur"
         return ligne
 
+    colonnes_hfsql = {dict(table.renommer).get(c, c) for c in colonnes_hfsql}
     colonnes_pg = set(serveur["columns"])
     ligne.lignes_postgres = serveur["count"]
-    ligne.colonnes_perdues = sorted(colonnes_hfsql - colonnes_pg)
+    if _COLONNES_EMPAQUETEES.get(table.cible) not in colonnes_pg:
+        ligne.colonnes_perdues = sorted(colonnes_hfsql - colonnes_pg)
     ligne.colonnes_jamais_remplies = sorted(
         colonnes_pg - colonnes_hfsql - _COLONNES_POSTGRES_SEULEMENT.get(table.cible, set())
     )

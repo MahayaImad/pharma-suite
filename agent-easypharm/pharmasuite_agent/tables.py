@@ -45,6 +45,8 @@ class Table:
     # lecture est un avertissement, pas une erreur de passe. Aucune ne l'est
     # aujourd'hui — les 39 noms sont vérifiés sur le listing du 2026-11-09.
     optionnelle: bool = False
+    # Colonnes nommées autrement côté PostgreSQL : {nom HFSQL normalisé: nom PG}.
+    renommer: tuple[tuple[str, str], ...] = ()
 
     @property
     def incrementale(self) -> bool:
@@ -283,6 +285,8 @@ TABLES: tuple[Table, ...] = (
     Table(
         cible="motif_instance",
         source="motif_instance",
+        # HFSQL nomme la colonne comme la table ; PostgreSQL l'appelle motif.
+        renommer=(("motif_instance", "motif"),),
         strategie="full",
         intervalle_minutes=1440,
     ),

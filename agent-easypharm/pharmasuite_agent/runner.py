@@ -150,6 +150,16 @@ def _pousser_par_lots(
     return envoyees
 
 
+def _renommer(table: Table, lignes: Iterable[dict]) -> Iterator[dict]:
+    """Applique `table.renommer` à chaque ligne lue."""
+    if not table.renommer:
+        yield from lignes
+        return
+    correspondance = dict(table.renommer)
+    for ligne in lignes:
+        yield {correspondance.get(k, k): v for k, v in ligne.items()}
+
+
 def _rattraper(table: Table, source: Source, client: ClientPharmaSuite) -> tuple[int, int]:
     """
     Lit tout ce qui dépasse le curseur serveur et avance ce curseur lot par lot.
@@ -158,7 +168,7 @@ def _rattraper(table: Table, source: Source, client: ClientPharmaSuite) -> tuple
     depuis = max(client.statut(table.cible), 0)
     logger.info("[%s] rattrapage depuis id > %d", table.cible, depuis)
     envoyees = _pousser_par_lots(
-        source.lire(table.source, table.cle, depuis, table.taille_lot),
+        _renommer(table, source.lire(table.source, table.cle, depuis, table.taille_lot)),
         table.taille_lot,
         lambda lot: client.pousser(table.cible, lot),
         table.cle,
@@ -187,10 +197,10 @@ def _sync_window(table: Table, source: Source, client: ClientPharmaSuite) -> int
     depuis, envoyees = _rattraper(table, source, client)
 
     def deja_connues() -> Iterator[dict]:
-        for enregistrement in source.lire_fenetre(
+        for enregistrement in _renommer(table, source.lire_fenetre(
             table.source, table.cle, table.taille_lot, table.fenetre_jours,
             table.champ_modif, table.condition_extra,
-        ):
+        )):
             valeur = _cle_entiere(enregistrement, table.cle)
             if valeur is None or valeur <= depuis:
                 yield enregistrement
@@ -208,7 +218,7 @@ def _sync_full(table: Table, source: Source, client: ClientPharmaSuite) -> int:
     """Synchronisation complète."""
     logger.info("[%s] lecture complète", table.cible)
     envoyees = _pousser_par_lots(
-        source.lire(table.source, table.cle, -1, table.taille_lot),
+        _renommer(table, source.lire(table.source, table.cle, -1, table.taille_lot)),
         table.taille_lot,
         lambda lot: client.pousser(table.cible, lot),
         table.cle,
