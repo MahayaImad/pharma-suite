@@ -40,13 +40,12 @@ def _tester(config: Config) -> int:
     """Vérifie séparément les deux extrémités, pour situer une panne."""
     ok = True
 
-    source = SourceHFSQL(config.source.dsn, config.source.user,
-                         config.source.password, config.source.fetch_size)
+    source = SourceHFSQL.depuis_config(config.source)
     try:
         maximum = source.max_cle("sorties", "id")
-        print(f"  EASYPHARM (ODBC {config.source.dsn}) : OK — sorties.id max = {maximum}")
+        print(f"  EASYPHARM ({source.description}) : OK — sorties.id max = {maximum}")
     except Exception as erreur:
-        print(f"  EASYPHARM (ODBC {config.source.dsn}) : ECHEC — {erreur}")
+        print(f"  EASYPHARM ({source.description}) : ECHEC — {erreur}")
         ok = False
     finally:
         source.fermer()
@@ -112,8 +111,7 @@ def main(argv: list[str] | None = None) -> int:
         return _tester(config)
 
     if args.verifier:
-        source = SourceHFSQL(config.source.dsn, config.source.user,
-                             config.source.password, config.source.fetch_size)
+        source = SourceHFSQL.depuis_config(config.source)
         client = ClientPharmaSuite(config.api.base_url, config.api.username,
                                    config.api.password, config.api.timeout_seconds)
         try:
@@ -124,8 +122,7 @@ def main(argv: list[str] | None = None) -> int:
         afficher(rapport)
         return 0 if rapport.complet else 1
 
-    source = SourceHFSQL(config.source.dsn, config.source.user,
-                         config.source.password, config.source.fetch_size)
+    source = SourceHFSQL.depuis_config(config.source)
     client = ClientPharmaSuite(config.api.base_url, config.api.username,
                                config.api.password, config.api.timeout_seconds)
     etat = Etat(config.agent.state_file)

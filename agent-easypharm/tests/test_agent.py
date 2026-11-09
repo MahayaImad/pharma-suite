@@ -1,5 +1,5 @@
 """
-Tests de l'agent — sans driver ODBC ni réseau.
+Tests de l'agent — sans provider OLE DB ni réseau.
 
 La source et le client sont remplacés par des doublures ; ce qui est vérifié
 ici, c'est la logique de reprise, le découpage en lots et la sérialisation.

@@ -105,7 +105,7 @@ class ValeurInvalide(ValueError):
     """Une valeur source qui ne rentre pas dans le type de la colonne."""
 
 
-# Formats de date rencontrés côté HFSQL / ODBC. L'ordre compte : le format
+# Formats de date rencontrés côté HFSQL / ADO. L'ordre compte : le format
 # ISO strict d'abord, c'est celui que l'agent est censé produire.
 _FORMATS_DATE = ("%Y-%m-%d", "%Y%m%d", "%d/%m/%Y", "%d/%m/%y")
 # Valeurs « date vide » de WinDev : une date non saisie n'est pas une erreur.
@@ -117,7 +117,7 @@ def _parse_date(v: Any) -> PyDate | None:
     Convertit une date source en `datetime.date`.
 
     Accepte `YYYY-MM-DD`, un horodatage ISO (`2026-08-19T00:00:00`, ce que
-    pyodbc rend pour une colonne date HFSQL), `YYYYMMDD` (format natif HFSQL)
+    l'agent envoie pour une colonne date HFSQL), `YYYYMMDD` (format natif HFSQL)
     et `DD/MM/YYYY`. Lève `ValeurInvalide` plutôt que de rendre `None` en
     silence : une date perdue ne se voit sinon qu'en aval, dans un KPI.
     """

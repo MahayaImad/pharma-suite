@@ -1,9 +1,15 @@
 """
-Lecture d'EASYPHARM par le driver ODBC HyperFileSQL.
+Lecture d'EASYPHARM par le connecteur **OLE DB HFSQL** (`PCSOFT.HFSQL`).
 
-`pyodbc` n'est pas importé au chargement du module : les tests, et toute
+Pas d'ODBC : les fichiers EASYPHARM sont protégés par mot de passe, et seul le
+provider OLE DB permet de le passer pour tous les fichiers d'un coup, via
+`Extended Properties="Password=*:<mdp>;"` (`*` = toutes les tables).
+
+L'accès passe par ADO, avec `adodbapi` (fourni par `pywin32`), qui expose ADO
+sous l'interface DB-API habituelle (`cursor`, `execute`, `fetchmany`).
+`adodbapi` n'est pas importé au chargement du module : les tests, et toute
 machine qui n'est pas le poste Windows de l'officine, doivent pouvoir importer
-l'agent sans driver installé.
+l'agent sans provider installé.
 """
 from __future__ import annotations
 
@@ -37,26 +43,68 @@ class Source(Protocol):
         ...
 
 
-class SourceHFSQL:
-    """Source réelle, adossée au DSN ODBC du poste Windows."""
+def _echapper(valeur: str) -> str:
+    """Une valeur contenant `;` ou `"` casserait la chaîne de connexion."""
+    if any(c in valeur for c in ';"'):
+        raise ValueError("les caractères ; et \" ne sont pas acceptés dans la configuration HFSQL")
+    return valeur
 
-    def __init__(self, dsn: str, user: str = "", password: str = "", fetch_size: int = 500):
-        self._dsn = dsn
+
+class SourceHFSQL:
+    """Source réelle : serveur HFSQL Client/Serveur, via le provider OLE DB."""
+
+    def __init__(
+        self,
+        server: str,
+        database: str,
+        port: int = 4900,
+        user: str = "admin",
+        password: str = "",
+        fetch_size: int = 500,
+    ):
+        self._server = server
+        self._port = port
+        self._database = database
         self._user = user
         self._password = password
         self._fetch_size = fetch_size
         self._cnx = None
 
+    @classmethod
+    def depuis_config(cls, config) -> "SourceHFSQL":
+        """Construit la source depuis la section [source] de config.toml."""
+        return cls(
+            server=config.server, port=config.port, database=config.database,
+            user=config.user, password=config.password, fetch_size=config.fetch_size,
+        )
+
+    @property
+    def description(self) -> str:
+        """Pour les messages : jamais le mot de passe."""
+        return f"OLE DB {self._server}:{self._port}/{self._database}"
+
+    def _build_provider_string(self) -> str:
+        """
+        Chaîne Provider OLE DB.
+
+        `Password=` de premier niveau est vide : c'est le mot de passe du
+        compte. Le mot de passe des **fichiers** — exigé pour lire chaque
+        table — passe dans `Extended Properties`, `*` valant pour toutes.
+        """
+        return (
+            'Provider=PCSOFT.HFSQL;'
+            f' Data Source={_echapper(self._server)}:{int(self._port)};'
+            f' Initial Catalog={_echapper(self._database)};'
+            f' User ID={_echapper(self._user)};'
+            ' Password=;'
+            f' Extended Properties="Password=*:{_echapper(self._password)};"'
+        )
+
     def _connexion(self):
         if self._cnx is None:
-            import pyodbc  # importé tard : absent hors du poste Windows
+            import adodbapi  # importé tard : absent hors du poste Windows
 
-            morceaux = [f"DSN={self._dsn}"]
-            if self._user:
-                morceaux.append(f"UID={self._user}")
-            if self._password:
-                morceaux.append(f"PWD={self._password}")
-            self._cnx = pyodbc.connect(";".join(morceaux), autocommit=True)
+            self._cnx = adodbapi.connect(self._build_provider_string())
         return self._cnx
 
     def fermer(self) -> None:
@@ -80,8 +128,11 @@ class SourceHFSQL:
         `depuis < 0` signifie « tout relire » (stratégie full).
 
         Le nom de table et celui de la colonne viennent de `tables.py`, jamais
-        d'une entrée utilisateur : ils sont interpolés parce que l'ODBC HFSQL
-        n'accepte pas d'identifiant paramétré. La borne, elle, est liée.
+        d'une entrée utilisateur : ils sont interpolés parce qu'aucun provider
+        n'accepte d'identifiant paramétré. La borne est forcée en `int` avant
+        d'être écrite dans la requête : rien d'autre qu'un entier ne peut y
+        entrer, et on ne dépend pas du support des paramètres ADO par le
+        provider HFSQL.
         """
         curseur = self._connexion().cursor()
         try:
@@ -89,7 +140,7 @@ class SourceHFSQL:
                 curseur.execute(f"SELECT * FROM {table} ORDER BY {cle}")
             else:
                 curseur.execute(
-                    f"SELECT * FROM {table} WHERE {cle} > ? ORDER BY {cle}", depuis
+                    f"SELECT * FROM {table} WHERE {cle} > {int(depuis)} ORDER BY {cle}"
                 )
             colonnes: Sequence[str] = [c[0] for c in curseur.description]
             while True:
@@ -159,12 +210,8 @@ class SourceHFSQL:
             curseur.close()
 
     def lister_tables(self) -> list[str]:
-        """Tables exposées par le DSN, d'après le catalogue ODBC."""
-        curseur = self._connexion().cursor()
-        try:
-            return sorted(t.table_name for t in curseur.tables(tableType="TABLE"))
-        finally:
-            curseur.close()
+        """Tables de l'analyse, d'après le catalogue OLE DB (schéma ADO)."""
+        return sorted(self._connexion().get_table_names())
 
     def compter(self, table: str) -> int:
         """Retourne le nombre total d'enregistrements."""

@@ -36,7 +36,7 @@ def _decoder(octets: bytes) -> str:
 
 
 def valeur_json(valeur: Any) -> Any:
-    """Rend une valeur ODBC sérialisable, sans jamais passer par float."""
+    """Rend une valeur lue par ADO sérialisable, sans jamais passer par float."""
     if valeur is None:
         return None
     if isinstance(valeur, bool):

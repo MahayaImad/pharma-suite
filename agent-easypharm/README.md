@@ -1,7 +1,7 @@
 # Agent EASYPHARM → PharmaSuite
 
 Tourne sur le **PC Windows** de l'officine, celui qui héberge EASYPHARM. Lit
-les fichiers HyperFileSQL par ODBC et pousse les données vers l'API
+les fichiers HyperFileSQL par le **connecteur OLE DB HFSQL** et pousse les données vers l'API
 PharmaSuite, sur le serveur Ubuntu.
 
 Le flux est à sens unique : l'agent ne modifie jamais EASYPHARM.
@@ -11,7 +11,7 @@ Windows (officine)                     Ubuntu (serveur)
 ┌──────────────────────┐               ┌─────────────────────┐
 │ EASYPHARM (HFSQL)    │               │ PharmaSuite API     │
 │        ▲             │  HTTP + JWT   │   POST /sync/{table}│
-│        │ ODBC (lect.)│──────────────▶│   PostgreSQL 16     │
+│       │ OLE DB (lect.)│──────────────▶│   PostgreSQL 16     │
 │   agent (ce dossier) │               └─────────────────────┘
 └──────────────────────┘
 ```
@@ -54,12 +54,30 @@ python -m pip install -r requirements.txt
 copy config.example.toml config.toml
 ```
 
-Éditer `config.toml` : DSN ODBC, adresse du serveur, mot de passe du compte
-`sync_agent` (celui de `settings.sync_agent_password` côté backend).
+Éditer `config.toml` :
 
-Le DSN se crée dans **Panneau de configuration → Outils d'administration →
-Sources de données ODBC (64 bits) → onglet Système → Ajouter → HFSQL**.
-Il doit être **Système**, pas Utilisateur, sinon le service ne le verra pas.
+- `[source]` : serveur HFSQL (`server`, `port`, `database`, `user`) et
+  `password`, le **mot de passe des fichiers** EASYPHARM ;
+- `[api]` : adresse du serveur PharmaSuite et mot de passe du compte
+  `sync_agent` (celui de `settings.sync_agent_password` côté backend).
+
+### Connexion : OLE DB, pas ODBC
+
+Chaque fichier EASYPHARM est protégé par mot de passe. Le provider OLE DB
+`PCSOFT.HFSQL` permet de le donner une fois pour toutes les tables :
+
+```
+Provider=PCSOFT.HFSQL; Data Source=<server>:<port>; Initial Catalog=<database>;
+User ID=<user>; Password=; Extended Properties="Password=*:<password>;"
+```
+
+(`*` = toutes les tables.) L'agent y accède par ADO, avec `adodbapi`, fourni
+par `pywin32`. Prérequis sur le poste :
+
+- le **provider OLE DB pour HFSQL** de PC SOFT, installé ;
+- **Python de même architecture que le provider** : un provider 32 bits
+  n'est visible que d'un Python 32 bits, et inversement. Si `--tester`
+  répond « Provider cannot be found », c'est presque toujours ça.
 
 ## Vérifier avant de lancer
 
@@ -70,7 +88,7 @@ python -m pharmasuite_agent --config config.toml --tester
 Teste les deux extrémités séparément et dit laquelle échoue :
 
 ```
-  EASYPHARM (ODBC EASYPHARM) : OK — sorties.id max = 184203
+  EASYPHARM (OLE DB localhost:4900/EASYPHARM) : OK — sorties.id max = 184203
   PharmaSuite (http://192.168.1.10:8000/api/v1) : OK — sorties last_id = 184203
 ```
 
@@ -179,7 +197,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-Ils ne demandent ni ODBC ni réseau : la source et le client sont doublés.
+Ils ne demandent ni provider OLE DB ni réseau : la source et le client sont doublés.
 
 ## Sécurité
 

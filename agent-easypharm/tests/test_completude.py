@@ -175,3 +175,43 @@ def test_verifier_signale_colonnes_perdues_et_ecarts():
     assert familles.ecart == 1
     assert "table_oubliee" in rapport.tables_hfsql_non_lues
     assert not rapport.complet
+
+
+# ── Connexion OLE DB ──────────────────────────────────────────────────────────
+
+from pharmasuite_agent.config import SourceConfig  # noqa: E402
+from pharmasuite_agent.source import SourceHFSQL  # noqa: E402
+
+
+def test_chaine_provider_oledb():
+    """Le mot de passe des fichiers passe en Extended Properties, pour toutes les tables."""
+    source = SourceHFSQL.depuis_config(SourceConfig(
+        server="192.168.1.5", port=4900, database="EASYPHARM", user="admin", password="s3cret",
+    ))
+    assert source._build_provider_string() == (
+        'Provider=PCSOFT.HFSQL;'
+        ' Data Source=192.168.1.5:4900;'
+        ' Initial Catalog=EASYPHARM;'
+        ' User ID=admin;'
+        ' Password=;'
+        ' Extended Properties="Password=*:s3cret;"'
+    )
+
+
+def test_description_ne_montre_pas_le_mot_de_passe():
+    source = SourceHFSQL("srv", "BASE", password="s3cret")
+    assert "s3cret" not in source.description
+
+
+@pytest.mark.parametrize("mdp", ['a;b', 'a"b'])
+def test_mot_de_passe_cassant_la_chaine_refuse(mdp):
+    with pytest.raises(ValueError):
+        SourceHFSQL("srv", "BASE", password=mdp)._build_provider_string()
+
+
+def test_config_exemple_charge(tmp_path):
+    from pharmasuite_agent.config import Config
+    exemple = Path(__file__).resolve().parents[1] / "config.example.toml"
+    config = Config.charger(exemple)
+    assert config.source.port == 4900
+    assert config.source.database

@@ -8,9 +8,12 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class SourceConfig:
-    dsn: str
-    user: str = ""
-    password: str = ""
+    """Serveur HFSQL Client/Serveur, lu par le provider OLE DB PCSOFT.HFSQL."""
+    server: str
+    database: str
+    port: int = 4900
+    user: str = "admin"
+    password: str = ""      # mot de passe des fichiers (Password=*:…)
     fetch_size: int = 500
 
 

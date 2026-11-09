@@ -1,12 +1,17 @@
 # Copier en config.toml et adapter. Ne jamais committer config.toml.
 
 [source]
-# DSN ODBC HFSQL configuré sur le poste Windows (Panneau de configuration →
-# Sources de données ODBC → onglet Système).
-dsn = "EASYPHARM"
-user = ""
+# Serveur HFSQL Client/Serveur d'EASYPHARM, lu par le provider OLE DB
+# PCSOFT.HFSQL (à installer sur le poste : « Provider OLE DB pour HFSQL »).
+server = "localhost"
+port = 4900
+database = "EASYPHARM"     # Initial Catalog : nom de la base HFSQL
+user = "admin"
+# Mot de passe des FICHIERS HFSQL, exigé pour lire chaque table.
+# Envoyé en Extended Properties="Password=*:<mdp>;" (* = toutes les tables).
+# Ne doit contenir ni ; ni ".
 password = ""
-# Le driver HFSQL ne tolère pas les gros fetch : on lit par tranches.
+# Lecture par tranches.
 fetch_size = 500
 
 [api]

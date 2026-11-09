@@ -56,10 +56,12 @@ plus apparaître nulle part, sauf dans `SMS_GATEWAY_TOKEN`, dont la valeur est
 un contrat avec le boîtier SMS.
 
 Second composant : `agent-easypharm/` — l'agent de synchronisation qui tourne
-sur le PC Windows de l'officine. Lit EASYPHARM par ODBC (driver HFSQL) et
+sur le PC Windows de l'officine. Lit EASYPHARM par le connecteur **OLE DB
+HFSQL** (`PCSOFT.HFSQL`, via `adodbapi`) — pas ODBC : le mot de passe des
+fichiers passe en `Extended Properties="Password=*:…"` — et
 pousse vers `POST /sync/{table}`. Flux à sens unique, l'agent n'écrit jamais
 dans EASYPHARM. Curseur de reprise gardé côté serveur, pas en local. Ses tests
-tournent sans ODBC ni réseau (`cd agent-easypharm && pytest`).
+tournent sans provider OLE DB ni réseau (`cd agent-easypharm && pytest`).
 
 **N'existe pas** (ne pas y faire référence, ne pas supposer que ça marche) :
 `Makefile` · `docs/` · `mobile/` · `ml/` · aucune CI.

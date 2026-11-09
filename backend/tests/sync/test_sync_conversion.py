@@ -26,7 +26,7 @@ from app.models.ventes import SortieProduit
 
 @pytest.mark.parametrize("entree", [
     "2026-08-19",
-    "2026-08-19T00:00:00",      # ce que pyodbc rend pour une colonne date HFSQL
+    "2026-08-19T00:00:00",      # ce que ADO rend pour une colonne date HFSQL
     "2026-08-19 00:00:00",
     "20260819",                 # format natif HFSQL
     "19/08/2026",
