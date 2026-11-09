@@ -31,7 +31,6 @@ Un seul composant : `backend/` — une API FastAPI, ~98 fichiers Python.
 ```
 backend/
 ├── Dockerfile
-├── docker-compose.yml        # postgres 16-alpine + api + pgadmin
 ├── requirements.txt          # + requirements-dev.txt pour les tests
 ├── pytest.ini
 ├── alembic.ini
@@ -69,15 +68,23 @@ tournent sans provider OLE DB ni réseau (`cd agent-easypharm && pytest`).
 ## Commandes réelles
 
 ```bash
-cd backend
-docker compose up -d               # postgres + api + pgadmin
+cd docker                          # le seul compose du dépôt
+cp .env.example .env               # puis renseigner les secrets
+docker compose build api
+docker compose run --rm api alembic upgrade head   # schéma (001 baseline, 002…)
+docker compose up -d               # api + postgres + redis + pgadmin
 docker compose logs -f api
-alembic upgrade head               # schéma (baseline 001)
-alembic current                    # révision courante
 
+cd backend
 pip install -r requirements-dev.txt
 pytest                             # tests, sans postgres
 ```
+
+`docker/docker-compose.yml` est le seul fichier compose : l'API (port 8000)
+y tourne à côté de postgres (5439 sur l'hôte), redis et pgadmin (8085). Les
+secrets viennent de `docker/.env`, jamais committé. `API_DB_NAME` donne à
+l'API sa propre base dans ce postgres. Les migrations ne se lancent pas au
+démarrage du conteneur : c'est une étape volontaire.
 
 L'API expose `/api/v1/docs` (Swagger) et `/health`.
 Il n'y a **pas** de `make dev` / `make test` / `make api-client`.
