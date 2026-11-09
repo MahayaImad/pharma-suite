@@ -1,4 +1,4 @@
-# Services d'infrastructure de PharmaSuite : PostgreSQL, Redis, pgAdmin.
+# PharmaSuite : API, PostgreSQL, Redis, pgAdmin.
 # Les identifiants sont lus depuis docker/.env (non versionné) :
 #   cp .env.example .env   puis renseigner les mots de passe.
 # Les scripts .sql / .sh placés dans init/ ne s'exécutent qu'à la création
@@ -43,6 +43,32 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD manquant dans docker/.env}
     ports:
       - "8085:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ../backend
+      network: host
+    container_name: pharmasuite_api
+    restart: unless-stopped
+    environment:
+      # Dans le réseau Docker, la base est le service « postgres », port interne.
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-pharmasuite_db}
+      DB_USER: ${POSTGRES_USER:-pharmasuite_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans docker/.env}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY manquant dans docker/.env}
+      SYNC_AGENT_PASSWORD: ${SYNC_AGENT_PASSWORD:?SYNC_AGENT_PASSWORD manquant dans docker/.env}
+      # Vide par défaut : neutralise la clé committée par erreur dans
+      # app/core/config.py. Le chatbot n'est pas déployable en production.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ../backend/logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy

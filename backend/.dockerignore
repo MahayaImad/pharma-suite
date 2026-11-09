@@ -1,0 +1,7 @@
+# Jamais de secret ni de donnée locale dans l'image.
+.env
+.env.*
+logs/
+**/__pycache__/
+.pytest_cache/
+tests/
