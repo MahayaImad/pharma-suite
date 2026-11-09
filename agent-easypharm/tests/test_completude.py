@@ -299,3 +299,38 @@ def test_erreur_serveur_sur_trt_n_est_pas_masquee():
     source = SourceFactice({"instance_produits": [{"id": 1}], "instance_produits_trt": [{"id": 2}]})
     with pytest.raises(ErreurApi):
         synchroniser_table(par_nom("instance_produits"), source, ClientTrtEnPanne())
+
+
+# ── Heures HFSQL ──────────────────────────────────────────────────────────────
+
+import datetime as _dt  # noqa: E402
+from pharmasuite_agent.serialisation import normaliser_heure  # noqa: E402
+
+
+@pytest.mark.parametrize("entree, attendu", [
+    (_dt.datetime(2026, 11, 10, 8, 5, 3), "08:05:03"),
+    (_dt.time(8, 5, 3), "08:05:03"),
+    ("2026-11-10T08:05:03", "08:05:03"),
+    ("08:05:03:45", "08:05:03"),      # centièmes HFSQL
+    ("8:05", "08:05:00"),
+    ("08050345", "08:05:03"),         # HHMMSSCC natif
+    ("0805", "08:05:00"),
+    ("", None),
+    (None, None),
+])
+def test_heure_normalisee(entree, attendu):
+    assert normaliser_heure(entree) == attendu
+
+
+def test_ligne_normalise_seulement_les_colonnes_heure():
+    ligne = ligne_json(["id", "Heure", "heure_fin", "date"],
+                       [1, "2026-11-10T08:05:03", "17:30:00:00", _dt.date(2026, 11, 10)])
+    assert ligne == {"id": 1, "heure": "08:05:03", "heure_fin": "17:30:00", "date": "2026-11-10"}
+
+
+def test_lot_rejete_nomme_la_colonne():
+    erreur = LotRejete("sorties", {
+        "errors": 1, "rejected": [{"id": 1, "erreur": "value too long"}],
+        "invalid_values": [{"id": 1, "colonne": "heure", "erreur": "trop long pour VARCHAR(10) : 'x'"}],
+    })
+    assert "colonnes en cause : heure" in str(erreur)

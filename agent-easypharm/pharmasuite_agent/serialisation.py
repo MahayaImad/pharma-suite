@@ -61,5 +61,49 @@ def valeur_json(valeur: Any) -> Any:
     return valeur
 
 
+def normaliser_heure(valeur: Any) -> str | None:
+    """
+    Heure HFSQL → `HH:MM:SS`, zéro-paddé.
+
+    Le type « Heure » de HFSQL sort de l'OLE DB sous plusieurs formes selon
+    la version : horodatage complet, `HH:MM:SS:CC` (centièmes), `HHMMSSCC`.
+    PostgreSQL le stocke en `VARCHAR(10)`, et `grh_presence.py` fait
+    `MIN(heure)` puis `heure[:5]` : il faut donc un format fixe, trié
+    correctement en ordre lexicographique. Une forme inconnue est laissée
+    telle quelle, et le serveur la signalera.
+    """
+    if valeur is None:
+        return None
+    if isinstance(valeur, (dt.datetime, dt.time)):
+        return valeur.strftime("%H:%M:%S")
+    texte = valeur_json(valeur)
+    if not isinstance(texte, str):
+        texte = str(texte)
+    texte = texte.strip()
+    if not texte:
+        return None
+    if "T" in texte or " " in texte:
+        texte = texte.replace("T", " ").split(" ")[-1]
+    texte = texte.split(".")[0].split("+")[0]
+    morceaux = texte.split(":")
+    if len(morceaux) >= 2 and all(m.isdigit() for m in morceaux):
+        h, m = int(morceaux[0]), int(morceaux[1])
+        sec = int(morceaux[2]) if len(morceaux) > 2 else 0
+        return f"{h:02d}:{m:02d}:{sec:02d}"
+    if texte.isdigit() and len(texte) in (4, 6, 8):
+        sec = texte[4:6] or "00"
+        return f"{texte[0:2]}:{texte[2:4]}:{sec}"
+    return texte
+
+
+def _est_heure(nom: str) -> bool:
+    # heure, heure_debut, heure_fin, heure_ouverture…
+    return nom == "heure" or nom.startswith("heure_")
+
+
 def ligne_json(colonnes: Sequence[str], ligne: Sequence[Any]) -> dict[str, Any]:
-    return {nom_colonne(col): valeur_json(val) for col, val in zip(colonnes, ligne)}
+    resultat = {}
+    for col, val in zip(colonnes, ligne):
+        nom = nom_colonne(col)
+        resultat[nom] = normaliser_heure(val) if _est_heure(nom) else valeur_json(val)
+    return resultat

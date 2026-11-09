@@ -37,15 +37,20 @@ def _valeur(v: Any) -> Any:
     Normalise une valeur COM.
 
     pywin32 rend les dates ADO en `pywintypes.datetime`, avec un fuseau UTC
-    arbitraire : une date HFSQL n'a pas de fuseau, on le retire. La date zéro
-    OLE devient `None`.
+    arbitraire : une date HFSQL n'a pas de fuseau, on le retire. Sur la date
+    zéro OLE, minuit pile devient `None` (date vide) et toute autre valeur
+    devient une heure seule.
     """
     if isinstance(v, dt.datetime):
         if v.tzinfo is not None:
             v = v.replace(tzinfo=None)
         naive = dt.datetime(v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond)
         if naive.date() == _DATE_ZERO_OLE:
-            return None
+            # Date zéro OLE : soit une date vide, soit une heure seule
+            # (type Heure HFSQL) — qu'il ne faut surtout pas effacer.
+            if naive.time() == dt.time(0, 0):
+                return None
+            return naive.time()
         return naive
     return v
 

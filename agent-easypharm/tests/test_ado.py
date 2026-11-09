@@ -128,3 +128,10 @@ def test_cache_aligne_sur_les_paquets():
     cnx, _ = _connexion(rs)
     cnx.cursor().execute("SELECT id FROM sorties")
     assert rs.CacheSize == 1000
+
+
+def test_heure_seule_sur_date_zero_ole_conservee():
+    utc = dt.timezone.utc
+    rs = FauxRecordset(["heure"], [(dt.datetime(1899, 12, 30, 8, 5, 3, tzinfo=utc),)])
+    cnx, _ = _connexion(rs)
+    assert cnx.cursor().execute("SELECT heure FROM sorties").fetchone() == (dt.time(8, 5, 3),)

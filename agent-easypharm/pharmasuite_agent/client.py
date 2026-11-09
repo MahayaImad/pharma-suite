@@ -29,8 +29,15 @@ class LotRejete(ErreurApi):
         self.table = table
         self.rejets = reponse.get("rejected") or []
         exemples = "; ".join(f"id={r.get('id')}: {r.get('erreur')}" for r in self.rejets[:3])
+        # Le serveur nomme les colonnes en cause (texte trop long…), ce que
+        # l'erreur PostgreSQL ne fait pas.
+        causes = sorted({
+            f"{a.get('colonne')} ({a.get('erreur')})"
+            for a in (reponse.get("invalid_values") or [])[:20] if a.get("colonne")
+        })
         super().__init__(
             f"{reponse.get('errors')} ligne(s) refusée(s) par le serveur sur {table}"
+            + (f" — colonnes en cause : {'; '.join(causes[:3])}" if causes else "")
             + (f" — {exemples}" if exemples else "")
         )
 
