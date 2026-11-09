@@ -9,7 +9,9 @@ from app.models.base import Base
 from app.models import user, sync_status, pharma, ventes, achats, clients, caisse, chifa, config_tables, autres  # noqa
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.sync_database_url)
+# configparser interprète `%` : l'échappement URL d'un mot de passe en
+# contient (`@` → `%40`), il faut le doubler.
+config.set_main_option("sqlalchemy.url", settings.sync_database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
