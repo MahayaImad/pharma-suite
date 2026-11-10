@@ -57,9 +57,12 @@ async def list_products(
     psychotrope: Optional[int] = Query(None, ge=0, le=1),
     segment_abc: Optional[str] = Query(None, description="Filtrer par segment ABC (A, B ou C)"),
     segment_xyz: Optional[str] = Query(None, description="Filtrer par segment XYZ (X, Y ou Z)"),
-    disponibilite: Optional[str] = Query(None, description="Filtrer par disponibilité (oui, rupture, quota)"),
+    disponibilite: Optional[str] = Query(None, description="Filtrer par disponibilité (oui, rupture, inactif, quota)"),
     categorie: Optional[str] = Query(None, description="Filtrer par catégorie (princeps, generique, generique++)"),
     include_archived: bool = Query(False, description="Inclure les produits archivés"),
+    actif: Optional[bool] = Query(
+        None, description="true : produits actifs seulement (en stock ou vendus dans les "
+                          "12 mois) ; false : inactifs seulement"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
@@ -104,6 +107,9 @@ async def list_products(
     if disponibilite:
         conditions.append("n.disponibilite = :disponibilite")
         params["disponibilite"] = disponibilite.lower()
+    if actif is not None:
+        conditions.append("COALESCE(mv.actif, false) = :actif")
+        params["actif"] = actif
 
     where = " AND ".join(conditions)
 
@@ -125,7 +131,7 @@ async def list_products(
             n.forme_abr,
             n.famille,
             n.labo,
-            n.prix_vente,
+            COALESCE(mv.prix_vente, 0) AS prix_vente,
             n.qte_alerte,
             n.psychotrope,
             n.conditionnement,
@@ -136,7 +142,9 @@ async def list_products(
             n.disponibilite,
             n.categorie,
             COALESCE(mv.stock_actuel,       0) AS stock,
-            COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen
+            COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen,
+            COALESCE(mv.actif, false)          AS actif,
+            mv.derniere_vente
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
         WHERE {where}
@@ -165,6 +173,8 @@ async def list_products(
             "segment_xyz": r.segment_xyz,
             "disponibilite": r.disponibilite,
             "categorie": r.categorie,
+            "actif": r.actif,
+            "derniere_vente": r.derniere_vente.isoformat() if r.derniere_vente else None,
         }
         for r in res.fetchall()
     ]
@@ -182,11 +192,15 @@ async def get_product(
     res = await db.execute(text("""
         SELECT
             n.id, n.nom, n.dci, n.dosage, n.forme, n.forme_abr, n.famille, n.labo,
-            n.prix_vente, n.qte_alerte, n.psychotrope, n.conditionnement,
+            COALESCE(mv.prix_vente, 0) AS prix_vente,
+            n.qte_alerte, n.psychotrope, n.conditionnement,
             n.code_barre_original, n.desactiv_alrt_rup, n.ord_trois_souche,
             n.de_equiv, n.remb_cvm, n.cls_trp,
             COALESCE(mv.stock_actuel,       0) AS stock,
-            COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen
+            COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen,
+            COALESCE(mv.actif, false)          AS actif,
+            mv.derniere_vente,
+            COALESCE(mv.qte_vendue_12m, 0)     AS qte_vendue_12m
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
         WHERE n.id = :id
@@ -207,6 +221,9 @@ async def get_product(
         "ord_trois_souche": p.ord_trois_souche,
         "de_equiv": p.de_equiv, "remb_cvm": p.remb_cvm,
         "cls_trp": p.cls_trp,
+        "actif": p.actif,
+        "derniere_vente": p.derniere_vente.isoformat() if p.derniere_vente else None,
+        "qte_vendue_12m": int(p.qte_vendue_12m or 0),
     }
 
 
@@ -365,8 +382,11 @@ async def stock_alerts(
     _: dict = Depends(get_current_user),
 ):
     """Produits en rupture ou sous le seuil d'alerte — stock depuis mv_stock_produits."""
+    # Une rupture ne concerne qu'un produit actif : sans ce filtre, tout le
+    # catalogue jamais ou plus vendu ressort « en rupture ».
     if alert_type == "rupture":
-        where = "COALESCE(mv.stock_actuel, 0) <= 0 AND n.desactiv_alrt_rup = 0"
+        where = ("COALESCE(mv.stock_actuel, 0) <= 0 AND COALESCE(mv.actif, false) "
+                 "AND n.desactiv_alrt_rup = 0")
     elif alert_type == "alerte":
         where = (
             "COALESCE(mv.stock_actuel, 0) > 0 "
@@ -376,8 +396,9 @@ async def stock_alerts(
         )
     else:
         where = (
-            "(COALESCE(mv.stock_actuel, 0) <= 0 "
-            " OR (n.qte_alerte > 0 AND COALESCE(mv.stock_actuel, 0) < n.qte_alerte)) "
+            "((COALESCE(mv.stock_actuel, 0) <= 0 AND COALESCE(mv.actif, false)) "
+            " OR (n.qte_alerte > 0 AND COALESCE(mv.stock_actuel, 0) > 0 "
+            "     AND COALESCE(mv.stock_actuel, 0) < n.qte_alerte)) "
             "AND n.desactiv_alrt_rup = 0"
         )
 
@@ -477,7 +498,7 @@ async def list_classifications(
             ep.nom             AS parent_employe_nom,
             ep.prenom          AS parent_employe_prenom,
             COUNT(DISTINCT n.id)                                  AS nb_produits,
-            COALESCE(SUM(mv.stock_actuel * n.prix_vente), 0)      AS valeur_stock
+            COALESCE(SUM(mv.valeur_vente), 0)      AS valeur_stock
         FROM nomenclature_classification nc
         LEFT JOIN employes e ON e.id = nc.employe_id
         -- Classe parente : même 2 premiers caractères, niveau 1
@@ -614,7 +635,7 @@ async def list_classification_products(
     res = await db.execute(text("""
         SELECT
             n.id, n.nom, n.dci, n.dosage, n.forme_abr, n.famille,
-            n.prix_vente, n.qte_alerte,
+            COALESCE(mv.prix_vente, 0) AS prix_vente, n.qte_alerte,
             COALESCE(mv.stock_actuel,       0) AS stock,
             COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen
         FROM nomenclature n
@@ -652,7 +673,7 @@ async def list_etageres(
             e.nom AS employe_nom,
             COUNT(DISTINCT nc.id)                             AS nb_classes,
             COUNT(DISTINCT n.id)                              AS nb_produits,
-            COALESCE(SUM(mv.stock_actuel * n.prix_vente), 0)  AS valeur_stock
+            COALESCE(SUM(mv.valeur_vente), 0)  AS valeur_stock
         FROM nomenclature_classification nc
         LEFT JOIN employes e ON e.id = nc.employe_id
         LEFT JOIN nomenclature n ON (
@@ -776,12 +797,13 @@ async def dashboard_lots(
             WITH {filtered_ids_cte}
             SELECT n.id, n.nom, n.famille, n.dci, n.forme_abr,
                    n.segment_abc, n.segment_xyz, n.disponibilite,
-                   n.qte_alerte, n.prix_vente,
+                   n.qte_alerte, COALESCE(mv.prix_vente, 0) AS prix_vente,
                    COALESCE(mv.stock_actuel, 0) AS stock
             FROM nomenclature n
             LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
             WHERE n.id IN (SELECT id FROM filtered_ids)
               AND COALESCE(mv.stock_actuel, 0) = 0
+              AND COALESCE(mv.actif, false)
             ORDER BY n.nom LIMIT :limit
         """
     elif type == "alerte":
@@ -789,7 +811,7 @@ async def dashboard_lots(
             WITH {filtered_ids_cte}
             SELECT n.id, n.nom, n.famille, n.dci, n.forme_abr,
                    n.segment_abc, n.segment_xyz, n.disponibilite,
-                   n.qte_alerte, n.prix_vente,
+                   n.qte_alerte, COALESCE(mv.prix_vente, 0) AS prix_vente,
                    COALESCE(mv.stock_actuel, 0) AS stock
             FROM nomenclature n
             JOIN mv_stock_produits mv ON mv.id_nom = n.id
@@ -839,7 +861,7 @@ async def dashboard_lots(
             )
             SELECT n.id, n.nom, n.famille, n.dci, n.forme_abr,
                    n.segment_abc, n.segment_xyz,
-                   n.qte_alerte, n.prix_vente,
+                   n.qte_alerte, COALESCE(mv.prix_vente, 0) AS prix_vente,
                    COALESCE(mv.stock_actuel, 0) AS stock,
                    ROUND(COALESCE(mv.stock_actuel, 0)::numeric / NULLIF(vm.avg_monthly, 0), 1) AS mois_stock
             FROM nomenclature n
@@ -1183,7 +1205,7 @@ async def get_categories_kpis(
         SELECT
             n.categorie,
             COUNT(DISTINCT n.id)                               AS nb_produits,
-            COALESCE(SUM(mv.stock_actuel * n.prix_vente), 0)   AS valeur_stock,
+            COALESCE(SUM(mv.valeur_vente), 0)   AS valeur_stock,
             COALESCE(SUM(sl.ca_12m), 0)                        AS ca_12m
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id

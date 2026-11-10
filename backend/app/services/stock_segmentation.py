@@ -152,12 +152,17 @@ async def update_disponibilite(db: AsyncSession) -> dict:
 
     Règles (par ordre de priorité) :
     1. quota + stock > COALESCE(qte_alerte, 5)  →  reset à 'oui' automatiquement
-    2. stock = 0  et  != quota                  →  'rupture'
-    3. stock > 0  et  != quota                  →  'oui'
+    2. stock = 0, produit actif, != quota       →  'rupture'
+    3. stock = 0, produit inactif, != quota     →  'inactif'
+    4. stock > 0  et  != quota                  →  'oui'
 
     Les produits en 'quota' dont le stock n'atteint pas encore le seuil restent 'quota'.
     Retourne un dict résumant les counts de chaque action.
     """
+    # Chaque mise à jour ne touche que les lignes dont la valeur change :
+    # cette fonction tourne après chaque passe de synchronisation, et réécrire
+    # 9 000 lignes à l'identique toutes les 15 minutes gonflerait la table.
+
     # 1. Réinitialisation automatique des quotas si stock suffisant
     r_quota_reset = await db.execute(text("""
         UPDATE nomenclature n
@@ -171,26 +176,41 @@ async def update_disponibilite(db: AsyncSession) -> dict:
     """))
     quota_reset = len(r_quota_reset.fetchall())
 
-    # 2. Ruptures (stock = 0, hors quota)
+    # 2. Ruptures : stock nul sur un produit ACTIF (hors quota)
     r_rupture = await db.execute(text("""
         UPDATE nomenclature n
         SET disponibilite = 'rupture'
         FROM mv_stock_produits mv
         WHERE mv.id_nom = n.id
-          AND n.disponibilite != 'quota'
+          AND n.disponibilite NOT IN ('quota', 'rupture')
           AND n.archive = false
           AND COALESCE(mv.stock_actuel, 0) <= 0
+          AND mv.actif
         RETURNING n.id
     """))
     ruptures = len(r_rupture.fetchall())
 
-    # 3. Disponibles (stock > 0, hors quota)
+    # 3. Inactifs : stock nul, ni vendu depuis 12 mois — pas une rupture
+    r_inactif = await db.execute(text("""
+        UPDATE nomenclature n
+        SET disponibilite = 'inactif'
+        FROM mv_stock_produits mv
+        WHERE mv.id_nom = n.id
+          AND n.disponibilite NOT IN ('quota', 'inactif')
+          AND n.archive = false
+          AND COALESCE(mv.stock_actuel, 0) <= 0
+          AND NOT mv.actif
+        RETURNING n.id
+    """))
+    inactifs = len(r_inactif.fetchall())
+
+    # 4. Disponibles (stock > 0, hors quota)
     r_dispo = await db.execute(text("""
         UPDATE nomenclature n
         SET disponibilite = 'oui'
         FROM mv_stock_produits mv
         WHERE mv.id_nom = n.id
-          AND n.disponibilite != 'quota'
+          AND n.disponibilite NOT IN ('quota', 'oui')
           AND n.archive = false
           AND COALESCE(mv.stock_actuel, 0) > 0
         RETURNING n.id
@@ -199,10 +219,13 @@ async def update_disponibilite(db: AsyncSession) -> dict:
 
     await db.commit()
     logger.info(
-        f"[Disponibilité] oui={disponibles}, rupture={ruptures}, quota_reset={quota_reset}"
+        f"[Disponibilité] changements — oui={disponibles}, rupture={ruptures}, "
+        f"inactif={inactifs}, quota_reset={quota_reset}"
     )
+    # Nombre de produits dont la valeur a CHANGÉ à cet appel, pas le total.
     return {
         "oui": disponibles,
         "rupture": ruptures,
+        "inactif": inactifs,
         "quota_reset": quota_reset,
     }

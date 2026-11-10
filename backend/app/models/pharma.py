@@ -9,6 +9,9 @@ from app.models.base import Base
 DISPONIBILITE_OUI     = 'oui'
 DISPONIBILITE_RUPTURE = 'rupture'
 DISPONIBILITE_QUOTA   = 'quota'
+# Stock nul et produit inactif (ni en stock, ni vendu depuis 12 mois) :
+# ce n'est pas une rupture.
+DISPONIBILITE_INACTIF = 'inactif'
 
 
 class Nomenclature(Base):

@@ -57,6 +57,16 @@ phase, la méthode à suivre.
 - **Stock d'un produit** = somme des `entrees_produits.stock` de ses lots
   (vue `mv_stock_produits`). `nomenclature.stock` sert de contrôle : un écart
   entre les deux se signale, il ne se masque pas.
+- **Produit actif** = non archivé **et** (en stock **ou** vendu au moins une
+  fois dans les 12 derniers mois). Calculé dans la vue (`actif`), à chaque
+  recalcul. Les ruptures, les alertes et tout taux de rupture ne portent que
+  sur les produits actifs. Un produit à stock nul et inactif a la
+  disponibilité `inactif`, pas `rupture`.
+- **Prix de vente d'un produit** = celui de son lot de référence : le plus
+  récent ayant du stock, à défaut le plus récent tout court, hors avoirs
+  (`mv_stock_produits.prix_vente`). `nomenclature.prix_vente` vaut 0 partout
+  et ne s'utilise pas. La valeur d'un stock se calcule lot par lot
+  (`valeur_achat`, `valeur_vente`), jamais stock × prix de référence.
 - **La vue `mv_stock_produits` doit être rafraîchie** après chaque
   synchronisation, sinon tout le module affiche un stock périmé. À la
   création de la base elle est vide (`WITH NO DATA`) et toute lecture échoue
@@ -331,22 +341,19 @@ lots dont 4 310 avec stock.
   (`docs/02-sync-contrat.md` §6.2). `peremption_date` est remplie partout où
   le texte l'est.
 
+- **Prix de vente à 0 dans toutes les listes** : `nomenclature.prix_vente`
+  vaut 0 pour tous les produits. Le prix vient maintenant des lots, par la
+  vue (migration 004).
+- **« Rupture » sur 6 780 produits sur 9 184**, pour l'essentiel des
+  références jamais ou plus vendues : définition du produit actif
+  (section 3), appliquée aux alertes, aux ruptures et à la disponibilité
+  (migration 004).
+
 ### À corriger
 
-- **Prix de vente à 0 dans toutes les listes.** `nomenclature.prix_vente`
-  vaut 0 pour tous les produits ; le prix réel est sur les lots
-  (`entrees_produits.prix_vente`). Les routes produits, alertes et surstock
-  affichent donc 0.
 - **`nomenclature.stock` vaut 0 partout** : ce n'est pas un contrôle
   utilisable du stock calculé. Le rapprochement se fera avec EASYPHARM, sur
   un échantillon.
-- **« Rupture » ne veut rien dire tel quel** : 6 780 produits sur 9 184 sont
-  à stock nul, pour l'essentiel des références du catalogue jamais ou plus
-  vendues. Il faut définir le **produit actif** (par exemple : vendu dans les
-  12 derniers mois) avant tout indicateur de rupture. Seuls 1 979 produits
-  ont un seuil d'alerte.
-- **`disponibilite` = « oui » pour tous**, y compris les produits à stock
-  nul : elle n'avait jamais été recalculée (elle l'est désormais avec la vue).
 - **Aucun segment ABC / XYZ, aucune catégorie, aucune étagère** : la
   segmentation n'a jamais tourné (`POST /stock/segmentation/run`, sinon le
   1er du mois), `laboratoires.is_generique` est faux partout, les étagères

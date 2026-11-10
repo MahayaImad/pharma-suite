@@ -147,6 +147,24 @@ async def partie_donnees(rafraichir: bool) -> bool:
                    round(sum(stock_actuel * prix_moyen_pondere), 2) AS valeur_achat
             FROM mv_stock_produits
         """)
+        await verifier("Produits actifs (en stock, ou vendus dans les 12 mois)", """
+            SELECT count(*) FILTER (WHERE actif) AS actifs,
+                   count(*) FILTER (WHERE actif AND stock_actuel > 0) AS actifs_en_stock,
+                   count(*) FILTER (WHERE actif AND stock_actuel = 0) AS actifs_en_rupture,
+                   count(*) FILTER (WHERE NOT actif) AS inactifs,
+                   count(*) FILTER (WHERE stock_actuel > 0 AND qte_vendue_12m <= 0) AS en_stock_sans_vente_12m,
+                   count(*) FILTER (WHERE derniere_vente IS NULL) AS jamais_vendus
+            FROM mv_stock_produits
+        """)
+        await verifier("Prix de vente (pris sur les lots)", """
+            SELECT count(*) FILTER (WHERE prix_vente > 0) AS avec_prix,
+                   count(*) FILTER (WHERE prix_vente = 0) AS sans_prix,
+                   count(*) FILTER (WHERE prix_vente = 0 AND actif) AS actifs_sans_prix,
+                   count(*) FILTER (WHERE prix_vente = 0 AND stock_actuel > 0) AS en_stock_sans_prix,
+                   round(sum(valeur_achat), 2) AS valeur_stock_achat,
+                   round(sum(valeur_vente), 2) AS valeur_stock_vente
+            FROM mv_stock_produits
+        """)
         await verifier(
             "Stock de la fiche produit (nomenclature.stock) contre somme des lots", """
             SELECT count(*) FILTER (WHERE COALESCE(n.stock, 0) = mv.stock_actuel) AS identiques,
@@ -369,6 +387,8 @@ async def partie_routes() -> tuple[int, int]:
         ("/products", {"in_stock_only": "true", "limit": 200}),
         ("/products", {"segment_abc": "A"}),
         ("/products", {"disponibilite": "rupture"}),
+        ("/products", {"actif": "true"}),
+        ("/products", {"actif": "false"}),
         ("/products", {"psychotrope": 1}),
         ("/instances", {}),
         ("/alerts", {"alert_type": "all"}),
