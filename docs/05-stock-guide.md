@@ -66,8 +66,13 @@ phase, la méthode à suivre.
   réel (`MM/YY` ou `MM/YYYY`) se constate dans le rapport de vérification —
   on ne le suppose pas. Une péremption illisible est comptée et affichée
   comme « inconnue », jamais ignorée.
-- **Ventes** : exclure retours et avoirs (`type_sortie` `RET`, `AV`) des
-  quantités vendues, de la même façon partout.
+- **Ventes** (`docs/BUSINESS_LOGIC.md` §2.3, vérifié sur la base) : une ligne
+  de vente a `type_sortie = 'V'` ; un retour client n'a pas de type dédié, sa
+  `qte_sortie` est **négative**. Le net est donc la simple somme de
+  `qte_sortie` ; pour compter des ventes, filtrer `qte_sortie > 0`. Les
+  valeurs `RET` et `AV` n'existent pas côté ventes.
+- **Achats** : `type_entree = 'AV'` est un avoir produit, un retour au
+  fournisseur ; il s'exclut des quantités reçues.
 - **Produits archivés** (`nomenclature.archive`) exclus par défaut des listes
   et des indicateurs.
 - **Lots bloqués** (`bloque = 1`) : comptés dans le stock physique, exclus du
@@ -129,8 +134,8 @@ demande vaut zéro) et **biais**, suivis dans le temps et par classe.
 - **À faire** : vérifier sur données réelles ; remplacer ou compléter le MAPE
   par le MASE pour les produits intermittents ; suivre le biais ; gérer les
   fêtes mobiles (Ramadan, Aïd), que la saisonnalité calendaire ne voit pas ;
-  aligner la définition d'une vente — `stock_history.py` filtre
-  `type_sortie = 'V'`, la segmentation exclut `'RET'` et `'AV'`. *Phase 6.*
+  aligner les filtres de vente sur la règle de la section 3 (retour =
+  quantité négative). *Phase 6.*
 
 ### Bloc 3 — Décider quand et combien commander
 
@@ -319,8 +324,11 @@ Pour chaque fonctionnalité du module :
   planifiée mensuellement et peut être lancée par
   `POST /stock/segmentation/run`.
 - `nomenclature.generique` n'est alimentée par rien.
-- Définition d'une vente incohérente entre modules : `type_sortie = 'V'`
-  dans `stock_history.py`, `NOT IN ('RET', 'AV')` dans la segmentation. Les
-  valeurs réelles sont dans le rapport de vérification.
+- Filtres de vente à aligner sur `docs/BUSINESS_LOGIC.md` §2.3 : le code
+  filtre tantôt `type_sortie = 'V'`, tantôt `NOT IN ('RET', 'AV')`,
+  `!= 'RET'` ou `NOT IN ('AV', 'R')`, et `stock.py` inverse le signe des
+  lignes `RET` / `AV`. Aucune de ces valeurs n'existe : ces filtres ne font
+  rien aujourd'hui ; à vérifier : les comptages de ventes peuvent inclure
+  les retours.
 - Le moteur d'achat calcule les montants en `float`, contre la règle
   « Argent ».

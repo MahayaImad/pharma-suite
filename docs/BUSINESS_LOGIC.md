@@ -114,6 +114,29 @@ Quand une instance est vendue ou annulée :
 - `V` = Vente normale
 - `A` = Avoir/Retour (filtré dans la plupart des calculs)
 
+> Ces deux valeurs concernent l'en-tête (`sorties.type`) et n'ont pas été
+> revérifiées sur la base. Pour les lignes de vente, voir 2.3, qui fait foi.
+
+### 2.3 Champ `type_sortie` dans sorties_produits — vérifié sur la base (2026-11-10)
+
+| Fait | Détail |
+|------|--------|
+| `type_sortie = 'V'` | une **vente** |
+| `'RET'`, `'AV'` | **aucun enregistrement** ne porte ces valeurs |
+| Retour client | **pas de type dédié** : la ligne garde son type et `sorties_produits.qte_sortie` est **négative** |
+
+Conséquences pour les calculs :
+
+- **Quantité ou chiffre d'affaires net** = simple somme de `qte_sortie` (ou
+  de `qte_sortie × prix_vente`) : les retours se déduisent d'eux-mêmes par
+  leur signe. Ne pas inverser le signe une seconde fois.
+- **Retours seuls** = lignes où `qte_sortie < 0`.
+- **Ventes brutes** = lignes où `qte_sortie > 0`.
+- **Compter des ventes** (nombre de lignes, de tickets) : filtrer
+  `qte_sortie > 0`, sinon un retour est compté comme une vente.
+- Les filtres `type_sortie NOT IN ('RET', 'AV')` ou `!= 'RET'` présents dans
+  le code ne retirent rien : ils ne correspondent à aucune ligne.
+
 ---
 
 ## 3. Gestion des Achats
@@ -127,6 +150,12 @@ Quand une instance est vendue ou annulée :
 | `modif` | > 0 | Achat a été modifié après clôture |
 | `type` | A | Achat normal |
 | `type` | AV | Avoir fournisseur |
+
+**`AV` = avoir produit, c'est-à-dire un retour au fournisseur** (côté achats
+uniquement ; cette valeur n'existe pas côté ventes, voir 2.3). Sur les lignes,
+c'est `entrees_produits.type_entree = 'AV'`. Un avoir fait **sortir** du
+stock : il ne se compte ni comme une entrée ni comme un achat, et s'exclut
+des quantités reçues (`type_entree NOT IN ('AV')`).
 
 ### 3.2 Flux de Réception
 
