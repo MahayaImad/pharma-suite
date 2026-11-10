@@ -19,7 +19,7 @@ stock (`backend/app/api/v1/stock.py`, 25 routes) existe mais n'a pas encore
    des tables propres à PharmaSuite.
 2. **Un chiffre affiché est un chiffre vérifié.** Aucun indicateur ne part à
    l'écran sans avoir été rapproché d'EASYPHARM sur un échantillon réel.
-3. **Chaque indicateur a une définition écrite** (section 4) : formule,
+3. **Chaque indicateur a une définition écrite** (section 5) : formule,
    période, exclusions. Deux écrans ne calculent jamais le même indicateur de
    deux façons.
 4. **Dire la fraîcheur.** Le stock affiché date de la dernière
@@ -41,13 +41,14 @@ Chaque phase a une sortie vérifiable. On ne commence pas la suivante avant.
 | **0. Fiabiliser** | lancer `scripts/verifier_stock.py`, corriger ce qui échoue ; rafraîchir la vue du stock après chaque passe de l'agent ; trancher le format de péremption ; rapprocher le stock de 20 produits avec EASYPHARM | toutes les routes répondent, et les 20 produits concordent |
 | **1. Consulter** | recherche produit, fiche, lots triés par péremption (FEFO), stock et valeur | un employé retrouve un produit et ses lots en moins de 10 s |
 | **2. Alerter** | ruptures, sous le seuil, péremptions à 1/3/6 mois, stock dormant, surstock | chaque alerte mène à une action (commander, mettre en avant, échanger, retourner) |
-| **3. Piloter** | indicateurs de la section 4, par famille / étagère / responsable, avec historique | le titulaire lit l'état du stock en une page |
-| **4. Classer** | ABC × XYZ existants, ajout de la criticité VEN, taux de service cible par classe | chaque produit actif a ses trois classes |
+| **3. Piloter** | indicateurs de la section 5, par famille / étagère / responsable, avec historique | le titulaire lit l'état du stock en une page |
+| **4. Classer** | ABC × XYZ existants, ajout de la criticité VEN, taux de service cible par classe (bloc 1) | chaque produit actif a ses trois classes |
 | **5. Inventorier** | inventaire tournant : listes de comptage par classe, saisie, écarts, exactitude | l'exactitude du stock est mesurée chaque mois |
 | **6. Réapprovisionner** | brancher le moteur d'achat existant (`assistant_achat`) sur des paramètres fiables | une proposition de commande est acceptée sans retouche majeure |
 
 La phase 0 est le backend ; le frontend Flutter démarre à la phase 1, sur
-des routes vérifiées.
+des routes vérifiées. Les six blocs de la section 4 disent, pour chaque
+phase, la méthode à suivre.
 
 ---
 
@@ -83,7 +84,139 @@ des routes vérifiées.
 
 ---
 
-## 4. Indicateurs — définitions de référence
+## 4. Méthode : les six blocs
+
+La gestion du stock repose sur six blocs, tirés de la littérature
+(Silver, Pyke et Thomas ; Syntetos et Boylan ; Nahmias ; MSH, *MDS-3*). Pour
+chacun : la règle de l'art, ce que le code fait déjà, ce qui reste à faire.
+« Existe » veut dire écrit, pas encore vérifié sur les données réelles.
+
+### Bloc 1 — Classer avant de gérer
+
+On ne gère pas 9 000 références de la même façon.
+
+| Classement | Critère | Sert à |
+|---|---|---|
+| **ABC** | valeur vendue sur 12 mois (A ≤ 80 % du cumul, B ≤ 95 %, C au-delà) | concentrer le contrôle et la trésorerie |
+| **XYZ** | régularité de la demande (coefficient de variation) | choisir la méthode de prévision |
+| **VEN** | criticité thérapeutique : Vital, Essentiel, Non essentiel | fixer le taux de service visé |
+
+Le croisement **ABC × VEN** est la référence en pharmacie : un produit vital
+de classe C mérite un stock de sécurité qu'un classement purement financier
+lui refuserait.
+
+- **Existe** : ABC et XYZ (`services/stock_segmentation.py`), recalcul
+  mensuel planifié, matrice ABC × XYZ (`/stock/kpis/segments`).
+- **À faire** : VEN (colonne, saisie par le pharmacien, valeur par défaut par
+  classe thérapeutique) ; croisement ABC × VEN ; un produit sans vente sur
+  12 mois n'est pas « C » par défaut mais « sans mouvement ». *Phase 4.*
+
+### Bloc 2 — Prévoir la demande
+
+| Demande | Méthode |
+|---|---|
+| régulière (X) | lissage exponentiel ; Holt-Winters s'il y a saisonnalité (grippe, allergies, Ramadan) |
+| intermittente (Z) | Croston, corrigé par Syntetos-Boylan — les moyennes classiques surestiment |
+| censurée par une rupture | corriger l'historique des jours à stock nul : les ventes sous-estiment le besoin |
+
+La qualité se mesure : erreur (MAPE ou MASE — le MAPE est indéfini quand la
+demande vaut zéro) et **biais**, suivis dans le temps et par classe.
+
+- **Existe** : `purchase_engine/forecaster.py` choisit entre Croston
+  (variante SBA), Holt-Winters, régression et moyenne mobile, sur le MAPE des
+  30 derniers jours ; `censored_demand.py` corrige la demande des jours de
+  rupture ; `stock_history.py` reconstitue le stock jour par jour.
+- **À faire** : vérifier sur données réelles ; remplacer ou compléter le MAPE
+  par le MASE pour les produits intermittents ; suivre le biais ; gérer les
+  fêtes mobiles (Ramadan, Aïd), que la saisonnalité calendaire ne voit pas ;
+  aligner la définition d'une vente — `stock_history.py` filtre
+  `type_sortie = 'V'`, la segmentation exclut `'RET'` et `'AV'`. *Phase 6.*
+
+### Bloc 3 — Décider quand et combien commander
+
+```
+stock de sécurité  SS  = z × σ(demande) × √(délai)
+point de commande  ROP = demande moyenne × délai + SS
+quantité économique EOQ = √(2 × demande annuelle × coût de commande ÷ coût de possession)
+```
+
+- `z` vient du **taux de service visé**, qui dépend de la classe, pas d'une
+  valeur unique.
+- En officine, avec des livraisons quotidiennes ou presque, la politique
+  adaptée est la **révision périodique avec niveau de recomplètement**
+  (min / max) ; l'EOQ sert de repère, pas de règle.
+- La variabilité du **délai fournisseur** entre dans le stock de sécurité,
+  pas seulement celle de la demande.
+- Contraintes réelles : colisage, minimum de commande, remises par palier,
+  unités gratuites, budget.
+
+- **Existe** : `purchase_engine/stock_params.py` (SS, ROP, EOQ ; taux de
+  service A 95 %, B 90 %, C 85 %) ; `optimizer.py` (quantités entières sous
+  contrainte de budget, PuLP) ; tables `parametres_stock` et
+  `previsions_demande`.
+- **À faire** : taux de service par ABC × VEN au lieu d'ABC seul ; délai et
+  sa variabilité mesurés par fournisseur au lieu d'un délai fixe ; coût de
+  commande (500 DA) et taux de possession (20 %) aujourd'hui en dur, à rendre
+  configurables ; colisage, minimum, remises et unités gratuites absents de
+  l'optimisation ; montants en `Decimal` (le moteur calcule en `float`).
+  *Phase 6.*
+
+### Bloc 4 — Gérer le périssable
+
+- **FEFO** : premier périmé, premier sorti — pas FIFO.
+- Suivi par **lot** et date de péremption ; alertes à 6, 3 et 1 mois.
+- Pour un lot proche de la péremption, une action : mise en avant, échange
+  inter-pharmacies, retour fournisseur.
+- **Stock dormant** (aucune vente depuis N mois) et **surstock** détectés et
+  valorisés.
+- Un lot périmé encore en stock est une anomalie à traiter, pas une ligne de
+  tableau.
+
+- **Existe** : lots triés par péremption (`/stock/products/{id}/lots`),
+  alertes à 3 / 6 / 9 mois et surstock (`/stock/dashboard/lots`), KPI
+  `ventes_peremption_3` (prime).
+- **À faire** : trancher le format de péremption (section 9) ; alerte à
+  1 mois ; lots périmés en stock ; stock dormant ; l'action associée à chaque
+  alerte ; taux de péremption (pertes subies). *Phases 2 et 3.*
+
+### Bloc 5 — Fiabiliser les données
+
+- **Inventaire tournant** : compter un peu chaque jour, à une fréquence
+  fixée par la classe (A souvent, C rarement), plutôt qu'un inventaire annuel.
+- **Exactitude du stock** : part des références dont le compté égale le
+  théorique. C'est le préalable à tout : une prévision sur un stock faux ne
+  vaut rien.
+- **Analyse des écarts** par cause : casse, vol, erreur de saisie, périmé.
+- **Psychotropes** : traçabilité renforcée, registre et rapprochement.
+
+- **Existe** : tables `inventaires` et `inventaires_produits` (miroir
+  EASYPHARM), historique et instantané des psychotropes
+  (`/stock/psychotropes/*`).
+- **À faire** : tout l'inventaire tournant (listes de comptage, saisie
+  mobile, écarts, causes) dans des tables propres à PharmaSuite, puisque
+  PharmaSuite n'écrit pas dans EASYPHARM ; exactitude et démarque ;
+  rapprochement stock fiche / somme des lots. *Phases 0 et 5.*
+
+### Bloc 6 — Mesurer
+
+Les indicateurs sont définis à la section 5. Trois règles de lecture :
+
+- ils se lisent **ensemble** : une rotation excellente avec des ruptures
+  fréquentes est une mauvaise gestion ;
+- ils se déclinent **par classe** : un taux de rupture global cache une
+  rupture sur un produit vital ;
+- ils se suivent **dans le temps** : une valeur isolée ne dit rien, une
+  tendance oui — d'où un relevé périodique conservé.
+
+- **Existe** : rotation, segments, catégories (`/stock/kpis/*`), valeur du
+  stock.
+- **À faire** : couverture, taux et jours de rupture, dormant, taux de
+  péremption, exactitude, démarque, GMROI, indicateurs fournisseurs, et
+  l'historisation de tous. *Phase 3.*
+
+---
+
+## 5. Indicateurs — définitions de référence
 
 Période par défaut : 12 mois glissants, sauf mention. Tout indicateur se
 décline par famille, étagère, responsable, classe ABC/XYZ/VEN.
@@ -105,16 +238,8 @@ décline par famille, étagère, responsable, classe ABC/XYZ/VEN.
 | **Fournisseur : délai** | moyenne et écart-type (réception − commande) | entre dans le stock de sécurité |
 | **Fournisseur : complétude** | lignes livrées en entier ÷ lignes commandées | fiabilité |
 
-Classements :
-
-- **ABC** — part cumulée du chiffre d'affaires 12 mois : A ≤ 80 %, B ≤ 95 %,
-  C au-delà (implémenté, `services/stock_segmentation.py`).
-- **XYZ** — régularité de la demande (coefficient de variation) : X régulier,
-  Y variable, Z erratique (implémenté).
-- **VEN** — Vital / Essentiel / Non essentiel, fixé par le pharmacien, pas
-  calculé (à créer).
-- **Taux de service cible** — par croisement ABC × VEN ; il règle le stock de
-  sécurité : `z × σ` de la demande pendant le délai de livraison.
+Les classements ABC, XYZ et VEN et le taux de service cible sont définis
+aux blocs 1 et 3 de la section 4.
 
 Un indicateur qui influence la prime (`ventes_peremption_3`, catégories)
 relève de la règle « Paie » : pas de changement sans test de non-régression
@@ -122,7 +247,7 @@ dans `backend/tests/paie/`.
 
 ---
 
-## 5. Règles backend
+## 6. Règles backend
 
 - **Existant** : suivre les conventions de `stock.py` (SQL brut paramétré,
   `async def`, réponses nues). Corriger au plus près.
@@ -145,7 +270,7 @@ dans `backend/tests/paie/`.
 
 ---
 
-## 6. Règles frontend (Flutter)
+## 7. Règles frontend (Flutter)
 
 Celles de `CLAUDE.md`, Partie 2, s'appliquent en entier. Pour le stock :
 
@@ -165,11 +290,11 @@ Celles de `CLAUDE.md`, Partie 2, s'appliquent en entier. Pour le stock :
 
 ---
 
-## 7. Avant de dire « terminé »
+## 8. Avant de dire « terminé »
 
 Pour chaque fonctionnalité du module :
 
-- [ ] la définition de l'indicateur est dans la section 4, ou y a été ajoutée
+- [ ] la définition de l'indicateur est dans la section 5, ou y a été ajoutée
 - [ ] le calcul a un test avec un résultat vérifié à la main
 - [ ] le chiffre a été rapproché d'EASYPHARM sur des produits réels
 - [ ] la route répond en moins d'une seconde sur la base réelle
@@ -181,7 +306,7 @@ Pour chaque fonctionnalité du module :
 
 ---
 
-## 8. Points connus à traiter en phase 0
+## 9. Points connus à traiter en phase 0
 
 - La vue `mv_stock_produits` n'est rafraîchie par personne : l'agent
   n'appelle pas `POST /stock/refresh-cache` après ses passes.
@@ -194,3 +319,8 @@ Pour chaque fonctionnalité du module :
   planifiée mensuellement et peut être lancée par
   `POST /stock/segmentation/run`.
 - `nomenclature.generique` n'est alimentée par rien.
+- Définition d'une vente incohérente entre modules : `type_sortie = 'V'`
+  dans `stock_history.py`, `NOT IN ('RET', 'AV')` dans la segmentation. Les
+  valeurs réelles sont dans le rapport de vérification.
+- Le moteur d'achat calcule les montants en `float`, contre la règle
+  « Argent ».
