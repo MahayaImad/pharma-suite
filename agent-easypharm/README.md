@@ -6,6 +6,9 @@ PharmaSuite, sur le serveur Ubuntu.
 
 Le flux est à sens unique : l'agent ne modifie jamais EASYPHARM.
 
+**Utilisation au quotidien, vérifications et dépannage : voir
+[`GUIDE.md`](GUIDE.md).**
+
 ```
 Windows (officine)                     Ubuntu (serveur)
 ┌──────────────────────┐               ┌─────────────────────┐
@@ -176,14 +179,19 @@ powershell -ExecutionPolicy Bypass -File installer_tache.ps1
 La tâche « PharmaSuite Agent EASYPHARM » :
 
 - démarre avec Windows, sans session ouverte (compte SYSTEM) ;
-- tourne sans limite de durée, en une seule instance ;
+- tourne **sans fenêtre** (`pythonw.exe`), sans limite de durée, en une
+  seule instance ;
 - redémarre une minute après un arrêt imprévu ;
 - écrit dans `agent.log`, dans ce dossier.
 
 Si Python ou ses modules sont installés dans le profil d'un utilisateur, le
 compte SYSTEM ne les voit pas : le script le détecte et installe la tâche à
 l'ouverture de session de cet utilisateur à la place (il le dit). Pour un
-démarrage sans session, réinstaller Python « pour tous les utilisateurs ».
+démarrage sans session, soit réinstaller Python « pour tous les
+utilisateurs », soit relancer le script avec `-SansSession` : la tâche
+démarre alors avec Windows sous le compte de cet utilisateur, sans session
+ouverte et sans mot de passe enregistré. `-AvecFenetre` garde la console
+visible.
 
 Suivre le journal, arrêter, désinstaller :
 

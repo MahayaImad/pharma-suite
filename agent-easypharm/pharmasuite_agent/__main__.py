@@ -28,7 +28,11 @@ logger = logging.getLogger("pharmasuite_agent")
 
 def _installer_logs(fichier: str) -> None:
     format_ = "%(asctime)s | %(levelname)-7s | %(name)s | %(message)s"
-    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+    # Sous pythonw.exe (tâche planifiée sans fenêtre), il n'y a pas de
+    # console : sys.stdout vaut None et seul le fichier journal sert.
+    handlers: list[logging.Handler] = []
+    if sys.stdout is not None:
+        handlers.append(logging.StreamHandler(sys.stdout))
     try:
         handlers.append(RotatingFileHandler(fichier, maxBytes=5_000_000, backupCount=5, encoding="utf-8"))
     except OSError as erreur:

@@ -7,15 +7,23 @@
 # La tache demarre avec Windows (sans session ouverte), tourne en continu,
 # et redemarre toute seule une minute apres un arret imprevu.
 #
-# Option -SessionUtilisateur : la tache demarre a l'ouverture de session de
-# l'utilisateur courant au lieu du demarrage de Windows. A utiliser si Python
-# est installe pour un seul utilisateur (voir le message du script).
+# Options :
+#   -SessionUtilisateur : la tache demarre a l'ouverture de session de
+#       l'utilisateur courant au lieu du demarrage de Windows. Choisi
+#       d'office si Python est installe dans le profil d'un utilisateur.
+#   -SansSession : avec un Python installe dans un profil, lance quand meme
+#       la tache au demarrage de Windows, sous le compte de cet utilisateur,
+#       sans session ouverte (mode S4U, aucun mot de passe enregistre).
+#   -AvecFenetre : garde la console visible (python.exe). Par defaut la
+#       tache tourne sans fenetre (pythonw.exe) ; tout est dans agent.log.
 #
 # Ce fichier est volontairement sans accents : PowerShell 5.1 lit les scripts
 # sans BOM en ANSI.
 
 param(
     [switch]$SessionUtilisateur,
+    [switch]$SansSession,
+    [switch]$AvecFenetre,
     [string]$Nom = "PharmaSuite Agent EASYPHARM"
 )
 
@@ -52,21 +60,37 @@ $python = $infos[0]
 
 # Le compte SYSTEM ne voit ni un Python installe dans le profil d'un
 # utilisateur, ni les modules installes avec pip --user.
-$parUtilisateur = ($infos | Where-Object { $_ -like "$env:USERPROFILE\*" }).Count -gt 0
-if ($parUtilisateur -and -not $SessionUtilisateur) {
+$parUtilisateur = @($infos | Where-Object { $_ -like "$env:USERPROFILE\*" }).Count -gt 0
+if ($parUtilisateur -and -not $SessionUtilisateur -and -not $SansSession) {
     Write-Host "Python ou ses modules sont installes dans le profil de $env:USERNAME :" -ForegroundColor Yellow
     Write-Host "  la tache sera lancee a l'ouverture de session de cet utilisateur," -ForegroundColor Yellow
-    Write-Host "  pas au demarrage de Windows." -ForegroundColor Yellow
+    Write-Host "  pas au demarrage de Windows. (Option -SansSession pour l'eviter.)" -ForegroundColor Yellow
     $SessionUtilisateur = $true
+}
+
+# Sans fenetre : pythonw.exe, livre a cote de python.exe.
+$executable = $python
+if (-not $AvecFenetre) {
+    $pythonw = Join-Path (Split-Path $python) "pythonw.exe"
+    if (Test-Path $pythonw) {
+        $executable = $pythonw
+    } else {
+        Write-Host "pythonw.exe introuvable a cote de python.exe : la console restera visible." -ForegroundColor Yellow
+    }
 }
 
 # --- Tache -----------------------------------------------------------------
 
-$action = New-ScheduledTaskAction -Execute $python `
+$action = New-ScheduledTaskAction -Execute $executable `
     -Argument "-m pharmasuite_agent --config config.toml" `
     -WorkingDirectory $dossier
 
-if ($SessionUtilisateur) {
+if ($SansSession) {
+    $utilisateur = "$env:USERDOMAIN\$env:USERNAME"
+    $declencheur = New-ScheduledTaskTrigger -AtStartup
+    $compte = New-ScheduledTaskPrincipal -UserId $utilisateur -LogonType S4U -RunLevel Limited
+    $quand = "au demarrage de Windows, sous le compte $utilisateur, sans session"
+} elseif ($SessionUtilisateur) {
     $utilisateur = "$env:USERDOMAIN\$env:USERNAME"
     $declencheur = New-ScheduledTaskTrigger -AtLogOn -User $utilisateur
     $compte = New-ScheduledTaskPrincipal -UserId $utilisateur -LogonType Interactive -RunLevel Limited
@@ -97,7 +121,7 @@ $etat = (Get-ScheduledTask -TaskName $Nom).State
 Write-Host ""
 Write-Host "Tache '$Nom' installee : demarrage $quand." -ForegroundColor Green
 Write-Host "  Etat actuel : $etat"
-Write-Host "  Python      : $python"
+Write-Host "  Programme   : $executable"
 Write-Host "  Dossier     : $dossier"
 Write-Host "  Journal     : $dossier\agent.log"
 Write-Host ""
