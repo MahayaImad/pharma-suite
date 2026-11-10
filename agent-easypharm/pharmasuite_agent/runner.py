@@ -327,6 +327,17 @@ def passe(
             bilan.erreurs.append(f"{table.cible}: {erreur}")
             logger.error("[%s] échec : %s", table.cible, erreur)
 
+    if bilan.tables_en_erreur:
+        # L'agent tourne des semaines : après une coupure du serveur HFSQL, la
+        # connexion gardée en mémoire est morte et chaque table échouerait
+        # indéfiniment. On la ferme ; la passe suivante en ouvre une neuve.
+        fermer = getattr(source, "fermer", None)
+        if fermer is not None:
+            try:
+                fermer()
+            except Exception:
+                pass
+
     etat.passes += 1
     etat.enregistrer()
     return bilan

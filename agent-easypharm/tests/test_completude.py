@@ -345,3 +345,19 @@ def test_verifier_compte_les_instances_traitees():
     schema = [{"table": "instance_produits", "columns": ["id"], "count": 5}]
     ligne = next(l for l in verifier(source, ClientSchema(schema)).lignes if l.table == "instance_produits")
     assert ligne.lignes_hfsql == 5 and ligne.ecart == 0
+
+
+def test_connexion_fermee_apres_une_passe_en_erreur(tmp_path):
+    """Sinon une connexion HFSQL morte ferait échouer toutes les passes suivantes."""
+    source = SourceFactice({t.source: [{"id": 1}] for t in TABLES} | {"instance_produits_trt": []})
+    source.fermetures = 0
+
+    def fermer():
+        source.fermetures += 1
+    source.fermer = fermer
+
+    passe(source, ClientFactice(), Etat(tmp_path / "e.json"), 500, 12)
+    assert source.fermetures == 0
+
+    passe(source, ClientFactice(casse_sur="sorties"), Etat(tmp_path / "e.json"), 500, 12)
+    assert source.fermetures == 1

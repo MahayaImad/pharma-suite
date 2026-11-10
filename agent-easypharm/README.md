@@ -164,6 +164,42 @@ python -m pharmasuite_agent --config config.toml --table sorties
 Le code de sortie vaut 1 si au moins une table a échoué, ce qui permet au
 planificateur de signaler l'incident.
 
+## Installer en tâche planifiée Windows
+
+Pour que l'agent démarre avec le PC et tourne en continu, dans une console
+PowerShell ouverte **en administrateur**, depuis ce dossier :
+
+```bat
+powershell -ExecutionPolicy Bypass -File installer_tache.ps1
+```
+
+La tâche « PharmaSuite Agent EASYPHARM » :
+
+- démarre avec Windows, sans session ouverte (compte SYSTEM) ;
+- tourne sans limite de durée, en une seule instance ;
+- redémarre une minute après un arrêt imprévu ;
+- écrit dans `agent.log`, dans ce dossier.
+
+Si Python ou ses modules sont installés dans le profil d'un utilisateur, le
+compte SYSTEM ne les voit pas : le script le détecte et installe la tâche à
+l'ouverture de session de cet utilisateur à la place (il le dit). Pour un
+démarrage sans session, réinstaller Python « pour tous les utilisateurs ».
+
+Suivre le journal, arrêter, désinstaller :
+
+```bat
+powershell -Command "Get-Content agent.log -Wait -Tail 20 -Encoding UTF8"
+powershell -Command "Stop-ScheduledTask -TaskName 'PharmaSuite Agent EASYPHARM'"
+powershell -ExecutionPolicy Bypass -File desinstaller_tache.ps1
+```
+
+Arrêter la tâche à tout moment est sans risque : la synchronisation reprend
+au dernier lot accepté. Après un `git pull`, arrêter puis relancer la tâche
+pour qu'elle prenne le nouveau code (`Start-ScheduledTask`).
+
+Après une passe en erreur, l'agent ferme sa connexion HFSQL et en ouvre une
+neuve à la passe suivante : un redémarrage du serveur HFSQL ne le bloque pas.
+
 ## Comment la reprise fonctionne
 
 Le curseur de chaque table est gardé **côté serveur**
