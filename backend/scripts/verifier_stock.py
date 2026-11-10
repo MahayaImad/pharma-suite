@@ -29,13 +29,14 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import time
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlencode
 
-import httpx
 from sqlalchemy import text
 
 from app.core.database import AsyncSessionLocal
@@ -290,17 +291,54 @@ def decrire(valeur: Any, profondeur: int = 0) -> str:
     return type(valeur).__name__
 
 
-async def appeler(client: httpx.AsyncClient, chemin: str, **params) -> dict:
+async def requete_asgi(chemin: str, params: dict) -> tuple[int, bytes]:
+    """
+    Appelle l'application FastAPI directement par son interface ASGI : ni
+    réseau, ni client HTTP à installer dans l'image.
+    """
+    scope = {
+        "type": "http", "asgi": {"version": "3.0"}, "http_version": "1.1",
+        "method": "GET", "scheme": "http", "path": chemin, "raw_path": chemin.encode(),
+        "query_string": urlencode(params).encode(),
+        "headers": [(b"host", b"verification")],
+        "client": ("127.0.0.1", 0), "server": ("verification", 80), "root_path": "",
+    }
+    code = 500
+    corps = bytearray()
+    recu = False
+
+    async def receive():
+        nonlocal recu
+        if not recu:
+            recu = True
+            return {"type": "http.request", "body": b"", "more_body": False}
+        await asyncio.sleep(3600)   # jamais de déconnexion pendant l'appel
+
+    async def send(message):
+        nonlocal code
+        if message["type"] == "http.response.start":
+            code = message["status"]
+        elif message["type"] == "http.response.body":
+            corps.extend(message.get("body", b""))
+
+    await app(scope, receive, send)
+    return code, bytes(corps)
+
+
+async def appeler(chemin: str, **params) -> dict:
     libelle = chemin + ("?" + "&".join(f"{k}={v}" for k, v in params.items()) if params else "")
     debut = time.monotonic()
     try:
-        reponse = await client.get(PREFIXE + chemin, params=params)
+        code, corps = await asyncio.wait_for(requete_asgi(PREFIXE + chemin, params), timeout=120)
         duree = time.monotonic() - debut
-        if reponse.status_code == 200:
+        if code == 200:
             return {"route": libelle, "code": 200, "duree": duree,
-                    "detail": decrire(reponse.json())}
-        return {"route": libelle, "code": reponse.status_code, "duree": duree,
-                "detail": reponse.text[:300]}
+                    "detail": decrire(json.loads(corps))}
+        return {"route": libelle, "code": code, "duree": duree,
+                "detail": corps.decode("utf-8", errors="replace")[:300]}
+    except asyncio.TimeoutError:
+        return {"route": libelle, "code": 504, "duree": time.monotonic() - debut,
+                "detail": "aucune réponse en 120 s"}
     except Exception as erreur:
         # Exception non gérée dans la route : ce serait un 500 pour un client.
         message = str(erreur).splitlines()[0][:300] if str(erreur) else ""
@@ -368,11 +406,8 @@ async def partie_routes() -> tuple[int, int]:
     app.dependency_overrides[get_current_user] = lambda: {"username": "verification", "role": "admin"}
     resultats = []
     try:
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://verification",
-                                     timeout=120) as client:
-            for chemin, params in appels:
-                resultats.append(await appeler(client, chemin, **params))
+        for chemin, params in appels:
+            resultats.append(await appeler(chemin, **params))
     finally:
         app.dependency_overrides.clear()
 
