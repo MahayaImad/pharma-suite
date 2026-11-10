@@ -42,6 +42,11 @@ _COLONNES_EMPAQUETEES = {"groupware": "droits"}
 _SOURCES_ANNEXES = {"instance_produits_trt"}
 
 
+# Tables PostgreSQL qui réunissent plusieurs fichiers HFSQL : instance_produits
+# contient les instances actives ET les traitées (archive = TRUE).
+_SOURCES_REUNIES = {"instance_produits": ("instance_produits_trt",)}
+
+
 @dataclass
 class LigneRapport:
     table: str
@@ -82,6 +87,8 @@ def _verifier_table(table: Table, source, schema_serveur: dict) -> LigneRapport:
     try:
         colonnes_hfsql = set(source.colonnes(table.source))
         ligne.lignes_hfsql = source.compter(table.source)
+        for annexe in _SOURCES_REUNIES.get(table.cible, ()):
+            ligne.lignes_hfsql += source.compter(annexe)
     except Exception as erreur:
         ligne.existe = False
         ligne.erreur = str(erreur).splitlines()[0][:120] if str(erreur) else type(erreur).__name__

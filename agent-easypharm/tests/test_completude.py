@@ -334,3 +334,14 @@ def test_lot_rejete_nomme_la_colonne():
         "invalid_values": [{"id": 1, "colonne": "heure", "erreur": "trop long pour VARCHAR(10) : 'x'"}],
     })
     assert "colonnes en cause : heure" in str(erreur)
+
+
+def test_verifier_compte_les_instances_traitees():
+    """PostgreSQL réunit instance_produits et instance_produits_trt."""
+    source = SourceFactice({
+        "instance_produits": [{"id": 1}, {"id": 2}],
+        "instance_produits_trt": [{"id": 3}, {"id": 4}, {"id": 5}],
+    })
+    schema = [{"table": "instance_produits", "columns": ["id"], "count": 5}]
+    ligne = next(l for l in verifier(source, ClientSchema(schema)).lignes if l.table == "instance_produits")
+    assert ligne.lignes_hfsql == 5 and ligne.ecart == 0
