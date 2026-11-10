@@ -44,7 +44,7 @@ class CaisseRegie(Base):
     depenses = Column(Numeric(15, 4))
     virement_de_fond_entrant = Column(Numeric(15, 4))
     virement_de_fond_sortant = Column(Numeric(15, 4))
-    indice_ouverture = Column(Numeric(10, 4))
+    indice_ouverture = Column(Numeric(20, 4))  # élargi par la migration 003
 
 
 class SuiviCaisse(Base):
@@ -71,7 +71,7 @@ class SuiviCaisse(Base):
     depenses = Column(Numeric(15, 4))
     virement_de_fond_entrant = Column(Numeric(15, 4))
     virement_de_fond_sortant = Column(Numeric(15, 4))
-    indice_ouverture = Column(Numeric(10, 4))
+    indice_ouverture = Column(Numeric(20, 4))  # élargi par la migration 003
     caisse = Column(String(50), index=True)
     ecart = Column(Numeric(15, 4))
 
