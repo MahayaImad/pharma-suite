@@ -34,7 +34,13 @@ async def refresh_stock_cache(
     Appelé automatiquement par le sync-agent après chaque cycle de synchronisation.
     CONCURRENT = pas de verrou sur les lectures en cours.
     """
-    await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_stock_produits"))
+    # La vue est créée vide (WITH NO DATA) : CONCURRENTLY est refusé tant
+    # qu'elle n'a pas été calculée une première fois.
+    peuplee = (await db.execute(text(
+        "SELECT relispopulated FROM pg_class WHERE relname = 'mv_stock_produits'"
+    ))).scalar()
+    mode = "CONCURRENTLY " if peuplee else ""
+    await db.execute(text(f"REFRESH MATERIALIZED VIEW {mode}mv_stock_produits"))
     await db.commit()
     stats = await update_disponibilite(db)
     return {"status": "ok", "disponibilite": stats}

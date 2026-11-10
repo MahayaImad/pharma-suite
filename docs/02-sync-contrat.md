@@ -1087,6 +1087,13 @@ préfixes (`E_`, `F_`, `TB_`) ou du singulier là où PostgreSQL a du pluriel
 correspondance ?** Sans ça, le §2 reste une carte approximative.
 
 **6.2 — 🔴 `peremption` : `MM/YYYY` ou `MM/YY` ?**
+
+> ✅ **Tranché le 2026-11-10** sur la base chargée : le format est **`MM/YY`**
+> dans les trois tables (`entrees_produits` 51 437 lignes, `sorties_produits`
+> 509 751, `instance_produits` 7 941), le reste étant vide, à 29 lignes près
+> au format `YYYY-MM…`. `performance.py` a donc raison ; `dashboard.py:214`,
+> qui attend `MM/YYYY` sur `instance_produits`, ne voit aucune ligne.
+> `entrees_produits.peremption_date` est remplie partout où le texte l'est.
 Deux modules du même dépôt supposent des formats différents sur la même donnée
 métier (`dashboard.py:214` contre `performance.py:485`). Trois cas possibles :
 HFSQL produit les deux selon la table, HFSQL n'en produit qu'un et l'un des deux

@@ -311,18 +311,67 @@ Pour chaque fonctionnalité du module :
 
 ---
 
-## 9. Points connus à traiter en phase 0
+## 9. Phase 0 — constats du rapport du 2026-11-10
 
-- La vue `mv_stock_produits` n'est rafraîchie par personne : l'agent
-  n'appelle pas `POST /stock/refresh-cache` après ses passes.
-- `inventaires` est vide côté EASYPHARM alors que `inventaires_produits`
-  contient ~27 900 lignes ; le moteur d'achat ne lit que les inventaires
-  validés de la première, et les anciennes colonnes de la seconde.
-- Format de péremption : `dashboard.py` suppose `MM/YYYY`, `performance.py`
-  suppose `MM/YY` (`docs/02-sync-contrat.md` §6.2).
-- La segmentation ABC/XYZ n'a jamais tourné sur cette base ; elle est
-  planifiée mensuellement et peut être lancée par
-  `POST /stock/segmentation/run`.
+`scripts/verifier_stock.py` sur la base réelle : les 32 routes de lecture
+répondent, toutes en moins d'une demi-seconde. Chiffres : 9 184 produits,
+2 354 en stock, 34 977 unités, 15,9 M DA de stock au prix d'achat, 55 238
+lots dont 4 310 avec stock.
+
+### Corrigé
+
+- **Stock figé au chargement.** `entrees_produits` était synchronisée en
+  « incremental » : seuls les nouveaux lots arrivaient, alors que chaque
+  vente décrémente `stock` sur la ligne du lot. Stratégie « lots » dans
+  l'agent (nouveaux lots, lots ayant du stock, lots venant de tomber à zéro).
+- **Vue `mv_stock_produits` jamais calculée.** L'agent appelle maintenant
+  `POST /stock/refresh-cache` après chaque passe qui touche le stock ; la
+  route accepte une vue encore vide.
+- **Format de péremption tranché : `MM/YY`** partout
+  (`docs/02-sync-contrat.md` §6.2). `peremption_date` est remplie partout où
+  le texte l'est.
+
+### À corriger
+
+- **Prix de vente à 0 dans toutes les listes.** `nomenclature.prix_vente`
+  vaut 0 pour tous les produits ; le prix réel est sur les lots
+  (`entrees_produits.prix_vente`). Les routes produits, alertes et surstock
+  affichent donc 0.
+- **`nomenclature.stock` vaut 0 partout** : ce n'est pas un contrôle
+  utilisable du stock calculé. Le rapprochement se fera avec EASYPHARM, sur
+  un échantillon.
+- **« Rupture » ne veut rien dire tel quel** : 6 780 produits sur 9 184 sont
+  à stock nul, pour l'essentiel des références du catalogue jamais ou plus
+  vendues. Il faut définir le **produit actif** (par exemple : vendu dans les
+  12 derniers mois) avant tout indicateur de rupture. Seuls 1 979 produits
+  ont un seuil d'alerte.
+- **`disponibilite` = « oui » pour tous**, y compris les produits à stock
+  nul : elle n'avait jamais été recalculée (elle l'est désormais avec la vue).
+- **Aucun segment ABC / XYZ, aucune catégorie, aucune étagère** : la
+  segmentation n'a jamais tourné (`POST /stock/segmentation/run`, sinon le
+  1er du mois), `laboratoires.is_generique` est faux partout, les étagères
+  et responsables ne sont pas saisis. Les indicateurs par catégorie et par
+  employé sont vides. **La catégorie alimente l'enveloppe de prime** : à
+  traiter avec la règle « Paie ».
+- **`dashboard.py:214`** attend `MM/YYYY` sur `instance_produits` et ne voit
+  aucune ligne.
+- **504 lots en stock sans date de péremption** (12 % des lots en stock),
+  2 lots à stock négatif, 77 lots périmant sous 3 mois, aucun lot périmé en
+  stock.
+- **2 619 lignes de vente orphelines** (0,5 %) : leur produit n'existe plus
+  dans la nomenclature.
+- **Surstock** : la liste est plafonnée à 200 produits et va jusqu'à
+  1 272 mois de couverture — à borner et à croiser avec le produit actif.
+- **`psychotrope` prend la valeur 2** en plus de 0 et 1 ; les filtres ne
+  retiennent que 1. Signification à confirmer.
+- **Historique** : ventes depuis le 2022-01-16, lots depuis le 2023-01-01.
+  La reconstitution du stock n'est pas possible avant 2023.
+- **Inventaires** : 27 872 lignes rattachées à un seul inventaire, absent
+  de la table `inventaires` (vide). Hypothèse : l'inventaire d'ouverture de
+  2023. Les colonnes lues par le moteur d'achat (`id_nom`, `stock_reel`)
+  sont vides ; les données sont dans `id_produit` et `quantite_physique`.
+- **Moteur d'achat jamais exécuté** : `historique_stock_jour`,
+  `parametres_stock` et `previsions_demande` sont vides.
 - `nomenclature.generique` n'est alimentée par rien.
 - Filtres de vente à aligner sur `docs/BUSINESS_LOGIC.md` §2.3 : le code
   filtre tantôt `type_sortie = 'V'`, tantôt `NOT IN ('RET', 'AV')`,

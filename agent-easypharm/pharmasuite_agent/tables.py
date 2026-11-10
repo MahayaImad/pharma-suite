@@ -17,6 +17,11 @@ Quatre stratégies :
   produit, solde d'un client). L'incrémental raterait ces mises à jour, donc
   on la relit en entier — moins souvent, via ``full_resync_every``.
 - ``pipeline`` : cas spécial instance_produits (seule table avec DELETE).
+- ``lots`` : lignes de stock (entrees_produits). L'id ne change pas mais la
+  quantité restante baisse à chaque vente. Chaque passe lit les nouveaux
+  lots, puis tous les lots dont le stock n'est pas nul, puis ceux qui
+  avaient du stock à la passe précédente et n'en ont plus — sans quoi un lot
+  épuisé resterait « en stock » côté PostgreSQL.
 
 Le nom cible est celui attendu par ``POST /sync/{table}`` ; il ne coïncide pas
 toujours avec le nom HyperFileSQL d'origine.
@@ -26,7 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-Strategie = Literal["incremental", "window", "full", "pipeline"]
+Strategie = Literal["incremental", "window", "full", "pipeline", "lots"]
 
 
 @dataclass(frozen=True)
@@ -47,6 +52,8 @@ class Table:
     optionnelle: bool = False
     # Colonnes nommées autrement côté PostgreSQL : {nom HFSQL normalisé: nom PG}.
     renommer: tuple[tuple[str, str], ...] = ()
+    # Stratégie « lots » : colonne de quantité restante, modifiée sur place.
+    champ_stock: str | None = None
 
     @property
     def incrementale(self) -> bool:
@@ -63,6 +70,10 @@ class Table:
     @property
     def pipeline(self) -> bool:
         return self.strategie == "pipeline"
+
+    @property
+    def lots(self) -> bool:
+        return self.strategie == "lots"
 
 
 # =============================================================================
@@ -82,7 +93,10 @@ TABLES: tuple[Table, ...] = (
     Table(
         cible="entrees_produits",
         source="entrées_produits",  # Nom HFSQL avec accent
-        strategie="incremental",
+        # Pas « incremental » : chaque vente décrémente `stock` sur la ligne
+        # du lot, sans changer son id. Voir la stratégie « lots ».
+        strategie="lots",
+        champ_stock="stock",
         intervalle_minutes=15,
         taille_lot=1000,
     ),

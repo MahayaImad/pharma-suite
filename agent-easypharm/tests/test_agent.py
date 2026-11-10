@@ -39,6 +39,18 @@ class SourceFactice:
         lignes = self.lignes.get(table, [])
         return max((l[cle] for l in lignes), default=0)
 
+    def lire_non_nuls(self, table, cle, colonne, taille):
+        self.lectures_non_nuls = getattr(self, "lectures_non_nuls", 0) + 1
+        for ligne in self.lignes.get(table, []):
+            if ligne.get(colonne):
+                yield dict(ligne)
+
+    def lire_ids(self, table, cle, ids, taille):
+        voulus = set(ids)
+        for ligne in self.lignes.get(table, []):
+            if ligne[cle] in voulus:
+                yield dict(ligne)
+
     def colonnes(self, table):
         if table not in self.lignes:
             raise RuntimeError(f"table {table} inconnue")
@@ -76,6 +88,10 @@ class ClientFactice:
 
     def maj_statut(self, table, last_id, count):
         self.majs.append((table, last_id, count))
+
+    def rafraichir_stock(self):
+        self.rafraichissements = getattr(self, "rafraichissements", 0) + 1
+        return {"status": "ok"}
 
 
 # ── Sérialisation ─────────────────────────────────────────────────────────────
@@ -238,7 +254,7 @@ def test_39_tables_configurees():
 
 def test_strategies_connues():
     """Toutes les tables ont une stratégie valide."""
-    strategies_valides = {"incremental", "window", "full", "pipeline"}
+    strategies_valides = {"incremental", "window", "full", "pipeline", "lots"}
     for table in TABLES:
         assert table.strategie in strategies_valides
 
@@ -247,7 +263,7 @@ def test_par_strategie():
     """par_strategie retourne les bonnes tables."""
     incrementales = par_strategie("incremental")
     assert all(t.strategie == "incremental" for t in incrementales)
-    assert len(incrementales) == 11
+    assert len(incrementales) == 10
 
     fenetres = par_strategie("window")
     assert all(t.strategie == "window" for t in fenetres)

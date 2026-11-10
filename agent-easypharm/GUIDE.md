@@ -183,7 +183,7 @@ Ne jamais envoyer `config.toml` : il contient des mots de passe.
 |---|---|---|
 | `config.toml` | adresses et mots de passe | oui, en lieu sûr — **jamais** dans Git ni par e-mail |
 | `agent.log` (+ `.1` à `.5`) | journal, 5 Mo par fichier, les plus anciens sont effacés | non |
-| `agent_state.json` | heure de dernière synchro de chaque table | non — s'il est supprimé, toutes les tables sont simplement relues une fois |
+| `agent_state.json` | heure de dernière synchro de chaque table, lots ayant du stock | non — s'il est supprimé, toutes les tables sont simplement relues une fois |
 | `installer_tache.ps1` / `desinstaller_tache.ps1` | installation de la tâche Windows | — |
 
 L'endroit où chaque table en est (son « curseur ») est gardé sur le serveur,

@@ -261,6 +261,33 @@ class SourceHFSQL:
         finally:
             curseur.close()
 
+    def _lire_requete(self, requete: str, taille: int) -> Iterator[dict[str, Any]]:
+        curseur = self._connexion().cursor()
+        try:
+            curseur.execute(requete)
+            colonnes: Sequence[str] = [c[0] for c in curseur.description]
+            while True:
+                lignes = curseur.fetchmany(taille)
+                if not lignes:
+                    return
+                for ligne in lignes:
+                    yield ligne_json(colonnes, ligne)
+        finally:
+            curseur.close()
+
+    def lire_non_nuls(self, table: str, cle: str, colonne: str, taille: int) -> Iterator[dict[str, Any]]:
+        """Lignes dont `colonne` n'est pas nulle (lots ayant du stock, positif ou négatif)."""
+        return self._lire_requete(
+            f"SELECT * FROM {table} WHERE {colonne} <> 0 ORDER BY {cle}", taille)
+
+    def lire_ids(self, table: str, cle: str, ids: Sequence[int], taille: int) -> Iterator[dict[str, Any]]:
+        """Lignes d'identifiants donnés, par paquets pour garder des requêtes courtes."""
+        ids = sorted(int(i) for i in ids)   # entiers uniquement : rien d'autre n'entre dans la requête
+        for debut in range(0, len(ids), 200):
+            liste = ", ".join(str(i) for i in ids[debut:debut + 200])
+            yield from self._lire_requete(
+                f"SELECT * FROM {table} WHERE {cle} IN ({liste}) ORDER BY {cle}", taille)
+
     def lire_tout(self, table: str, cle: str, taille: int) -> Iterator[dict[str, Any]]:
         """Alias pour lecture complète."""
         yield from self.lire(table, cle, -1, taille)

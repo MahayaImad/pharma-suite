@@ -27,10 +27,11 @@ identiques.
 
 | Stratégie | Tables | Intervalle |
 |-----------|--------|------------|
-| **incremental** | sorties_produits, entrees_produits, mouchard, factures_chifa_produits, ordonnancier, commandes_fournisseurs_produits, echanges_sorties_produits, chifa_rejet_partiel, mouchard_details, reg_client_association, reg_fourn_association | 15-60 min |
+| **incremental** | sorties_produits, mouchard, factures_chifa_produits, ordonnancier, commandes_fournisseurs_produits, echanges_sorties_produits, chifa_rejet_partiel, mouchard_details, reg_client_association, reg_fourn_association | 15-60 min |
 | **window** | sorties, entrees, operations, factures_chifa, commandes_fournisseurs, echanges | 30-60 min |
 | **full** | nomenclature, clients, fournisseurs, groupware, bordereaux_chifa, suivi_caisses, familles, formes, laboratoires, etc., pharmnos_factures, caisses_regies, inventaires, inventaires_produits | 4h-24h |
 | **pipeline** | instance_produits (+ instance_produits_trt) | 15 min |
+| **lots** | entrees_produits | 15 min |
 
 ### Stratégies de synchronisation
 
@@ -40,6 +41,14 @@ identiques.
   — pour les en-têtes modifiés sur place
 - **full** : relecture complète périodique — pour les référentiels
 - **pipeline** : cas spécial `instance_produits` (seule table avec DELETE)
+- **lots** : `entrees_produits`. Chaque vente décrémente le stock sur la
+  ligne du lot sans changer son id ; l'agent relit donc à chaque passe les
+  nouveaux lots, les lots ayant du stock, et ceux qui viennent de tomber à
+  zéro (il garde la liste des lots en stock dans `agent_state.json`)
+
+Après une passe qui a touché `entrees_produits` ou `nomenclature`, l'agent
+demande au serveur de recalculer le stock par produit
+(`POST /stock/refresh-cache`).
 
 ## Pourquoi un agent, plutôt qu'une connexion directe
 

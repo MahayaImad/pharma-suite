@@ -147,6 +147,10 @@ class ClientPharmaSuite:
         reponse = self._appeler("POST", f"/sync/{table}", json={"records": enregistrements})
         return self._controler(table, reponse)
 
+    def rafraichir_stock(self) -> dict:
+        """Recalcule la vue du stock et la disponibilité côté serveur."""
+        return self._appeler("POST", "/stock/refresh-cache")
+
     def schema(self) -> list[dict]:
         """Colonnes et nombre de lignes de chaque table miroir côté serveur."""
         return self._appeler("GET", "/sync/schema")

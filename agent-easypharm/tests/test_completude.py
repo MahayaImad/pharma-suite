@@ -361,3 +361,61 @@ def test_connexion_fermee_apres_une_passe_en_erreur(tmp_path):
 
     passe(source, ClientFactice(casse_sur="sorties"), Etat(tmp_path / "e.json"), 500, 12)
     assert source.fermetures == 1
+
+
+# ── Lots : le stock change sur place ──────────────────────────────────────────
+
+def _passe_lots(source, client, etat):
+    return synchroniser_table(par_nom("entrees_produits"), source, client, etat)
+
+
+def test_lots_premier_lancement_relit_tout(tmp_path):
+    source = SourceFactice({"entrées_produits": [
+        {"id": 1, "stock": 0}, {"id": 2, "stock": 5}, {"id": 3, "stock": 2}]})
+    client, etat = ClientFactice(), Etat(tmp_path / "e.json")
+
+    assert _passe_lots(source, client, etat) == 3
+    assert etat.lots_en_stock["entrees_produits"] == [2, 3]
+    assert client.majs[-1][:2] == ("entrees_produits", 3)
+
+
+def test_lot_epuise_est_remis_a_zero(tmp_path):
+    """Avant : la table était incrémentale, le stock restait figé au chargement."""
+    lignes = [{"id": 1, "stock": 0}, {"id": 2, "stock": 5}, {"id": 3, "stock": 2}]
+    source = SourceFactice({"entrées_produits": lignes})
+    client, etat = ClientFactice(statuts={"entrees_produits": 3}), Etat(tmp_path / "e.json")
+    etat.lots_en_stock["entrees_produits"] = [2, 3]
+
+    lignes[1]["stock"] = 4          # une vente sur le lot 2
+    lignes[2]["stock"] = 0          # le lot 3 est épuisé
+    lignes.append({"id": 4, "stock": 9})   # une réception
+
+    _passe_lots(source, client, etat)
+
+    envoye = {l["id"]: l["stock"] for _, lot in client.pousses for l in lot}
+    assert envoye == {2: 4, 3: 0, 4: 9}        # le lot 1, inchangé à zéro, n'est pas relu
+    assert etat.lots_en_stock["entrees_produits"] == [2, 4]
+
+
+def test_lots_memoire_gardee_si_la_passe_echoue(tmp_path):
+    source = SourceFactice({"entrées_produits": [{"id": 2, "stock": 5}]})
+    etat = Etat(tmp_path / "e.json")
+    etat.lots_en_stock["entrees_produits"] = [2, 3]
+    with pytest.raises(LotRejete):
+        _passe_lots(source, ClientQuiRefuse(), etat)
+    assert etat.lots_en_stock["entrees_produits"] == [2, 3]
+
+
+def test_memoire_des_lots_persistee(tmp_path):
+    chemin = tmp_path / "e.json"
+    etat = Etat(chemin)
+    etat.lots_en_stock["entrees_produits"] = [2, 3]
+    etat.enregistrer()
+    assert Etat(chemin).lots_en_stock == {"entrees_produits": [2, 3]}
+
+
+def test_stock_recalcule_cote_serveur_apres_la_passe(tmp_path):
+    source = SourceFactice({t.source: [{"id": 1}] for t in TABLES} | {"instance_produits_trt": []})
+    client = ClientFactice()
+    passe(source, client, Etat(tmp_path / "e.json"), 500, 12)
+    assert client.rafraichissements == 1

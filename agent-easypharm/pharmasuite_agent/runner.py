@@ -57,11 +57,14 @@ class Etat:
         self._chemin = Path(chemin)
         self.passes = 0
         self.derniere_sync: dict[str, float] = {}
+        # Stratégie « lots » : ids ayant du stock à la passe précédente.
+        self.lots_en_stock: dict[str, list[int]] = {}
         if self._chemin.exists():
             try:
                 donnees = json.loads(self._chemin.read_text())
                 self.passes = donnees.get("passes", 0)
                 self.derniere_sync = donnees.get("derniere_sync", {})
+                self.lots_en_stock = donnees.get("lots_en_stock", {})
             except (ValueError, OSError):
                 logger.warning("État illisible, on repart de zéro : %s", self._chemin)
 
@@ -71,6 +74,7 @@ class Etat:
                 json.dumps({
                     "passes": self.passes,
                     "derniere_sync": self.derniere_sync,
+                    "lots_en_stock": self.lots_en_stock,
                 }),
                 encoding="utf-8"
             )
@@ -265,12 +269,74 @@ def _sync_pipeline(table: Table, source: Source, client: ClientPharmaSuite) -> i
     return actives + traitees
 
 
+def _sync_lots(table: Table, source: Source, client: ClientPharmaSuite,
+               etat: "Etat | None") -> int:
+    """
+    Lignes de stock : l'id est stable, la quantité restante change sur place.
+
+    1. nouveaux lots (``id > last_id``) ;
+    2. tous les lots dont le stock n'est pas nul — leur quantité a pu bouger ;
+    3. les lots qui avaient du stock à la passe précédente et n'apparaissent
+       plus en 2 : ils viennent de tomber à zéro, il faut l'écrire.
+
+    Sans mémoire de la passe précédente (premier lancement, état perdu,
+    ``--table``), la table est relue en entier une fois : c'est ce qui remet
+    d'aplomb une base chargée avant l'existence de cette stratégie.
+    """
+    precedents = None if etat is None else etat.lots_en_stock.get(table.cible)
+    pousser = lambda lot: client.pousser(table.cible, lot)  # noqa: E731
+
+    if precedents is None:
+        logger.info("[%s] pas de mémoire des lots en stock : relecture complète", table.cible)
+        actuels: set[int] = set()
+
+        def tout() -> Iterator[dict]:
+            for ligne in _renommer(table, source.lire(table.source, table.cle, -1, table.taille_lot)):
+                if _cle_entiere(ligne, table.champ_stock):
+                    actuels.add(_cle_entiere(ligne, table.cle))
+                yield ligne
+
+        envoyees = _pousser_par_lots(
+            tout(), table.taille_lot, pousser, table.cle,
+            lambda dernier, n: client.maj_statut(table.cible, dernier, n),
+        )
+    else:
+        _, nouvelles = _rattraper(table, source, client)
+        actuels = set()
+
+        def vivants() -> Iterator[dict]:
+            for ligne in _renommer(table, source.lire_non_nuls(
+                    table.source, table.cle, table.champ_stock, table.taille_lot)):
+                actuels.add(_cle_entiere(ligne, table.cle))
+                yield ligne
+
+        relues = _pousser_par_lots(vivants(), table.taille_lot, pousser, table.cle)
+        epuises = sorted(set(precedents) - actuels)
+        soldees = _pousser_par_lots(
+            _renommer(table, source.lire_ids(table.source, table.cle, epuises, table.taille_lot)),
+            table.taille_lot, pousser, table.cle,
+        ) if epuises else 0
+        logger.info("[%s] %d nouveau(x) lot(s), %d en stock relu(s), %d épuisé(s)",
+                    table.cible, nouvelles, relues, soldees)
+        envoyees = nouvelles + relues + soldees
+
+    actuels.discard(None)
+    if etat is not None:
+        # Écrit seulement après une passe complète : un échec ci-dessus garde
+        # l'ancienne mémoire, et les lots épuisés seront revus.
+        etat.lots_en_stock[table.cible] = sorted(actuels)
+    return envoyees
+
+
 def synchroniser_table(
     table: Table,
     source: Source,
     client: ClientPharmaSuite,
+    etat: "Etat | None" = None,
 ) -> int:
     """Synchronise une table selon sa stratégie."""
+    if table.lots:
+        return _sync_lots(table, source, client, etat)
     if table.incrementale:
         return _sync_incremental(table, source, client)
     elif table.fenetre:
@@ -279,6 +345,10 @@ def synchroniser_table(
         return _sync_pipeline(table, source, client)
     else:  # full
         return _sync_full(table, source, client)
+
+
+# Tables dont dépend la vue du stock (mv_stock_produits) côté serveur.
+_TABLES_DU_STOCK = {"entrees_produits", "nomenclature"}
 
 
 def passe(
@@ -304,6 +374,7 @@ def passe(
         respecter_intervalles: Si True, respecte les intervalles par table
     """
     bilan = Bilan()
+    stock_touche = False
 
     for table in TABLES:
         # Vérifier si la table doit être synchronisée
@@ -311,9 +382,11 @@ def passe(
             continue
 
         try:
-            bilan.lignes += synchroniser_table(table, source, client)
+            bilan.lignes += synchroniser_table(table, source, client, etat)
             bilan.tables_ok += 1
             etat.marquer_synchronise(table)
+            if table.cible in _TABLES_DU_STOCK:
+                stock_touche = True
         except Exception as erreur:
             if table.optionnelle and not isinstance(erreur, (LotRejete, ErreurApi)):
                 # Erreur de lecture HFSQL sur une table non attestée : sans
@@ -326,6 +399,14 @@ def passe(
             bilan.tables_en_erreur += 1
             bilan.erreurs.append(f"{table.cible}: {erreur}")
             logger.error("[%s] échec : %s", table.cible, erreur)
+
+    if stock_touche:
+        # Le stock par produit est une vue pré-calculée côté serveur : sans ce
+        # recalcul, tout le module stock afficherait l'état d'avant la passe.
+        try:
+            client.rafraichir_stock()
+        except Exception as erreur:
+            logger.warning("Recalcul du stock côté serveur impossible : %s", erreur)
 
     if bilan.tables_en_erreur:
         # L'agent tourne des semaines : après une coupure du serveur HFSQL, la
