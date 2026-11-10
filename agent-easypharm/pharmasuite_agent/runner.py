@@ -203,7 +203,7 @@ def _sync_window(table: Table, source: Source, client: ClientPharmaSuite) -> int
     def deja_connues() -> Iterator[dict]:
         for enregistrement in _renommer(table, source.lire_fenetre(
             table.source, table.cle, table.taille_lot, table.fenetre_jours,
-            table.champ_modif, table.condition_extra,
+            table.champ_modif, table.condition_extra, table.champ_date,
         )):
             valeur = _cle_entiere(enregistrement, table.cle)
             if valeur is None or valeur <= depuis:

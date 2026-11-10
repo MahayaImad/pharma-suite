@@ -36,6 +36,7 @@ class Source(Protocol):
         fenetre_jours: int,
         champ_modif: str | None = None,
         condition_extra: str | None = None,
+        champ_date: str = "date",
     ) -> Iterator[dict[str, Any]]:
         """Lecture par fenêtre glissante."""
         ...
@@ -75,9 +76,12 @@ def _message_hfsql(erreur: Exception, secrets: list[str]) -> str:
     brut = brut.replace("\\r\\n", "\n").replace("\r\n", "\n")
 
     morceaux = []
-    quoi = re.search(r"Que s'est-il passé \?\s*\n?(.+?)(?:\n|$)", brut)
+    # Tout le paragraphe d'explication, jusqu'à la ligne vide ou au code :
+    # la première ligne seule ne dit souvent que « Erreur renvoyée par le
+    # serveur », la cause est sur les suivantes.
+    quoi = re.search(r"Que s'est-il passé \?\s*\n?(.+?)(?:\n\s*\n|\n?Code erreur|$)", brut, re.S)
     if quoi:
-        morceaux.append(quoi.group(1).strip())
+        morceaux.append(" ".join(quoi.group(1).split()))
     code = re.search(r"Code erreur\s*:\s*(\d+)", brut)
     if code:
         morceaux.append(f"code HFSQL {code.group(1)}")
@@ -172,6 +176,14 @@ class SourceHFSQL:
                 raise ErreurSource(_message_hfsql(erreur, [self._password])) from None
         return self._cnx
 
+    @staticmethod
+    def _executer(curseur, requete: str) -> None:
+        """Exécute une requête ; une erreur HFSQL ressort en clair, avec la requête."""
+        try:
+            curseur.execute(requete)
+        except Exception as erreur:
+            raise ErreurSource(f"{_message_hfsql(erreur, [])} — requête : {requete[:200]}") from None
+
     def fermer(self) -> None:
         if self._cnx is not None:
             self._cnx.close()
@@ -180,7 +192,7 @@ class SourceHFSQL:
     def max_cle(self, table: str, cle: str) -> int:
         curseur = self._connexion().cursor()
         try:
-            curseur.execute(f"SELECT MAX({cle}) FROM {table}")
+            self._executer(curseur, f"SELECT MAX({cle}) FROM {table}")
             valeur = curseur.fetchone()[0]
             return int(valeur) if valeur is not None else 0
         finally:
@@ -202,9 +214,9 @@ class SourceHFSQL:
         curseur = self._connexion().cursor()
         try:
             if depuis < 0:
-                curseur.execute(f"SELECT * FROM {table} ORDER BY {cle}")
+                self._executer(curseur, f"SELECT * FROM {table} ORDER BY {cle}")
             else:
-                curseur.execute(
+                self._executer(curseur, 
                     f"SELECT * FROM {table} WHERE {cle} > {int(depuis)} ORDER BY {cle}"
                 )
             colonnes: Sequence[str] = [c[0] for c in curseur.description]
@@ -225,12 +237,13 @@ class SourceHFSQL:
         fenetre_jours: int,
         champ_modif: str | None = None,
         condition_extra: str | None = None,
+        champ_date: str = "date",
     ) -> Iterator[dict[str, Any]]:
         """
         Lecture par fenêtre glissante.
 
         Récupère les enregistrements:
-        - Avec date >= (aujourd'hui - fenetre_jours)
+        - Avec champ_date >= (aujourd'hui - fenetre_jours)
         - OU avec champ_modif > 0 (si spécifié)
         - OU vérifiant condition_extra (si spécifiée)
         """
@@ -239,7 +252,7 @@ class SourceHFSQL:
             # Date au format HFSQL (YYYYMMDD)
             date_limite = (datetime.now() - timedelta(days=fenetre_jours)).strftime('%Y%m%d')
 
-            conditions = [f"date >= '{date_limite}'"]
+            conditions = [f"{champ_date} >= '{date_limite}'"]
 
             if champ_modif:
                 conditions.append(f"{champ_modif} > 0")
@@ -250,7 +263,7 @@ class SourceHFSQL:
             where_clause = " OR ".join(conditions)
             requete = f"SELECT * FROM {table} WHERE {where_clause} ORDER BY {cle}"
 
-            curseur.execute(requete)
+            self._executer(curseur, requete)
             colonnes: Sequence[str] = [c[0] for c in curseur.description]
             while True:
                 lignes = curseur.fetchmany(taille)
@@ -264,7 +277,7 @@ class SourceHFSQL:
     def _lire_requete(self, requete: str, taille: int) -> Iterator[dict[str, Any]]:
         curseur = self._connexion().cursor()
         try:
-            curseur.execute(requete)
+            self._executer(curseur, requete)
             colonnes: Sequence[str] = [c[0] for c in curseur.description]
             while True:
                 lignes = curseur.fetchmany(taille)
@@ -296,7 +309,7 @@ class SourceHFSQL:
         """Colonnes de `table`, normalisées comme dans les lignes envoyées."""
         curseur = self._connexion().cursor()
         try:
-            curseur.execute(f"SELECT TOP 1 * FROM {table}")
+            self._executer(curseur, f"SELECT TOP 1 * FROM {table}")
             return [nom_colonne(c[0]) for c in curseur.description]
         finally:
             curseur.close()
@@ -309,7 +322,7 @@ class SourceHFSQL:
         """Retourne le nombre total d'enregistrements."""
         curseur = self._connexion().cursor()
         try:
-            curseur.execute(f"SELECT COUNT(*) FROM {table}")
+            self._executer(curseur, f"SELECT COUNT(*) FROM {table}")
             return curseur.fetchone()[0] or 0
         finally:
             curseur.close()

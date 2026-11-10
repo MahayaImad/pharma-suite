@@ -30,8 +30,11 @@ class SourceFactice:
             if depuis < 0 or ligne[cle] > depuis:
                 yield dict(ligne)
 
-    def lire_fenetre(self, table, cle, taille, fenetre_jours, champ_modif=None, condition_extra=None):
+    def lire_fenetre(self, table, cle, taille, fenetre_jours, champ_modif=None,
+                     condition_extra=None, champ_date="date"):
         self.lectures_fenetre.append(table)
+        self.champs_date = getattr(self, "champs_date", {})
+        self.champs_date[table] = champ_date
         for ligne in self.lignes.get(table, []):
             yield dict(ligne)
 

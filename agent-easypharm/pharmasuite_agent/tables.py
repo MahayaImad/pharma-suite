@@ -43,6 +43,7 @@ class Table:
     intervalle_minutes: int = 60        # fréquence de sync
     taille_lot: int = 500               # batch size
     fenetre_jours: int = 30             # pour stratégie window
+    champ_date: str = "date"            # colonne de date de la fenêtre glissante
     champ_modif: str | None = None      # champ indiquant une modification
     condition_extra: str | None = None  # condition SQL supplémentaire
     sensible: bool = False              # données RGPD
@@ -171,6 +172,7 @@ TABLES: tuple[Table, ...] = (
         cible="factures_chifa",
         source="factures_chifa",
         strategie="window",
+        champ_date="date_fact",   # ce fichier n'a pas de rubrique « date »
         intervalle_minutes=30,
         taille_lot=500,
         fenetre_jours=30,

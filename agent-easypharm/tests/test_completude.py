@@ -419,3 +419,41 @@ def test_stock_recalcule_cote_serveur_apres_la_passe(tmp_path):
     client = ClientFactice()
     passe(source, client, Etat(tmp_path / "e.json"), 500, 12)
     assert client.rafraichissements == 1
+
+
+# ── Fenêtre glissante : colonne de date propre à la table ─────────────────────
+
+def test_factures_chifa_filtre_sur_date_fact():
+    """Ce fichier HFSQL n'a pas de rubrique « date » : la requête échouait (70208)."""
+    source = SourceFactice({"factures_chifa": [{"id": 1}], "sorties": [{"id": 1}]})
+    client = ClientFactice()
+    synchroniser_table(par_nom("factures_chifa"), source, client)
+    synchroniser_table(par_nom("sorties"), source, client)
+    assert source.champs_date == {"factures_chifa": "date_fact", "sorties": "date"}
+
+
+def test_requete_de_fenetre_utilise_la_colonne_de_date():
+    class Curseur:
+        description = [("id",)]
+        def execute(self, requete):
+            self.requete = requete
+        def fetchmany(self, n):
+            return []
+        def close(self):
+            pass
+
+    curseur = Curseur()
+    source = SourceHFSQL("srv", "BASE")
+    source._cnx = type("C", (), {"cursor": lambda self: curseur})()
+    list(source.lire_fenetre("factures_chifa", "id", 500, 30, None, None, "date_fact"))
+    assert "WHERE date_fact >= '" in curseur.requete
+
+
+def test_erreur_de_requete_lisible():
+    brut = ("(-2147352567, 'Une exception', (0, None, \"Que s'est-il passé ?\\r\\nErreur renvoyée par le "
+            "serveur <localhost:4900> :\\r\\nErreur dans le code SQL de la requête <RequeteOLEDB2>. "
+            "Initialisation de la requête impossible.\\r\\nRubrique DATE inconnue dans le fichier .\\r\\n"
+            "\\r\\nCode erreur : 70208\\r\\nVersion=<17.0.65.0>\", None, 0, -1), None)")
+    message = _message_hfsql(RuntimeError(brut), [])
+    assert "Rubrique DATE inconnue" in message
+    assert "code HFSQL 70208" in message
