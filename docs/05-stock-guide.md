@@ -120,11 +120,27 @@ Le croisement **ABC × VEN** est la référence en pharmacie : un produit vital
 de classe C mérite un stock de sécurité qu'un classement purement financier
 lui refuserait.
 
-- **Existe** : ABC et XYZ (`services/stock_segmentation.py`), recalcul
-  mensuel planifié, matrice ABC × XYZ (`/stock/kpis/segments`).
+Règles de calcul retenues (`services/stock_segmentation.py`, testées dans
+`backend/tests/stock/`) :
+
+- **Produits classés** : non archivés, chiffre d'affaires **net** positif
+  sur 12 mois glissants (les retours, à quantité négative, se déduisent).
+  Les autres n'ont **pas de classe** : un produit sans mouvement n'est ni C
+  ni Z. ABC et XYZ classent exactement les mêmes produits.
+- **ABC** : produits rangés par chiffre d'affaires décroissant ; A tant que
+  le cumul *avant* le produit est sous 80 %, B sous 95 %, C ensuite. Le
+  produit qui fait franchir un seuil appartient à la classe qu'il termine.
+- **XYZ** : coefficient de variation des quantités mensuelles sur les
+  **12 derniers mois complets**, les mois sans vente comptant pour **zéro** ;
+  X sous 0,5, Y sous 1, Z au-delà. Pour un produit récent la série part du
+  mois de sa première vente ; sous 3 mois d'historique : Z.
+- Une classe devenue fausse est effacée au recalcul.
+
+- **Existe** : ABC et XYZ, recalcul le 1er du mois, lancement à la main par
+  `python -m scripts.calculer_segments`, matrice ABC × XYZ
+  (`/stock/kpis/segments`).
 - **À faire** : VEN (colonne, saisie par le pharmacien, valeur par défaut par
-  classe thérapeutique) ; croisement ABC × VEN ; un produit sans vente sur
-  12 mois n'est pas « C » par défaut mais « sans mouvement ». *Phase 4.*
+  classe thérapeutique) ; croisement ABC × VEN. *Phase 4.*
 
 ### Bloc 2 — Prévoir la demande
 
@@ -349,14 +365,17 @@ lots dont 4 310 avec stock.
   (section 3), appliquée aux alertes, aux ruptures et à la disponibilité
   (migration 004).
 
+- **Classement ABC / XYZ** : le calcul d'origine classait « C » et « Z »
+  les 5 565 produits inactifs, gardait pour toujours une classe devenue
+  fausse, et mesurait la régularité sur les seuls mois avec vente — un
+  produit vendu trois mois sur douze sortait « régulier ». Réécrit et testé.
+
 ### À corriger
 
 - **`nomenclature.stock` vaut 0 partout** : ce n'est pas un contrôle
   utilisable du stock calculé. Le rapprochement se fera avec EASYPHARM, sur
   un échantillon.
-- **Aucun segment ABC / XYZ, aucune catégorie, aucune étagère** : la
-  segmentation n'a jamais tourné (`POST /stock/segmentation/run`, sinon le
-  1er du mois), `laboratoires.is_generique` est faux partout, les étagères
+- **Aucune catégorie, aucune étagère** : `laboratoires.is_generique` est faux partout, les étagères
   et responsables ne sont pas saisis. Les indicateurs par catégorie et par
   employé sont vides. **La catégorie alimente l'enveloppe de prime** : à
   traiter avec la règle « Paie ».

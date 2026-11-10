@@ -1076,7 +1076,7 @@ async def get_segment_kpis(
             GROUP BY sp.id_nom
         )
         SELECT
-            COALESCE(n.segment_abc, 'C')              AS segment,
+            COALESCE(n.segment_abc, '-')              AS segment,
             COUNT(DISTINCT n.id)                       AS nb_produits,
             COALESCE(SUM(mv.stock_actuel * mv.prix_moyen_pondere), 0) AS valeur_stock,
             COALESCE(SUM(c.ca), 0)                     AS ca_12m
@@ -1084,7 +1084,7 @@ async def get_segment_kpis(
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
         LEFT JOIN ca_12m c ON c.id_nom = n.id
         WHERE n.id IN (SELECT id FROM filtered_ids)
-        GROUP BY COALESCE(n.segment_abc, 'C')
+        GROUP BY COALESCE(n.segment_abc, '-')
         ORDER BY segment
     """), params)
     abc_rows = abc_res.fetchall()
@@ -1106,11 +1106,11 @@ async def get_segment_kpis(
     xyz_res = await db.execute(text(f"""
         WITH {filtered_ids_cte}
         SELECT
-            COALESCE(segment_xyz, 'Z') AS segment,
+            COALESCE(segment_xyz, '-') AS segment,
             COUNT(*)                    AS nb_produits
         FROM nomenclature
         WHERE id IN (SELECT id FROM filtered_ids)
-        GROUP BY COALESCE(segment_xyz, 'Z')
+        GROUP BY COALESCE(segment_xyz, '-')
         ORDER BY segment
     """), params)
     xyz_rows = xyz_res.fetchall()
@@ -1127,12 +1127,12 @@ async def get_segment_kpis(
     mat_res = await db.execute(text(f"""
         WITH {filtered_ids_cte}
         SELECT
-            COALESCE(segment_abc, 'C') AS seg_abc,
-            COALESCE(segment_xyz, 'Z') AS seg_xyz,
+            COALESCE(segment_abc, '-') AS seg_abc,
+            COALESCE(segment_xyz, '-') AS seg_xyz,
             COUNT(*)                    AS nb_produits
         FROM nomenclature
         WHERE id IN (SELECT id FROM filtered_ids)
-        GROUP BY COALESCE(segment_abc, 'C'), COALESCE(segment_xyz, 'Z')
+        GROUP BY COALESCE(segment_abc, '-'), COALESCE(segment_xyz, '-')
     """), params)
     matrice = [
         {

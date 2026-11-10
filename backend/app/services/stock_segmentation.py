@@ -1,15 +1,17 @@
 """
 Service de segmentation stock — ABC / XYZ / Disponibilité
 
-ABC  : Segmentation par chiffre d'affaires cumulé (12 derniers mois)
-         A → top produits couvrant 80 % du CA
-         B → produits suivants couvrant 80–95 % du CA
-         C → reste
+ABC  : Segmentation par chiffre d'affaires net cumulé (12 mois glissants)
+         A → produits couvrant les 80 premiers % du CA
+         B → produits suivants, jusqu'à 95 %
+         C → reste des produits vendus
+         (aucune classe pour un produit sans vente nette sur 12 mois)
 
-XYZ  : Segmentation par stabilité de la demande (coefficient de variation mensuel)
+XYZ  : Segmentation par régularité de la demande (coefficient de variation
+       mensuel sur les 12 derniers mois complets, mois sans vente comptés à 0)
          X → CV < 0.5  (stable, prévisible)
          Y → 0.5 ≤ CV < 1.0  (variable)
-         Z → CV ≥ 1.0  (erratique / sporadique)
+         Z → CV ≥ 1.0, ou moins de 3 mois d'historique
 
 Disponibilité : mise à jour automatique après chaque refresh du MV stock
          oui     → stock > 0  (et disponibilite != 'quota')
@@ -22,126 +24,172 @@ from sqlalchemy import text
 from loguru import logger
 
 
+# ── Paramètres ────────────────────────────────────────────────────────────────
+
+SEUIL_A = "0.80"      # part cumulée du chiffre d'affaires : A jusqu'à 80 %
+SEUIL_B = "0.95"      # B jusqu'à 95 %, C au-delà
+CV_X = "0.5"          # coefficient de variation mensuel : X en dessous de 0,5
+CV_Y = "1.0"          # Y en dessous de 1, Z au-delà
+MOIS_MIN_XYZ = 3      # en dessous de 3 mois d'historique, la régularité ne se mesure pas
+
+# Produits classés : non archivés, avec un chiffre d'affaires net positif sur
+# 12 mois glissants. Net : un retour client a une qte_sortie négative
+# (docs/BUSINESS_LOGIC.md §2.3), il se déduit donc tout seul. Les lignes de
+# vente dont le produit a disparu de la nomenclature sont écartées par la
+# jointure : elles ne doivent pas peser dans le total.
+_VENDUS = """
+    SELECT sp.id_nom,
+           SUM(sp.qte_sortie * sp.prix_vente) AS ca_total
+    FROM sorties_produits sp
+    JOIN nomenclature n ON n.id = sp.id_nom AND n.archive = false
+    WHERE sp.date >= CURRENT_DATE - INTERVAL '12 months'
+    GROUP BY sp.id_nom
+    HAVING SUM(sp.qte_sortie * sp.prix_vente) > 0
+"""
+
+
 # ── ABC ───────────────────────────────────────────────────────────────────────
 
 async def compute_abc(db: AsyncSession) -> int:
     """
-    Calcule segment_abc pour tous les produits actifs.
-    Utilise les ventes des 12 derniers mois (sorties de type 0).
-    Retourne le nombre de produits mis à jour.
+    Calcule segment_abc sur le chiffre d'affaires net des 12 derniers mois.
+
+    Les produits sont rangés par chiffre d'affaires décroissant ; un produit
+    est A tant que le cumul **avant lui** est sous 80 %, B sous 95 %, C
+    ensuite. Le produit qui fait franchir le seuil appartient donc à la
+    classe qu'il termine.
+
+    Un produit sans vente nette sur 12 mois, ou archivé, n'a **pas de
+    classe** (NULL) : ce n'est pas un « C », c'est un produit sans mouvement.
+    Une classe devenue fausse est effacée — un ancien A qui ne se vend plus ne
+    reste pas A.
+
+    Retourne le nombre de produits classés.
     """
-    result = await db.execute(text("""
-        WITH ca_produit AS (
-            SELECT
-                sp.id_nom,
-                SUM(sp.qte_sortie * sp.prix_vente) AS ca_total
-            FROM sorties_produits sp
-            WHERE sp.date >= CURRENT_DATE - INTERVAL '12 months'
-              AND sp.type_sortie NOT IN ('RET', 'AV')
-            GROUP BY sp.id_nom
-            HAVING SUM(sp.qte_sortie * sp.prix_vente) > 0
-        ),
-        ranked AS (
-            SELECT
-                id_nom,
-                ca_total,
-                SUM(ca_total) OVER (
-                    ORDER BY ca_total DESC
-                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-                ) AS ca_cumul,
-                SUM(ca_total) OVER () AS ca_global
-            FROM ca_produit
+    await db.execute(text(f"""
+        WITH vendus AS ({_VENDUS}),
+        ranges AS (
+            SELECT id_nom, ca_total,
+                   SUM(ca_total) OVER (
+                       ORDER BY ca_total DESC, id_nom
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                   ) - ca_total                  AS cumul_avant,
+                   SUM(ca_total) OVER ()          AS ca_global
+            FROM vendus
         ),
         segments AS (
-            SELECT
-                id_nom,
-                CASE
-                    WHEN ca_global = 0 THEN 'C'
-                    WHEN ca_cumul::numeric / ca_global <= 0.80 THEN 'A'
-                    WHEN ca_cumul::numeric / ca_global <= 0.95 THEN 'B'
-                    ELSE 'C'
-                END AS segment
-            FROM ranked
+            SELECT id_nom,
+                   CASE
+                       WHEN cumul_avant / ca_global < CAST(:seuil_a AS numeric) THEN 'A'
+                       WHEN cumul_avant / ca_global < CAST(:seuil_b AS numeric) THEN 'B'
+                       ELSE 'C'
+                   END AS segment
+            FROM ranges
         )
         UPDATE nomenclature n
         SET segment_abc = s.segment
-        FROM segments s
-        WHERE n.id = s.id_nom
-        RETURNING n.id
-    """))
-    updated = len(result.fetchall())
-
-    # Produits sans ventes sur 12 mois → C (y compris nouveaux produits)
-    await db.execute(text("""
-        UPDATE nomenclature
-        SET segment_abc = 'C'
-        WHERE (segment_abc IS NULL OR segment_abc = '')
-          AND archive = false
-    """))
+        FROM (
+            SELECT n2.id, seg.segment
+            FROM nomenclature n2
+            LEFT JOIN segments seg ON seg.id_nom = n2.id
+        ) s
+        WHERE n.id = s.id
+          AND n.segment_abc IS DISTINCT FROM s.segment
+    """), {"seuil_a": SEUIL_A, "seuil_b": SEUIL_B})
+    classes = (await db.execute(text(
+        "SELECT count(*) FROM nomenclature WHERE segment_abc IS NOT NULL"))).scalar() or 0
     await db.commit()
-    logger.info(f"[ABC] Segmentation terminée — {updated} produits classés A/B, reste → C")
-    return updated
+    logger.info(f"[ABC] Segmentation terminée — {classes} produits classés")
+    return classes
 
 
 # ── XYZ ───────────────────────────────────────────────────────────────────────
 
 async def compute_xyz(db: AsyncSession) -> int:
     """
-    Calcule segment_xyz pour tous les produits actifs.
-    Nécessite au moins 3 mois de ventes pour un CV significatif.
-    Produits avec < 3 mois ou sans ventes → Z.
-    Retourne le nombre de produits mis à jour.
+    Calcule segment_xyz : régularité de la demande mensuelle.
+
+    Coefficient de variation (écart-type ÷ moyenne) des quantités nettes
+    vendues par mois, sur les **12 derniers mois complets** — le mois en cours,
+    incomplet, fausserait la mesure. Les mois **sans vente comptent pour
+    zéro** : un produit vendu trois mois sur douze est irrégulier, même si
+    ses trois mois se ressemblent.
+
+    Pour un produit récent, la série commence au mois de sa première vente,
+    pas avant. Avec moins de 3 mois d'historique, la régularité ne se mesure
+    pas : Z.
+
+    Mêmes produits classés que l'ABC ; les autres n'ont pas de classe (NULL).
+    Retourne le nombre de produits classés.
     """
-    result = await db.execute(text("""
-        WITH ventes_mensuelles AS (
-            SELECT
-                sp.id_nom,
-                DATE_TRUNC('month', sp.date) AS mois,
-                SUM(sp.qte_sortie)           AS qte_mois
+    await db.execute(text(f"""
+        WITH vendus AS ({_VENDUS}),
+        bornes AS (
+            SELECT date_trunc('month', CURRENT_DATE)::date                         AS fin,
+                   (date_trunc('month', CURRENT_DATE) - INTERVAL '12 months')::date AS debut
+        ),
+        depuis AS (
+            -- Mois de la première vente du produit, borné à la fenêtre.
+            SELECT sp.id_nom,
+                   GREATEST(date_trunc('month', MIN(sp.date))::date, b.debut) AS premier_mois
             FROM sorties_produits sp
-            WHERE sp.date >= CURRENT_DATE - INTERVAL '12 months'
-              AND sp.type_sortie NOT IN ('RET', 'AV')
-            GROUP BY sp.id_nom, DATE_TRUNC('month', sp.date)
+            JOIN vendus v ON v.id_nom = sp.id_nom
+            CROSS JOIN bornes b
+            WHERE sp.qte_sortie > 0
+            GROUP BY sp.id_nom, b.debut
+        ),
+        calendrier AS (
+            SELECT d.id_nom, g::date AS mois
+            FROM depuis d
+            CROSS JOIN bornes b
+            CROSS JOIN LATERAL generate_series(
+                d.premier_mois::timestamp, b.fin - INTERVAL '1 month', INTERVAL '1 month') g
+        ),
+        ventes AS (
+            SELECT sp.id_nom,
+                   date_trunc('month', sp.date)::date AS mois,
+                   SUM(sp.qte_sortie)                 AS qte
+            FROM sorties_produits sp
+            CROSS JOIN bornes b
+            WHERE sp.date >= b.debut AND sp.date < b.fin
+            GROUP BY sp.id_nom, date_trunc('month', sp.date)
         ),
         stats AS (
-            SELECT
-                id_nom,
-                AVG(qte_mois)        AS mu,
-                STDDEV_POP(qte_mois) AS sigma,
-                COUNT(*)             AS nb_mois_actifs
-            FROM ventes_mensuelles
-            GROUP BY id_nom
+            SELECT c.id_nom,
+                   AVG(COALESCE(v.qte, 0))        AS mu,
+                   STDDEV_POP(COALESCE(v.qte, 0)) AS sigma,
+                   COUNT(*)                       AS nb_mois
+            FROM calendrier c
+            LEFT JOIN ventes v ON v.id_nom = c.id_nom AND v.mois = c.mois
+            GROUP BY c.id_nom
         ),
         segments AS (
-            SELECT
-                id_nom,
-                CASE
-                    WHEN nb_mois_actifs < 3           THEN 'Z'
-                    WHEN mu IS NULL OR mu = 0         THEN 'Z'
-                    WHEN sigma / mu < 0.5             THEN 'X'
-                    WHEN sigma / mu < 1.0             THEN 'Y'
-                    ELSE 'Z'
-                END AS segment
-            FROM stats
+            SELECT v.id_nom,
+                   CASE
+                       WHEN st.id_nom IS NULL OR st.nb_mois < :mois_min THEN 'Z'
+                       WHEN st.mu <= 0                                   THEN 'Z'
+                       WHEN st.sigma / st.mu < CAST(:cv_x AS numeric)    THEN 'X'
+                       WHEN st.sigma / st.mu < CAST(:cv_y AS numeric)    THEN 'Y'
+                       ELSE 'Z'
+                   END AS segment
+            FROM vendus v
+            LEFT JOIN stats st ON st.id_nom = v.id_nom
         )
         UPDATE nomenclature n
         SET segment_xyz = s.segment
-        FROM segments s
-        WHERE n.id = s.id_nom
-        RETURNING n.id
-    """))
-    updated = len(result.fetchall())
-
-    # Produits sans historique suffisant → Z
-    await db.execute(text("""
-        UPDATE nomenclature
-        SET segment_xyz = 'Z'
-        WHERE (segment_xyz IS NULL OR segment_xyz = '')
-          AND archive = false
-    """))
+        FROM (
+            SELECT n2.id, seg.segment
+            FROM nomenclature n2
+            LEFT JOIN segments seg ON seg.id_nom = n2.id
+        ) s
+        WHERE n.id = s.id
+          AND n.segment_xyz IS DISTINCT FROM s.segment
+    """), {"cv_x": CV_X, "cv_y": CV_Y, "mois_min": MOIS_MIN_XYZ})
+    classes = (await db.execute(text(
+        "SELECT count(*) FROM nomenclature WHERE segment_xyz IS NOT NULL"))).scalar() or 0
     await db.commit()
-    logger.info(f"[XYZ] Segmentation terminée — {updated} produits classés X/Y, reste → Z")
-    return updated
+    logger.info(f"[XYZ] Segmentation terminée — {classes} produits classés")
+    return classes
 
 
 # ── Disponibilité ─────────────────────────────────────────────────────────────
