@@ -112,6 +112,12 @@ async def partie_donnees(rafraichir: bool) -> bool:
             await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_stock_produits"))
             await db.commit()
         ecrire("- Vue rafraîchie par `--rafraichir`")
+    if rafraichir:
+        # Comme POST /stock/refresh-cache : la disponibilité suit la vue.
+        from app.services.stock_segmentation import update_disponibilite
+        async with AsyncSessionLocal() as db:
+            changements = await update_disponibilite(db)
+        ecrire(f"- Disponibilité recalculée, changements : {changements}")
     if not est_peuplee:
         ecrire("- ⚠️ Toutes les routes qui lisent le stock vont échouer. "
                "Relancer avec `--rafraichir`.")
@@ -127,6 +133,13 @@ async def partie_donnees(rafraichir: bool) -> bool:
         UNION ALL SELECT 'historique_stock_jour', count(*) FROM historique_stock_jour
         UNION ALL SELECT 'parametres_stock', count(*) FROM parametres_stock
         UNION ALL SELECT 'previsions_demande', count(*) FROM previsions_demande
+    """)
+
+    await verifier("Fraîcheur de la synchronisation", """
+        SELECT table_name AS table, last_id, last_sync_at AS dernier_lot_recu
+        FROM sync_status
+        WHERE table_name IN ('sorties_produits', 'entrees_produits', 'sorties', 'nomenclature')
+        ORDER BY 1
     """)
 
     await verifier("Périodes couvertes", """

@@ -720,6 +720,9 @@ async def update_sync_status(
         set_={
             "last_id": stmt.excluded.last_id,
             "total_synced": SyncStatus.total_synced + payload.count,
+            # onupdate ne s'applique pas à un ON CONFLICT : sans cette ligne
+            # la date restait celle du tout premier lot.
+            "last_sync_at": func.now(),
         },
     )
     await db.execute(stmt)
