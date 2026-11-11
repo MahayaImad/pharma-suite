@@ -62,8 +62,18 @@ pousse vers `POST /sync/{table}`. Flux à sens unique, l'agent n'écrit jamais
 dans EASYPHARM. Curseur de reprise gardé côté serveur, pas en local. Ses tests
 tournent sans provider OLE DB ni réseau (`cd agent-easypharm && pytest`).
 
+Troisième composant : `mobile/` — l'application Flutter (Android et web),
+démarrée le 2026-11-11. **Socle seulement** : cinq thèmes (bleu médical par
+défaut, sombre, vert, turquoise, indigo) choisis dans les préférences et
+conservés sur l'appareil, navigation adaptative (menu latéral sur PC, barre
+du bas sur portable), sections en état « Bientôt disponible ». Riverpod,
+go_router et shared_preferences sont en place ; **Dio, Drift, freezed, la
+connexion et le hors-ligne n'existent pas encore**. Voir `mobile/README.md`.
+La version web se construit avec `--no-web-resources-cdn` et embarque sa
+police : elle ne doit rien télécharger depuis Internet.
+
 **N'existe pas** (ne pas y faire référence, ne pas supposer que ça marche) :
-`Makefile` · `docs/` · `mobile/` · `ml/` · aucune CI.
+`Makefile` · `ml/` · aucune CI.
 
 ## Commandes réelles
 
