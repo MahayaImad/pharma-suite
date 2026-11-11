@@ -259,7 +259,14 @@ décline par famille, étagère, responsable, classe ABC/XYZ/VEN.
 |---|---|---|
 | **Valeur du stock** | Σ (stock du lot × prix d'achat du lot) | capital immobilisé |
 | **Rotation** | coût d'achat des ventes ÷ valeur moyenne du stock | plus haut = mieux, à lire avec les ruptures |
-| **Couverture (jours)** | stock ÷ vente moyenne par jour (quantité vendue sur 12 mois ÷ 365) ; non mesurable sans vente | cible selon la classe |
+| **CMM** | ventes nettes des 12 derniers mois ÷ mois d'historique (12 au plus ; moins pour un produit référencé depuis moins d'un an) | consommation de référence |
+| **CMJ** | CMM ÷ 30 | base de la couverture et du risque de péremption |
+| **Délai de livraison (L)** | jours calendaires entre la commande du jour et la livraison : `fournisseurs.delai_livraison` jours **ouvrés** (défaut : réglage `delai_livraison_jours`, 1), vendredi et samedi non ouvrés — une commande du jeudi à 24 h arrive le dimanche (L = 3) | entre dans le stock de sécurité |
+| **Stock de sécurité (SS)** | Z × σ × √L, σ = écart-type des ventes journalières (jours sans vente comptés à 0) ; Z selon la classe : A 1,645 (95 %), B 1,282 (90 %), C 1,036 (85 %), non classé = B. Version simple affichée à côté : CMJ × `delai_securite_jours` | protège contre la variabilité |
+| **Stock maximum** | SS + CMM × `periode_commande_jours` ÷ 30 | niveau de recomplètement |
+| **Couverture (jours)** | stock ÷ CMJ ; non mesurable sans vente. Doit rester **sous la DVR du lot le plus long**, sinon une partie périmera | cible selon la classe |
+| **DVR d'un lot** | jours jusqu'au **dernier jour** du mois de péremption (MM/YY) ; 0 si périmé | durée de vie restante |
+| **Quantité écoulable / à risque (FEFO)** | les lots se vendent dans l'ordre de péremption au rythme CMJ ; un lot ne commence qu'une fois les précédents épuisés ou périmés. Écoulable = min(stock, CMJ × (DVR − temps pris par les lots précédents)) ; à risque = stock − écoulable. Lots bloqués ou sans date : hors calcul | > 0 : agir tout de suite (retour fournisseur, échange, mise en avant) |
 | **Taux de marge** | (prix de vente − prix d'achat moyen pondéré) ÷ prix d'achat, en % — lecture de la réglementation algérienne des marges, sur le prix d'achat | affiché sur la fiche produit |
 | **Taux de rupture** | produits actifs à stock 0 ÷ produits actifs (hors `desactiv_alrt_rup`) | par classe : une rupture en A ou en vital pèse plus |
 | **Jours de rupture** | jours à stock 0 sur la période (`historique_stock_jour`) | base de la demande perdue |
@@ -272,6 +279,17 @@ décline par famille, étagère, responsable, classe ABC/XYZ/VEN.
 | **GMROI** | marge brute ÷ valeur moyenne du stock | rentabilité du stock |
 | **Fournisseur : délai** | moyenne et écart-type (réception − commande) | entre dans le stock de sécurité |
 | **Fournisseur : complétude** | lignes livrées en entier ÷ lignes commandées | fiabilité |
+
+Ces indicateurs par produit sont calculés par `GET /stock/products/{id}/indicateurs`
+(`app/services/indicateurs_stock.py`, testés dans `tests/stock/test_indicateurs.py`).
+Leurs constantes (`periode_commande_jours` 7, `delai_securite_jours` 2,
+`delai_livraison_jours` 1) sont dans la table `reglages_stock` (migration 005),
+modifiables par un administrateur via `PATCH /stock/reglages`.
+
+**Pas encore calculés** (module Commandes) : point de commande
+(CMJ × L + SS), quantité à commander (stock max − stock − commandes en
+cours), quantité économique de Wilson. **Taux de péremption** : en attente
+de la méthode d'extraction des périmés.
 
 Les classements ABC, XYZ et VEN et le taux de service cible sont définis
 aux blocs 1 et 3 de la section 4.

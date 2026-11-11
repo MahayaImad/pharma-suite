@@ -232,7 +232,20 @@ portent aussi). Règles :
   (`nomenclature.categorie` : princeps / générique / générique++), qui sert
   au calcul de l'enveloppe de prime.
 
-### 3.5 Horodatage des données du stock
+### 3.5 Délai de livraison des fournisseurs (confirmé le 2026-11-11)
+
+- Les grossistes livrent en général **en 24 heures, les jours ouvrés**. La
+  semaine algérienne ne travaille pas le **vendredi ni le samedi** : une
+  commande du **jeudi arrive le dimanche**, une commande du vendredi aussi.
+- Le délai propre à un fournisseur se saisit dans
+  `fournisseurs.delai_livraison`, en **jours ouvrés** (colonne absente
+  d'EASYPHARM : la synchronisation ne l'écrase pas). Sans saisie, on prend le
+  réglage `delai_livraison_jours` (1).
+- Le **fournisseur principal** d'un produit est celui de sa dernière entrée
+  hors avoir (`entrees_produits.id_fournisseur`, `type_entree <> 'AV'`).
+- Les jours fériés ne sont pas encore retirés du calcul.
+
+### 3.6 Horodatage des données du stock
 
 Les écrans stock affichent l'heure de leurs données : c'est l'heure du
 dernier calcul de la vue `mv_stock_produits` (`POST /stock/refresh-cache`,

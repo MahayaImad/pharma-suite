@@ -72,7 +72,9 @@ réelle** : écran `/connexion` (deux volets), `POST /auth/login` puis
 redirection go_router tant qu'on n'est pas connecté, déconnexion dans le menu
 et les préférences. **Écran Stock réel** (`/stock`, `/stock/:id`) : valeur du
 stock et heure des données, recherche, familles, filtre d'état, tri, liste
-paginée, fiche produit (chiffres, prix, marge, lots) ; liste et fiche côte à
+paginée, fiche produit (CMM, CMJ, délai de livraison, stock de sécurité,
+stock maximum, couverture, prix, marge, lots avec quantité à risque de
+péremption en FEFO) ; liste et fiche côte à
 côte sur PC. Riverpod, go_router, shared_preferences, Dio (client authentifié :
 jeton ajouté, déconnexion sur 401) et freezed (+ json_serializable, fichiers
 générés committés) sont en place ; **Drift et le hors-ligne n'existent pas

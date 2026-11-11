@@ -2,7 +2,10 @@
 Stock endpoints — Nomenclature & Instances produits
 Stock réel calculé depuis entrees_produits via mv_stock_produits (vue matérialisée).
 """
+from datetime import date as Date, datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Optional, Literal
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel as PydanticBaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +17,7 @@ from app.models.pharma import Nomenclature, InstanceProduit, Laboratoire
 from app.models.stock_responsabilite import NomenclatureClassification
 from app.models.performance import Employe
 from app.services.stock_segmentation import compute_abc, compute_xyz, update_disponibilite
+from app.services import indicateurs_stock as ind
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
@@ -346,6 +350,171 @@ async def get_product(
         "valeur_vente": _f(p.valeur_vente),
         "segment_abc": p.segment_abc, "segment_xyz": p.segment_xyz,
         "categorie": p.categorie, "disponibilite": p.disponibilite,
+    }
+
+
+# ── Indicateurs de gestion d'un produit ───────────────────────────────────────
+
+_ALGER = ZoneInfo("Africa/Algiers")
+
+
+def _aujourdhui_alger() -> Date:
+    return datetime.now(timezone.utc).astimezone(_ALGER).date()
+
+
+async def _reglages(db: AsyncSession) -> dict[str, Decimal]:
+    lignes = await db.execute(text("SELECT cle, valeur FROM reglages_stock"))
+    return {r.cle: r.valeur for r in lignes}
+
+
+@router.get("/reglages")
+async def lire_reglages(
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """Constantes du calcul des indicateurs (table reglages_stock)."""
+    lignes = await db.execute(text(
+        "SELECT cle, valeur, description, modifie_le, modifie_par FROM reglages_stock ORDER BY cle"))
+    return [
+        {"cle": r.cle, "valeur": _f(r.valeur), "description": r.description,
+         "modifie_le": r.modifie_le.isoformat() if r.modifie_le else None,
+         "modifie_par": r.modifie_par}
+        for r in lignes
+    ]
+
+
+@router.patch("/reglages")
+async def modifier_reglages(
+    valeurs: dict[str, Decimal],
+    db: AsyncSession = Depends(get_db),
+    current: dict = Depends(get_current_user),
+):
+    """Modifie une ou plusieurs constantes ; administrateur uniquement."""
+    if current.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Réglages réservés aux administrateurs")
+    connues = await _reglages(db)
+    inconnues = sorted(set(valeurs) - set(connues))
+    if inconnues:
+        raise HTTPException(status_code=422, detail=f"Réglage inconnu : {', '.join(inconnues)}")
+    if any(v < 0 for v in valeurs.values()):
+        raise HTTPException(status_code=422, detail="Une valeur ne peut pas être négative")
+    for cle, valeur in valeurs.items():
+        await db.execute(text("""
+            UPDATE reglages_stock SET valeur = :v, modifie_le = now(), modifie_par = :qui
+            WHERE cle = :c
+        """), {"v": valeur, "qui": current.get("username"), "c": cle})
+    await db.commit()
+    return await lire_reglages(db, current)
+
+
+@router.get("/products/{product_id}/indicateurs")
+async def indicateurs_produit(
+    product_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """CMM, CMJ, délai de livraison, stock de sécurité, stock maximum,
+    couverture, et quantité à risque de péremption de chaque lot (FEFO).
+    Définitions : docs/05-stock-guide.md, section 5 ; calculs :
+    app/services/indicateurs_stock.py.
+    """
+    produit = (await db.execute(text("""
+        SELECT n.id, n.segment_abc, COALESCE(mv.stock_actuel, 0) AS stock
+        FROM nomenclature n
+        LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        WHERE n.id = :id
+    """), {"id": product_id})).fetchone()
+    if not produit:
+        raise HTTPException(status_code=404, detail="Produit introuvable")
+
+    jour = _aujourdhui_alger()
+    debut = jour - timedelta(days=365)
+    reglages = await _reglages(db)
+
+    # Ventes nettes par jour sur 12 mois (les retours sont négatifs).
+    ventes = (await db.execute(text("""
+        SELECT date, SUM(qte_sortie) AS qte
+        FROM sorties_produits
+        WHERE id_nom = :id AND date > :debut AND date <= :jour
+        GROUP BY date
+    """), {"id": product_id, "debut": debut, "jour": jour})).fetchall()
+    premiere_vente = (await db.execute(text(
+        "SELECT MIN(date) FROM sorties_produits WHERE id_nom = :id AND qte_sortie > 0"
+    ), {"id": product_id})).scalar()
+
+    ventes_12_mois = float(sum(v.qte or 0 for v in ventes))
+    mois = ind.mois_historique(premiere_vente, jour)
+    cmm = ind.cmm(ventes_12_mois, mois)
+    cmj = ind.cmj(cmm)
+    # σ sur la même période que la CMM (jours sans vente comptés à zéro).
+    jours_historique = min(365, (jour - premiere_vente).days + 1) if premiere_vente else 365
+    sigma = ind.ecart_type_journalier([float(v.qte or 0) for v in ventes], jours_historique)
+
+    # Fournisseur principal : celui de la dernière entrée hors avoir.
+    fournisseur = (await db.execute(text("""
+        SELECT ep.id_fournisseur, COALESCE(f.fournisseur, ep.fournisseur) AS nom, f.delai_livraison
+        FROM entrees_produits ep
+        LEFT JOIN fournisseurs f ON f.id = ep.id_fournisseur
+        WHERE ep.id_nom = :id AND COALESCE(ep.type_entree, '') <> 'AV'
+        ORDER BY ep.date_entree DESC NULLS LAST, ep.id DESC
+        LIMIT 1
+    """), {"id": product_id})).fetchone()
+    delai_saisi = fournisseur is not None and fournisseur.delai_livraison is not None
+    delai_ouvres = int(fournisseur.delai_livraison if delai_saisi
+                       else reglages.get("delai_livraison_jours", Decimal(1)))
+    delai = ind.delai_livraison(jour, delai_ouvres)
+
+    ss = ind.stock_securite(sigma, delai, produit.segment_abc)
+    delai_securite = float(reglages.get("delai_securite_jours", Decimal(2)))
+    periode = float(reglages.get("periode_commande_jours", Decimal(7)))
+    stock = float(produit.stock)
+
+    lots = (await db.execute(text("""
+        SELECT id, stock, peremption_date, prix_achat, bloque
+        FROM entrees_produits
+        WHERE id_nom = :id AND stock > 0
+    """), {"id": product_id})).fetchall()
+    risques = ind.risques_fefo(
+        [ind.LotFefo(id=l.id, stock=int(l.stock), peremption=l.peremption_date,
+                     prix_achat=Decimal(l.prix_achat or 0), bloque=bool(l.bloque)) for l in lots],
+        cmj, jour)
+    qte_risque = sum(r.a_risque or 0 for r in risques)
+    valeur_risque = sum((r.valeur_a_risque or Decimal(0) for r in risques), Decimal(0))
+    dvr_connues = [r.dvr for r in risques if r.dvr is not None]
+    couverture = ind.couverture_jours(stock, cmj)
+
+    return {
+        "date_calcul": jour.isoformat(),
+        "ventes_12_mois": ventes_12_mois,
+        "mois_historique": mois,
+        "cmm": round(cmm, 2),
+        "cmj": round(cmj, 3),
+        "ecart_type_journalier": round(sigma, 3),
+        "fournisseur": None if fournisseur is None else {
+            "id": fournisseur.id_fournisseur, "nom": fournisseur.nom,
+            "delai_jours_ouvres": delai_ouvres, "delai_saisi": delai_saisi,
+        },
+        "delai_livraison_jours": delai,
+        "date_livraison": ind.date_livraison(jour, delai_ouvres).isoformat(),
+        "classe_abc": produit.segment_abc,
+        "z": ind.Z_PAR_CLASSE.get((produit.segment_abc or "").upper(), ind.Z_DEFAUT),
+        "stock_securite": ss,
+        "stock_securite_simple": ind.stock_securite_simple(cmj, delai_securite),
+        "delai_securite_jours": delai_securite,
+        "periode_commande_jours": periode,
+        "stock_maximum": ind.stock_maximum(ss, cmm, periode),
+        "stock": stock,
+        "couverture_jours": couverture,
+        # La couverture doit rester sous la DVR du lot le plus long : au-delà,
+        # une partie du stock périmera avant d'être vendue.
+        "dvr_max": max(dvr_connues) if dvr_connues else None,
+        "qte_a_risque": qte_risque,
+        "valeur_a_risque": _f(valeur_risque),
+        "lots": [
+            {"id": r.id, "dvr": r.dvr, "ecoulable": r.ecoulable, "a_risque": r.a_risque,
+             "valeur_a_risque": None if r.valeur_a_risque is None else _f(r.valeur_a_risque)}
+            for r in risques
+        ],
     }
 
 
