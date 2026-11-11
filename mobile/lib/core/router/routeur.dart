@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/connexion/presentation/ecran_connexion.dart';
 
 import '../../features/preferences/presentation/ecran_preferences.dart';
 import '../widgets/coquille.dart';
@@ -12,9 +15,28 @@ const _descriptions = <String, String>{
   '/commandes': 'Les propositions de commande.',
 };
 
-GoRouter construireRouteur({String depart = '/stock'}) => GoRouter(
+/// [connecte] dit si une session est ouverte ; [rafraichir] prévient le
+/// routeur quand elle change, pour qu'il réapplique la redirection.
+GoRouter construireRouteur({
+  String depart = '/stock',
+  bool Function()? connecte,
+  Listenable? rafraichir,
+}) =>
+    GoRouter(
       initialLocation: depart,
+      refreshListenable: rafraichir,
+      redirect: (context, etat) {
+        final ouvert = connecte?.call() ?? true;
+        final surConnexion = etat.matchedLocation == '/connexion';
+        if (!ouvert && !surConnexion) return '/connexion';
+        if (ouvert && surConnexion) return '/stock';
+        return null;
+      },
       routes: [
+        GoRoute(
+          path: '/connexion',
+          pageBuilder: (context, etat) => const NoTransitionPage(child: EcranConnexion()),
+        ),
         ShellRoute(
           builder: (context, etat, child) =>
               Coquille(emplacement: etat.matchedLocation, child: child),

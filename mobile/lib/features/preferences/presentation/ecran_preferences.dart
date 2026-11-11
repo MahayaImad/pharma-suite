@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/themes.dart';
 import '../../../core/widgets/coquille.dart';
 import '../../../core/widgets/pastille_etat.dart';
+import '../../connexion/application/session_controller.dart';
 import '../application/theme_controller.dart';
 
 /// Préférences de l'utilisateur. Pour l'instant : le choix du thème.
@@ -49,6 +50,8 @@ class EcranPreferences extends ConsumerWidget {
                       surAppui: () => ref.read(themeProvider.notifier).choisir(t),
                     ),
                 ]),
+                const SizedBox(height: 28),
+                const _Compte(),
                 const SizedBox(height: 28),
                 Text('Aperçu',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
@@ -210,6 +213,39 @@ class _Apercu extends StatelessWidget {
                 FilledButton.tonal(onPressed: () {}, child: const Text('Secondaire')),
               ]),
             ]),
+          ),
+        ),
+      ),
+    ]);
+  }
+}
+
+
+/// Le compte connecté, et la déconnexion (seul accès sur portable).
+class _Compte extends ConsumerWidget {
+  const _Compte();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profil = ref.watch(sessionProvider)?.profil;
+    if (profil == null) return const SizedBox.shrink();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('Compte', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      const SizedBox(height: 12),
+      Card(
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: context.schema.primaryContainer,
+            child: Text(profil.initiales,
+                style: TextStyle(fontWeight: FontWeight.w700, color: context.schema.onPrimaryContainer)),
+          ),
+          title: Text(profil.nomAffiche, style: const TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Text('Compte EASYPHARM « ${profil.utilisateur} »'),
+          trailing: TextButton.icon(
+            key: const ValueKey('bouton-deconnexion'),
+            onPressed: () => ref.read(sessionProvider.notifier).fermer(),
+            icon: const Icon(Icons.logout, size: 18),
+            label: const Text('Se déconnecter'),
           ),
         ),
       ),

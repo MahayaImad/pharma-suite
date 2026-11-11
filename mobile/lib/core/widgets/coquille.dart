@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/connexion/application/session_controller.dart';
+import 'logo.dart';
 
 import '../theme/themes.dart';
 
@@ -87,18 +91,13 @@ class _MenuLateral extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 20),
           child: Row(children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                  color: context.couleurs.tuilePrincipale, borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.add, color: Colors.white, size: 22),
-            ),
+            const LogoPharmaSuite(taille: 34),
             const SizedBox(width: 10),
             const Expanded(
               child: Text('PharmaSuite',
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.2)),
+                  style: TextStyle(
+                      fontFamily: 'Sora', fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
             ),
           ]),
         ),
@@ -118,6 +117,8 @@ class _MenuLateral extends StatelessWidget {
           actif: preferencesActives,
           surAppui: () => context.go('/preferences'),
         ),
+        const SizedBox(height: 6),
+        const _Utilisateur(),
       ]),
     );
   }
@@ -176,6 +177,44 @@ class BoutonPreferences extends StatelessWidget {
       tooltip: 'Préférences',
       icon: const Icon(Icons.settings_outlined),
       onPressed: () => context.push('/preferences'),
+    );
+  }
+}
+
+
+/// Qui est connecté, et le bouton pour se déconnecter (menu latéral).
+class _Utilisateur extends ConsumerWidget {
+  const _Utilisateur();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profil = ref.watch(sessionProvider)?.profil;
+    if (profil == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 4, 0, 0),
+      child: Row(children: [
+        CircleAvatar(
+          radius: 17,
+          backgroundColor: context.schema.primaryContainer,
+          child: Text(profil.initiales,
+              style: TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w700, color: context.schema.onPrimaryContainer)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(profil.nomAffiche,
+                overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(profil.role == 'admin' ? 'Administrateur' : 'Équipe',
+                style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
+          ]),
+        ),
+        IconButton(
+          tooltip: 'Se déconnecter',
+          icon: Icon(Icons.logout, size: 20, color: context.couleurs.encre2),
+          onPressed: () => ref.read(sessionProvider.notifier).fermer(),
+        ),
+      ]),
     );
   }
 }

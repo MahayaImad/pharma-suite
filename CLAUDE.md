@@ -66,11 +66,18 @@ Troisième composant : `mobile/` — l'application Flutter (Android et web),
 démarrée le 2026-11-11. **Socle seulement** : cinq thèmes (bleu médical par
 défaut, sombre, vert, turquoise, indigo) choisis dans les préférences et
 conservés sur l'appareil, navigation adaptative (menu latéral sur PC, barre
-du bas sur portable), sections en état « Bientôt disponible ». Riverpod,
-go_router et shared_preferences sont en place ; **Dio, Drift, freezed, la
-connexion et le hors-ligne n'existent pas encore**. Voir `mobile/README.md`.
-La version web se construit avec `--no-web-resources-cdn` et embarque sa
-police : elle ne doit rien télécharger depuis Internet.
+du bas sur portable), sections en état « Bientôt disponible ». **Connexion
+réelle** : écran `/connexion` (deux volets), `POST /auth/login` puis
+`GET /auth/me`, session (jeton + profil) gardée dans shared_preferences,
+redirection go_router tant qu'on n'est pas connecté, déconnexion dans le menu
+et les préférences. Riverpod, go_router, shared_preferences, Dio et freezed
+(+ json_serializable, fichiers générés committés) sont en place ; **Drift, le
+hors-ligne et l'intercepteur Dio (jeton sur les appels, déconnexion sur 401)
+n'existent pas encore**. La photo de l'écran de connexion
+(`assets/images/connexion.webp`) est une image Envato filigranée, provisoire :
+licence à acheter avant la production. Voir `mobile/README.md`.
+La version web se construit avec `--no-web-resources-cdn` et embarque ses
+polices (Roboto, Sora) : elle ne doit rien télécharger depuis Internet.
 
 **N'existe pas** (ne pas y faire référence, ne pas supposer que ça marche) :
 `Makefile` · `ml/` · aucune CI.

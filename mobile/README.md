@@ -5,13 +5,29 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
 
 ## État
 
-Socle seulement : les cinq thèmes, le choix du thème dans les préférences
-(conservé sur l'appareil) et la navigation, menu latéral sur PC, barre du bas
-sur portable. Les sections Accueil, Stock, Alertes, Inventaire et Commandes
-affichent un état « Bientôt disponible » : aucune donnée n'est encore lue.
+- Les cinq thèmes, le choix du thème dans les préférences (conservé sur
+  l'appareil) et la navigation : menu latéral sur PC, barre du bas sur portable.
+- **Connexion** avec un compte de l'API : écran en deux volets (photo à gauche,
+  formulaire à droite ; bandeau au-dessus sur portable). La session (jeton et
+  profil) est gardée sur l'appareil ; sans session, toute adresse renvoie vers
+  `/connexion`. Déconnexion dans le menu et dans les préférences.
+- Les sections Accueil, Stock, Alertes, Inventaire et Commandes affichent un
+  état « Bientôt disponible » : aucune donnée métier n'est encore lue.
 
-Pas encore là : connexion, appels à l'API, base locale et fonctionnement hors
-ligne (Dio, Drift, freezed viendront avec le premier écran de données).
+Adresse de l'API : `--dart-define=API_URL=…` si fourni ; sinon, en web,
+`<origine de la page>/api/v1` (nginx relaie vers l'API) ; sinon
+`http://192.168.100.33:8000/api/v1`.
+
+Modèles en `freezed` : après modification de `lib/domain/`, relancer
+`dart run build_runner build --delete-conflicting-outputs` (les fichiers
+`*.freezed.dart` et `*.g.dart` sont committés, ne pas les éditer).
+
+Pas encore là : base locale et hors-ligne (Drift), intercepteur Dio qui ajoute
+le jeton et déconnecte sur 401.
+
+**Photo de connexion** : `assets/images/connexion.webp` est une image Envato
+filigranée, provisoire. Acheter la licence (ou la remplacer) avant la mise en
+production. Polices embarquées : Roboto et Sora (licence OFL).
 
 ## Commandes
 

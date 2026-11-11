@@ -4,11 +4,22 @@ import 'package:go_router/go_router.dart';
 
 import 'core/router/routeur.dart';
 import 'core/theme/themes.dart';
+import 'features/connexion/application/session_controller.dart';
 import 'features/preferences/application/theme_controller.dart';
 
 /// Le routeur vit aussi longtemps que l'application : le recréer à chaque
 /// changement de thème ramènerait l'utilisateur à l'écran de départ.
-final routeurProvider = Provider<GoRouter>((ref) => construireRouteur());
+final routeurProvider = Provider<GoRouter>((ref) {
+  // Le routeur est créé une fois ; un compteur le prévient des changements
+  // de session (connexion, déconnexion, jeton expiré).
+  final changements = ValueNotifier<int>(0);
+  ref.listen(sessionProvider, (_, _) => changements.value++);
+  ref.onDispose(changements.dispose);
+  return construireRouteur(
+    connecte: () => ref.read(sessionProvider) != null,
+    rafraichir: changements,
+  );
+});
 
 class PharmaSuite extends ConsumerWidget {
   const PharmaSuite({super.key});
