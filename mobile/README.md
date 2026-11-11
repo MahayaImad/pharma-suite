@@ -11,8 +11,13 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   formulaire à droite ; bandeau au-dessus sur portable). La session (jeton et
   profil) est gardée sur l'appareil ; sans session, toute adresse renvoie vers
   `/connexion`. Déconnexion dans le menu et dans les préférences.
-- Les sections Accueil, Stock, Alertes, Inventaire et Commandes affichent un
-  état « Bientôt disponible » : aucune donnée métier n'est encore lue.
+- **Stock** : valeur du stock et heure des données EASYPHARM, recherche (nom,
+  DCI, code-barres), filtre par famille, par état (actifs, en stock, sous le
+  seuil, rupture), tri, liste paginée ; fiche produit avec stock, seuil, ventes
+  sur 12 mois, couverture, prix, marge et lots (péremption, fournisseur, BL).
+  Sur PC, la fiche s'ouvre à côté de la liste ; sur portable, en plein écran.
+- Accueil, Alertes, Inventaire et Commandes affichent encore « Bientôt
+  disponible ».
 
 Adresse de l'API : `--dart-define=API_URL=…` si fourni ; sinon, en web,
 `<origine de la page>/api/v1` (nginx relaie vers l'API) ; sinon
@@ -22,8 +27,9 @@ Modèles en `freezed` : après modification de `lib/domain/`, relancer
 `dart run build_runner build --delete-conflicting-outputs` (les fichiers
 `*.freezed.dart` et `*.g.dart` sont committés, ne pas les éditer).
 
-Pas encore là : base locale et hors-ligne (Drift), intercepteur Dio qui ajoute
-le jeton et déconnecte sur 401.
+Les appels authentifiés passent par `dioProvider` (jeton ajouté, session
+fermée sur 401). Pas encore là : base locale et hors-ligne (Drift), lecture du
+code-barres par l'appareil photo.
 
 **Photo de connexion** : `assets/images/connexion.webp` est une image Envato
 filigranée, provisoire. Acheter la licence (ou la remplacer) avant la mise en

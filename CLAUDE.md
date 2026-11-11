@@ -70,10 +70,13 @@ du bas sur portable), sections en état « Bientôt disponible ». **Connexion
 réelle** : écran `/connexion` (deux volets), `POST /auth/login` puis
 `GET /auth/me`, session (jeton + profil) gardée dans shared_preferences,
 redirection go_router tant qu'on n'est pas connecté, déconnexion dans le menu
-et les préférences. Riverpod, go_router, shared_preferences, Dio et freezed
-(+ json_serializable, fichiers générés committés) sont en place ; **Drift, le
-hors-ligne et l'intercepteur Dio (jeton sur les appels, déconnexion sur 401)
-n'existent pas encore**. La photo de l'écran de connexion
+et les préférences. **Écran Stock réel** (`/stock`, `/stock/:id`) : valeur du
+stock et heure des données, recherche, familles, filtre d'état, tri, liste
+paginée, fiche produit (chiffres, prix, marge, lots) ; liste et fiche côte à
+côte sur PC. Riverpod, go_router, shared_preferences, Dio (client authentifié :
+jeton ajouté, déconnexion sur 401) et freezed (+ json_serializable, fichiers
+générés committés) sont en place ; **Drift et le hors-ligne n'existent pas
+encore**. La version web route par `#/` (ex. `/#/stock/5`). La photo de l'écran de connexion
 (`assets/images/connexion.webp`) est une image Envato filigranée, provisoire :
 licence à acheter avant la production. Voir `mobile/README.md`.
 La version web se construit avec `--no-web-resources-cdn` et embarque ses

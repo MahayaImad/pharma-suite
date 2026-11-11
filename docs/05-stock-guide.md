@@ -259,7 +259,8 @@ décline par famille, étagère, responsable, classe ABC/XYZ/VEN.
 |---|---|---|
 | **Valeur du stock** | Σ (stock du lot × prix d'achat du lot) | capital immobilisé |
 | **Rotation** | coût d'achat des ventes ÷ valeur moyenne du stock | plus haut = mieux, à lire avec les ruptures |
-| **Couverture (jours)** | stock ÷ vente moyenne par jour | cible selon la classe |
+| **Couverture (jours)** | stock ÷ vente moyenne par jour (quantité vendue sur 12 mois ÷ 365) ; non mesurable sans vente | cible selon la classe |
+| **Taux de marge** | (prix de vente − prix d'achat moyen pondéré) ÷ prix d'achat, en % — lecture de la réglementation algérienne des marges, sur le prix d'achat | affiché sur la fiche produit |
 | **Taux de rupture** | produits actifs à stock 0 ÷ produits actifs (hors `desactiv_alrt_rup`) | par classe : une rupture en A ou en vital pèse plus |
 | **Jours de rupture** | jours à stock 0 sur la période (`historique_stock_jour`) | base de la demande perdue |
 | **Stock dormant** | valeur des produits en stock sans vente depuis N mois (N = 6 par défaut) ÷ valeur du stock | trésorerie gelée |

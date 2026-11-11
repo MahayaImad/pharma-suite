@@ -8,7 +8,10 @@ import 'package:pharmasuite/data/api/auth_api.dart';
 import 'package:pharmasuite/domain/session.dart';
 import 'package:pharmasuite/features/connexion/application/session_controller.dart';
 import 'package:pharmasuite/features/preferences/application/theme_controller.dart';
+import 'package:pharmasuite/data/api/stock_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'fausse_stock_api.dart';
 
 /// API simulée : « sara » / « secret » est le seul compte valide.
 class FausseAuthApi implements AuthApi {
@@ -42,6 +45,7 @@ Future<SharedPreferences> _lancer(
   final prefs = await SharedPreferences.getInstance();
   await tester.pumpWidget(ProviderScope(
     overrides: [
+      stockApiProvider.overrideWithValue(FausseStockApi()),
       preferencesLocalesProvider.overrideWithValue(prefs),
       authApiProvider.overrideWithValue(api),
     ],
@@ -70,7 +74,7 @@ void main() {
     final prefs = await _lancer(tester, api: FausseAuthApi());
     await _saisir(tester, 'sara', 'secret');
 
-    expect(find.text('Recherche de produits, lots et valeur du stock.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('champ-recherche')), findsOneWidget);
     expect(find.text('Sara Benali'), findsOneWidget); // menu latéral
     final enregistree = Session.fromJson(jsonDecode(prefs.getString(cleSession)!) as Map<String, dynamic>);
     expect(enregistree.jeton, 'jeton-sara');

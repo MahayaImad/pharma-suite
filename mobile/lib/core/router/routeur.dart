@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../features/connexion/presentation/ecran_connexion.dart';
 
 import '../../features/preferences/presentation/ecran_preferences.dart';
+import '../../features/stock/presentation/ecran_stock.dart';
 import '../widgets/coquille.dart';
 import '../widgets/ecran_a_venir.dart';
 
 const _descriptions = <String, String>{
   '/accueil': "La vue d'ensemble de l'officine.",
-  '/stock': 'Recherche de produits, lots et valeur du stock.',
   '/alertes': 'Ruptures, seuils et péremptions à traiter.',
   '/inventaire': "L'inventaire tournant et ses écarts.",
   '/commandes': 'Les propositions de commande.',
@@ -41,7 +41,19 @@ GoRouter construireRouteur({
           builder: (context, etat, child) =>
               Coquille(emplacement: etat.matchedLocation, child: child),
           routes: [
-            for (final d in destinations)
+            GoRoute(
+              path: '/stock',
+              pageBuilder: (context, etat) => const NoTransitionPage(child: EcranStock()),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  pageBuilder: (context, etat) => NoTransitionPage(
+                    child: EcranStock(selection: int.tryParse(etat.pathParameters['id']!)),
+                  ),
+                ),
+              ],
+            ),
+            for (final d in destinations.where((d) => d.chemin != '/stock'))
               GoRoute(
                 path: d.chemin,
                 pageBuilder: (context, etat) => NoTransitionPage(

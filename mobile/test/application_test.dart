@@ -5,7 +5,10 @@ import 'package:pharmasuite/app.dart';
 import 'package:pharmasuite/core/router/routeur.dart';
 import 'package:pharmasuite/core/theme/themes.dart';
 import 'package:pharmasuite/features/preferences/application/theme_controller.dart';
+import 'package:pharmasuite/data/api/stock_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'fausse_stock_api.dart';
 
 Future<SharedPreferences> _lancer(
   WidgetTester tester, {
@@ -21,6 +24,7 @@ Future<SharedPreferences> _lancer(
   final prefs = await SharedPreferences.getInstance();
   await tester.pumpWidget(ProviderScope(
     overrides: [
+      stockApiProvider.overrideWithValue(FausseStockApi()),
       preferencesLocalesProvider.overrideWithValue(prefs),
       routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
     ],
@@ -76,7 +80,7 @@ void main() {
     await _lancer(tester, taille: _portable, depart: '/preferences');
     await tester.tap(find.byTooltip('Retour'));
     await tester.pumpAndSettle();
-    expect(find.text('Recherche de produits, lots et valeur du stock.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('champ-recherche')), findsOneWidget);
   });
 
   testWidgets('sur PC : pas de bouton préférences dans la barre de titre', (tester) async {

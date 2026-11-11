@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../theme/themes.dart';
 
-enum NiveauEtat { critique, alerte, bon }
+enum NiveauEtat { critique, alerte, bon, neutre }
 
 /// Étiquette d'état : une couleur, toujours accompagnée d'une icône et d'un
 /// libellé — la couleur seule ne porte jamais le sens.
 class PastilleEtat extends StatelessWidget {
-  const PastilleEtat({super.key, required this.niveau, required this.libelle});
+  const PastilleEtat({super.key, required this.niveau, required this.libelle, this.icone});
 
   final NiveauEtat niveau;
   final String libelle;
+
+  /// Remplace l'icône par défaut du niveau.
+  final IconData? icone;
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +22,20 @@ class PastilleEtat extends StatelessWidget {
       NiveauEtat.critique => (e.critique, e.critiqueDoux, Icons.remove_circle_outline),
       NiveauEtat.alerte => (e.alerte, e.alerteDoux, Icons.schedule),
       NiveauEtat.bon => (e.bon, e.bonDoux, Icons.check_circle_outline),
+      NiveauEtat.neutre => (context.couleurs.encre2, context.couleurs.neutreDoux, Icons.remove),
     };
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 3, 10, 3),
       decoration: BoxDecoration(color: fond, borderRadius: BorderRadius.circular(999)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icone, size: 15, color: texte),
+        Icon(this.icone ?? icone, size: 15, color: texte),
         const SizedBox(width: 5),
-        Text(libelle, style: TextStyle(color: texte, fontSize: 13, fontWeight: FontWeight.w600)),
+        Flexible(
+          child: Text(libelle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: texte, fontSize: 13, fontWeight: FontWeight.w600)),
+        ),
       ]),
     );
   }
