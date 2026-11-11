@@ -194,6 +194,51 @@ Conséquences :
   remontant les mouvements) : c'est une estimation, à la différence du stock
   du jour.
 
+### 3.4 Familles de produits (confirmé le 2026-11-11)
+
+Chaque produit appartient à une **famille**. La liste vit dans la table
+`familles` (`id`, `famille`) ; aujourd'hui :
+
+| id | Famille |
+|---:|---|
+| 1 | Médicaments |
+| 3 | Cosmétiques |
+| 4 | NUTRITION INFANTILE ET COUCHES |
+| 9 | COMPLEMENTS ALIMENTAIRES |
+| 10 | DERMO-COSMETIQUE |
+| 11 | SOIN CORPOREL |
+| 12 | ORTHOPEDIE ET MATERIEL MEDICAL |
+| 13 | HYGIENE BUCCO DENTAIRE |
+| 15 | BEBE ET MAMAN |
+
+Les identifiants ne se suivent pas (2, 5 à 8 et 14 manquent) : ne jamais
+supposer une suite continue ni coder la liste en dur, elle se lit en base.
+
+`nomenclature` porte **deux champs** : `id_famille` et `famille`. Le second
+est une **copie texte** du libellé, recopiée par EASYPHARM (les tables de
+mouvements `sorties_produits`, `entrees_produits`, `achats_produits`… la
+portent aussi). Règles :
+
+- **`id_famille` fait foi.** Le libellé se lit dans `familles` par jointure
+  (`LEFT JOIN familles f ON f.id = n.id_famille`) ; la copie texte n'est
+  qu'un repli quand l'id est absent de `familles`.
+- **Filtrer et regrouper par `id_famille`**, jamais par le texte : un
+  libellé renommé dans EASYPHARM laisse d'anciennes copies divergentes.
+- Les produits dont l'id est inconnu sont regroupés sous « Sans famille ».
+- Dans le module stock, la famille est le **premier axe de navigation** :
+  `GET /stock/resume` donne le nombre de produits actifs et en stock par
+  famille, `GET /stock/products?id_famille=…` filtre la liste.
+- La famille (nature du produit) n'est **pas** la catégorie
+  (`nomenclature.categorie` : princeps / générique / générique++), qui sert
+  au calcul de l'enveloppe de prime.
+
+### 3.5 Horodatage des données du stock
+
+Les écrans stock affichent l'heure de leurs données : c'est l'heure du
+dernier calcul de la vue `mv_stock_produits` (`POST /stock/refresh-cache`,
+appelé par l'agent après chaque passe), notée dans `sync_status` sous le nom
+de la vue, et rendue par `GET /stock/resume` (`donnees_du`, UTC).
+
 ---
 
 ## 4. Bordereaux CHIFA (CNAS)

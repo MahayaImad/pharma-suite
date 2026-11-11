@@ -17,6 +17,32 @@ from app.services.stock_segmentation import compute_abc, compute_xyz, update_dis
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
+VUE_STOCK = "mv_stock_produits"
+
+# La famille d'un produit se lit par id_famille dans la table familles, qui
+# fait foi. nomenclature.famille n'en est qu'une copie texte (voir
+# docs/BUSINESS_LOGIC.md §3.4) : elle ne sert que si l'id est inconnu.
+_JOINTURE_FAMILLE = "LEFT JOIN familles f ON f.id = n.id_famille"
+_NOM_FAMILLE = "COALESCE(f.famille, n.famille)"
+
+# Ordres de tri proposés par la liste : clé publique → SQL fixe (jamais la
+# valeur reçue telle quelle dans la requête).
+_TRIS = {
+    "nom": "n.nom",
+    "stock": "COALESCE(mv.stock_actuel, 0) DESC, n.nom",
+    "valeur": "COALESCE(mv.valeur_achat, 0) DESC, n.nom",
+    "derniere_vente": "mv.derniere_vente DESC NULLS LAST, n.nom",
+}
+
+# État de stock d'un produit, tel que l'affichent les écrans : même règle
+# que les alertes (une rupture ne concerne qu'un produit actif).
+_ETATS = {
+    "en_stock": "COALESCE(mv.stock_actuel, 0) > 0",
+    "rupture": "COALESCE(mv.stock_actuel, 0) <= 0 AND COALESCE(mv.actif, false)",
+    "sous_seuil": ("COALESCE(mv.stock_actuel, 0) > 0 AND n.qte_alerte > 0 "
+                   "AND COALESCE(mv.stock_actuel, 0) < n.qte_alerte"),
+}
+
 
 def _f(val) -> float:
     return float(val) if val is not None else 0.0
@@ -41,9 +67,81 @@ async def refresh_stock_cache(
     ))).scalar()
     mode = "CONCURRENTLY " if peuplee else ""
     await db.execute(text(f"REFRESH MATERIALIZED VIEW {mode}mv_stock_produits"))
+    # PostgreSQL ne garde pas l'heure du dernier REFRESH : on la note dans
+    # sync_status, sous le nom de la vue. C'est l'« horodatage des données »
+    # affiché par les écrans stock (GET /stock/resume).
+    await db.execute(text("""
+        INSERT INTO sync_status (table_name, last_id, total_synced, last_sync_at)
+        VALUES (:vue, 0, 0, now())
+        ON CONFLICT (table_name) DO UPDATE SET last_sync_at = now()
+    """), {"vue": VUE_STOCK})
     await db.commit()
     stats = await update_disponibilite(db)
     return {"status": "ok", "disponibilite": stats}
+
+
+# ── Résumé ───────────────────────────────────────────────────────────────────
+
+@router.get("/resume")
+async def resume_stock(
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """En-tête des écrans stock : chiffres globaux, familles, horodatage.
+
+    - Les totaux portent sur les produits non archivés.
+    - Chaque famille de la table familles est listée, même vide ; les produits
+      sans famille connue sont regroupés sous id null.
+    - donnees_du : heure du dernier calcul de mv_stock_produits (null si la
+      vue n'a jamais été rafraîchie par POST /stock/refresh-cache).
+    """
+    totaux = (await db.execute(text("""
+        SELECT count(*) FILTER (WHERE COALESCE(mv.stock_actuel, 0) > 0) AS en_stock,
+               count(*) FILTER (WHERE COALESCE(mv.actif, false))         AS actifs,
+               COALESCE(sum(mv.valeur_achat), 0)                         AS valeur_achat,
+               COALESCE(sum(mv.valeur_vente), 0)                         AS valeur_vente
+        FROM nomenclature n
+        LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        WHERE n.archive = false
+    """))).one()
+
+    familles = await db.execute(text("""
+        WITH par_famille AS (
+            SELECT f.id AS id_famille,
+                   count(*) FILTER (WHERE COALESCE(mv.actif, false))         AS actifs,
+                   count(*) FILTER (WHERE COALESCE(mv.stock_actuel, 0) > 0) AS en_stock
+            FROM nomenclature n
+            LEFT JOIN familles f ON f.id = n.id_famille
+            LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+            WHERE n.archive = false
+            GROUP BY f.id
+        )
+        SELECT f.id, f.famille, COALESCE(p.actifs, 0) AS actifs, COALESCE(p.en_stock, 0) AS en_stock
+        FROM familles f
+        LEFT JOIN par_famille p ON p.id_famille = f.id
+        UNION ALL
+        SELECT NULL, 'Sans famille', p.actifs, p.en_stock
+        FROM par_famille p
+        WHERE p.id_famille IS NULL AND p.actifs > 0
+        ORDER BY 1 NULLS LAST
+    """))
+
+    donnees_du = (await db.execute(text(
+        "SELECT last_sync_at FROM sync_status WHERE table_name = :vue"
+    ), {"vue": VUE_STOCK})).scalar()
+
+    return {
+        "donnees_du": donnees_du.isoformat() if donnees_du else None,
+        "produits_actifs": totaux.actifs,
+        "produits_en_stock": totaux.en_stock,
+        "valeur_achat": _f(totaux.valeur_achat),
+        "valeur_vente": _f(totaux.valeur_vente),
+        "familles": [
+            {"id": r.id, "famille": r.famille, "produits_actifs": r.actifs,
+             "produits_en_stock": r.en_stock}
+            for r in familles
+        ],
+    }
 
 
 # ── Produits ─────────────────────────────────────────────────────────────────
@@ -51,7 +149,10 @@ async def refresh_stock_cache(
 @router.get("/products")
 async def list_products(
     q: Optional[str] = Query(None, description="Recherche sur nom, DCI, code-barre"),
-    famille: Optional[str] = Query(None),
+    famille: Optional[str] = Query(None, description="Ancien filtre par nom ; préférer id_famille"),
+    id_famille: Optional[int] = Query(None, description="Filtrer par famille (familles.id)"),
+    etat: Optional[Literal["en_stock", "rupture", "sous_seuil"]] = Query(None),
+    tri: Literal["nom", "stock", "valeur", "derniere_vente"] = Query("nom"),
     forme: Optional[str] = Query(None),
     in_stock_only: bool = Query(False),
     psychotrope: Optional[int] = Query(None, ge=0, le=1),
@@ -88,8 +189,13 @@ async def list_products(
         )
         params["q"] = f"%{q}%"
     if famille:
-        conditions.append("n.famille = :famille")
+        conditions.append(f"{_NOM_FAMILLE} = :famille")
         params["famille"] = famille
+    if id_famille is not None:
+        conditions.append("n.id_famille = :id_famille")
+        params["id_famille"] = id_famille
+    if etat:
+        conditions.append(_ETATS[etat])
     if forme:
         conditions.append("n.forme ILIKE :forme")
         params["forme"] = f"%{forme}%"
@@ -117,6 +223,7 @@ async def list_products(
         SELECT COUNT(*)
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        {_JOINTURE_FAMILLE}
         WHERE {where}
     """), params)).scalar() or 0
 
@@ -129,7 +236,8 @@ async def list_products(
             n.dci,
             n.dosage,
             n.forme_abr,
-            n.famille,
+            n.id_famille,
+            {_NOM_FAMILLE} AS famille,
             n.labo,
             COALESCE(mv.prix_vente, 0) AS prix_vente,
             n.qte_alerte,
@@ -143,12 +251,14 @@ async def list_products(
             n.categorie,
             COALESCE(mv.stock_actuel,       0) AS stock,
             COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen,
+            COALESCE(mv.valeur_achat, 0)       AS valeur_achat,
             COALESCE(mv.actif, false)          AS actif,
             mv.derniere_vente
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        {_JOINTURE_FAMILLE}
         WHERE {where}
-        ORDER BY n.nom
+        ORDER BY {_TRIS[tri]}
         LIMIT :limit OFFSET :offset
     """), params)
 
@@ -159,10 +269,12 @@ async def list_products(
             "dci": r.dci,
             "dosage": r.dosage,
             "forme_abr": r.forme_abr,
+            "id_famille": r.id_famille,
             "famille": r.famille,
             "labo": r.labo,
             "prix_vente": _f(r.prix_vente),
             "prix_achat_moyen": _f(r.prix_achat_moyen),
+            "valeur_achat": _f(r.valeur_achat),
             "stock": _f(r.stock),
             "qte_alerte": r.qte_alerte,
             "psychotrope": r.psychotrope,
@@ -191,7 +303,8 @@ async def get_product(
     """Détail d'un produit — stock depuis mv_stock_produits."""
     res = await db.execute(text("""
         SELECT
-            n.id, n.nom, n.dci, n.dosage, n.forme, n.forme_abr, n.famille, n.labo,
+            n.id, n.nom, n.dci, n.dosage, n.forme, n.forme_abr,
+            n.id_famille, COALESCE(f.famille, n.famille) AS famille, n.labo,
             COALESCE(mv.prix_vente, 0) AS prix_vente,
             n.qte_alerte, n.psychotrope, n.conditionnement,
             n.code_barre_original, n.desactiv_alrt_rup, n.ord_trois_souche,
@@ -200,9 +313,13 @@ async def get_product(
             COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen,
             COALESCE(mv.actif, false)          AS actif,
             mv.derniere_vente,
-            COALESCE(mv.qte_vendue_12m, 0)     AS qte_vendue_12m
+            COALESCE(mv.qte_vendue_12m, 0)     AS qte_vendue_12m,
+            COALESCE(mv.valeur_achat, 0)       AS valeur_achat,
+            COALESCE(mv.valeur_vente, 0)       AS valeur_vente,
+            n.segment_abc, n.segment_xyz, n.categorie, n.disponibilite
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        LEFT JOIN familles f ON f.id = n.id_famille
         WHERE n.id = :id
     """), {"id": product_id})
     p = res.fetchone()
@@ -211,7 +328,8 @@ async def get_product(
 
     return {
         "id": p.id, "nom": p.nom, "dci": p.dci, "dosage": p.dosage,
-        "forme": p.forme, "forme_abr": p.forme_abr, "famille": p.famille,
+        "forme": p.forme, "forme_abr": p.forme_abr,
+        "id_famille": p.id_famille, "famille": p.famille,
         "labo": p.labo, "prix_vente": _f(p.prix_vente),
         "prix_achat_moyen": _f(p.prix_achat_moyen),
         "stock": _f(p.stock), "qte_alerte": p.qte_alerte,
@@ -224,6 +342,10 @@ async def get_product(
         "actif": p.actif,
         "derniere_vente": p.derniere_vente.isoformat() if p.derniere_vente else None,
         "qte_vendue_12m": int(p.qte_vendue_12m or 0),
+        "valeur_achat": _f(p.valeur_achat),
+        "valeur_vente": _f(p.valeur_vente),
+        "segment_abc": p.segment_abc, "segment_xyz": p.segment_xyz,
+        "categorie": p.categorie, "disponibilite": p.disponibilite,
     }
 
 
