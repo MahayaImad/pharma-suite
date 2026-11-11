@@ -171,6 +171,29 @@ Commande → Réception BL → Réception Facture → Paiement
         (lignes de stock)
 ```
 
+### 3.3 Le stock — un champ, pas un calcul (confirmé le 2026-11-11)
+
+Le stock affiché dans EASYPHARM **n'est pas calculé** à partir des mouvements
+(entrées − sorties) : c'est un **champ stocké**, `entrees_produits.stock`,
+la quantité restante de chaque lot. EASYPHARM le met à jour lui-même à chaque
+vente, retour ou correction.
+
+Conséquences :
+
+- **Stock d'un lot** = `entrees_produits.stock`. **Stock d'un produit** =
+  somme de ce champ sur ses lots. PharmaSuite lit ce champ ; il ne recalcule
+  jamais un stock à partir des ventes et des achats.
+- **La ligne du lot est modifiée sur place** : son `id` ne change pas, seul
+  `stock` bouge. La synchronisation doit donc relire les lots existants, pas
+  seulement les nouveaux (stratégie « lots » de l'agent).
+- **Un écart entre PharmaSuite et EASYPHARM ne peut venir que de la
+  synchronisation** (retard, lot non relu), jamais d'une formule : les deux
+  affichent le même champ.
+- `nomenclature.stock` existe mais vaut 0 partout : ce n'est pas le stock.
+- Reconstituer un stock **passé** reste un calcul (stock actuel, en
+  remontant les mouvements) : c'est une estimation, à la différence du stock
+  du jour.
+
 ---
 
 ## 4. Bordereaux CHIFA (CNAS)

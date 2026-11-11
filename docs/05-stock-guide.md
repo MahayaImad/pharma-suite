@@ -38,7 +38,7 @@ Chaque phase a une sortie vérifiable. On ne commence pas la suivante avant.
 
 | Phase | Contenu | Terminé quand |
 |---|---|---|
-| **0. Fiabiliser** | lancer `scripts/verifier_stock.py`, corriger ce qui échoue ; rafraîchir la vue du stock après chaque passe de l'agent ; trancher le format de péremption ; rapprocher le stock de 20 produits avec EASYPHARM | toutes les routes répondent, et les 20 produits concordent |
+| **0. Fiabiliser** | lancer `scripts/verifier_stock.py`, corriger ce qui échoue ; rafraîchir la vue du stock après chaque passe de l'agent ; trancher le format de péremption ; contrôler sur 20 produits que la synchronisation suit EASYPHARM | toutes les routes répondent, et les 20 produits concordent |
 | **1. Consulter** | recherche produit, fiche, lots triés par péremption (FEFO), stock et valeur | un employé retrouve un produit et ses lots en moins de 10 s |
 | **2. Alerter** | ruptures, sous le seuil, péremptions à 1/3/6 mois, stock dormant, surstock | chaque alerte mène à une action (commander, mettre en avant, échanger, retourner) |
 | **3. Piloter** | indicateurs de la section 5, par famille / étagère / responsable, avec historique | le titulaire lit l'état du stock en une page |
@@ -55,8 +55,11 @@ phase, la méthode à suivre.
 ## 3. Règles sur les données
 
 - **Stock d'un produit** = somme des `entrees_produits.stock` de ses lots
-  (vue `mv_stock_produits`). `nomenclature.stock` sert de contrôle : un écart
-  entre les deux se signale, il ne se masque pas.
+  (vue `mv_stock_produits`). Ce champ est celui qu'EASYPHARM affiche : le
+  stock n'y est pas calculé, il est stocké et tenu à jour sur la ligne du lot
+  (`docs/BUSINESS_LOGIC.md` §3.3). PharmaSuite ne recalcule donc jamais un
+  stock du jour ; un écart avec EASYPHARM ne peut venir que de la
+  synchronisation. `nomenclature.stock` vaut 0 partout et ne s'utilise pas.
 - **Produit actif** = non archivé **et** (en stock **ou** vendu au moins une
   fois dans les 12 derniers mois). Calculé dans la vue (`actif`), à chaque
   recalcul. Les ruptures, les alertes et tout taux de rupture ne portent que
@@ -372,9 +375,9 @@ lots dont 4 310 avec stock.
 
 ### À corriger
 
-- **`nomenclature.stock` vaut 0 partout** : ce n'est pas un contrôle
-  utilisable du stock calculé. Le rapprochement se fera avec EASYPHARM, sur
-  un échantillon.
+- **Contrôle de la synchronisation sur 20 produits.** Le stock étant un
+  champ lu tel quel, il n'y a pas de formule à valider : il reste à vérifier
+  que la valeur lue est à jour (lots relus, lots épuisés remis à zéro).
 - **Aucune catégorie, aucune étagère** : `laboratoires.is_generique` est faux partout, les étagères
   et responsables ne sont pas saisis. Les indicateurs par catégorie et par
   employé sont vides. **La catégorie alimente l'enveloppe de prime** : à
