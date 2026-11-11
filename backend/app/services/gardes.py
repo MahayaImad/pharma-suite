@@ -25,8 +25,11 @@ from typing import Optional
 
 PART_HABITUELLE = 0.4      # heure habituelle si ≥ 40 % des jours ont une vente
 PART_OUVERTURE = 0.3       # jour de semaine ouvert si ≥ 30 % de ces jours ont des ventes
-MIN_TICKETS_SOIREE = 3
-MIN_TICKETS_NUIT = 2
+# Une vraie garde fait des dizaines de tickets hors horaires (30 à 90 en
+# soirée sur la base réelle) ; quelques tickets tardifs sont des clients
+# servis à la fermeture.
+MIN_TICKETS_SOIREE = 15
+MIN_TICKETS_NUIT = 5
 MIN_TICKETS_JOUR = 10
 HEURES_NUIT = range(0, 7)
 HEURE_DEBUT_SOIREE = 18
@@ -81,11 +84,24 @@ def jours_ouverts(tickets: dict[tuple[date, int], int]) -> set[int]:
     return {j for j in range(7) if total[j] and avec_ventes[j] >= PART_OUVERTURE * total[j]}
 
 
-def detecter_gardes(tickets: dict[tuple[date, int], int]) -> list[Garde]:
-    ouverts = jours_ouverts(tickets)
+def detecter_gardes(
+    tickets: dict[tuple[date, int], int],
+    periodes_exclues: list[tuple[date, date]] = (),
+) -> list[Garde]:
+    """[periodes_exclues] : jours où l'ouverture tardive est un horaire, pas une
+    garde — Ramadan. Les soirées et nuits n'y sont pas détectées ; une
+    ouverture un jour de fermeture l'est toujours."""
+
+    def exclu(d: date) -> bool:
+        return any(debut <= d <= fin for debut, fin in periodes_exclues)
+
+    # Les horaires de Ramadan ne sont pas ceux du reste de l'année : on
+    # apprend les habitudes hors des périodes exclues.
+    hors_exclusion = {(d, h): n for (d, h), n in tickets.items() if not exclu(d)}
+    ouverts = jours_ouverts(hors_exclusion)
     # Un jour d'habitude fermé n'a pas d'heures habituelles : ses rares
     # ventes sont justement celles des gardes.
-    habituelles = {j: (h if j in ouverts else set()) for j, h in horaires_habituels(tickets).items()}
+    habituelles = {j: (h if j in ouverts else set()) for j, h in horaires_habituels(hors_exclusion).items()}
     par_jour: dict[date, dict[int, int]] = defaultdict(dict)
     for (d, h), n in tickets.items():
         par_jour[d][h] = par_jour[d].get(h, 0) + n
@@ -93,8 +109,14 @@ def detecter_gardes(tickets: dict[tuple[date, int], int]) -> list[Garde]:
     gardes: dict[date, Garde] = {}
     for d, heures in par_jour.items():
         j = d.weekday()
-        if j not in ouverts and sum(heures.values()) >= MIN_TICKETS_JOUR:
-            gardes[d] = Garde(d, "jour", sum(heures.values()))
+        # Ouverture un jour de fermeture : ventes de la journée seulement,
+        # avant le soir (la nuit d'une garde 24 h est datée de ce jour-là, et
+        # le soir de Ramadan n'est pas une garde).
+        de_jour = sum(n for h, n in heures.items() if HEURES_NUIT.stop <= h < HEURE_DEBUT_SOIREE)
+        if j not in ouverts and de_jour >= MIN_TICKETS_JOUR:
+            gardes[d] = Garde(d, "jour", de_jour)
+            continue
+        if exclu(d):
             continue
         soir = sum(n for h, n in heures.items()
                    if h >= HEURE_DEBUT_SOIREE and h not in habituelles[j])
@@ -103,15 +125,16 @@ def detecter_gardes(tickets: dict[tuple[date, int], int]) -> list[Garde]:
     # Nuit : ventes de 0 h à 6 h hors habitudes → garde 24 h de la veille.
     for d, heures in par_jour.items():
         nuit = sum(n for h, n in heures.items() if h in HEURES_NUIT and h not in habituelles[d.weekday()])
-        if nuit >= MIN_TICKETS_NUIT:
+        if nuit >= MIN_TICKETS_NUIT and not exclu(d - timedelta(days=1)):
             veille = d - timedelta(days=1)
             avant = gardes.get(veille)
             gardes[veille] = Garde(veille, "24h", nuit + (avant.tickets_hors_horaires if avant else 0))
     return sorted(gardes.values(), key=lambda g: g.date)
 
 
-def ecarts_frequents(gardes: list[Garde], nombre: int = 3) -> list[tuple[int, int]]:
-    """Écarts en jours entre gardes successives les plus fréquents : une
-    rotation régulière se voit ici (ex. [(28, 9)] = tous les 28 jours, 9 fois)."""
-    dates = [g.date for g in gardes]
+def ecarts_frequents(gardes: list[Garde], nombre: int = 3, type_: Optional[str] = None) -> list[tuple[int, int]]:
+    """Écarts en jours entre gardes successives les plus fréquents (d'un même
+    [type_] si donné) : une rotation régulière se voit ici (ex. [(10, 9)] =
+    tous les 10 jours, 9 fois)."""
+    dates = [g.date for g in gardes if type_ is None or g.type == type_]
     return Counter((b - a).days for a, b in zip(dates, dates[1:])).most_common(nombre)

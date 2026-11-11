@@ -78,6 +78,8 @@ async def main() -> int:
         """), {"d": debut})).all()
         saisies = {r.date: r.type for r in await db.execute(text(
             "SELECT date, type FROM gardes WHERE source = 'saisie'"))}
+        ramadans = [(r.date_debut, r.date_fin) for r in await db.execute(text(
+            "SELECT date_debut, date_fin FROM evenements_calendrier WHERE type = 'ramadan'"))]
 
     tickets: dict[tuple[date, int], int] = Counter()
     illisibles = 0
@@ -104,7 +106,8 @@ async def main() -> int:
     for j in range(7):
         ecrire(f"- {JOURS[j]} : {plages(habituelles[j]) if j in ouverts else 'fermé'}")
 
-    gardes = detecter_gardes(tickets)
+    gardes = detecter_gardes(tickets, ramadans)
+    ecrire(f"\nRamadan exclu des soirées et des nuits ({len(ramadans)} périodes).")
     ecrire(f"\n## Gardes candidates : {len(gardes)}\n")
     par_type = Counter(g.type for g in gardes)
     ecrire(" · ".join(f"{t} : {n}" for t, n in sorted(par_type.items())) or "aucune")
@@ -115,9 +118,10 @@ async def main() -> int:
         r = trouvees.get(d)
         ecrire(f"- {d} ({t}) : " + ("**retrouvée**" if r == t else f"retrouvée comme {r}" if r else "**non retrouvée**"))
 
-    ecrire("\n## Rotation : écarts les plus fréquents entre gardes\n")
-    for ecart, n in ecarts_frequents(gardes):
-        ecrire(f"- {ecart} jours : {n} fois")
+    ecrire("\n## Rotation : écarts les plus fréquents entre gardes, par type\n")
+    for t in ("soiree", "24h", "jour"):
+        ecarts = ", ".join(f"{e} j ({n} fois)" for e, n in ecarts_frequents(gardes, type_=t))
+        ecrire(f"- {t} : {ecarts or '—'}")
 
     ecrire("\n## Liste (12 derniers mois)\n")
     for g in gardes:
