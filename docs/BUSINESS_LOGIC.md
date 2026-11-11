@@ -245,7 +245,27 @@ portent aussi). Règles :
   hors avoir (`entrees_produits.id_fournisseur`, `type_entree <> 'AV'`).
 - Les jours fériés ne sont pas encore retirés du calcul.
 
-### 3.6 Horodatage des données du stock
+### 3.6 Gardes et fêtes à date mobile (confirmé le 2026-11-12)
+
+La demande change les jours de **garde** et pendant **Ramadan et les Aïd** :
+la prévision des commandes en tient compte.
+
+- **Trois types de garde** (table `gardes`, migration 006) :
+  `soiree` (jusqu'à 23 h, ex. 2026-11-07), `24h` (ex. 2026-10-01 ; les
+  ventes de la nuit sont **datées du lendemain** dans EASYPHARM) et `jour`
+  (ouverture un jour de fermeture habituelle).
+- **Gardes passées** : retrouvées dans les heures de vente
+  (`sorties.heure`) par `scripts/detecter_gardes.py`, qui apprend les
+  horaires habituels de chaque jour de la semaine et repère les ventes hors
+  horaires. Les candidates sont enregistrées `source = 'detection'`,
+  `confirme = false` : l'officine les confirme.
+- **Gardes à venir** : saisies par l'officine (`source = 'saisie'`).
+- **Ramadan, Aïd el-Fitr, Aïd el-Adha** : table `evenements_calendrier`,
+  dates 2022–2027 pré-remplies d'après le calendrier lunaire, marquées
+  `a_verifier` (l'annonce officielle peut décaler d'un jour), modifiables.
+  Les fériés à date fixe restent dans `holidays`.
+
+### 3.7 Horodatage des données du stock
 
 Les écrans stock affichent l'heure de leurs données : c'est l'heure du
 dernier calcul de la vue `mv_stock_produits` (`POST /stock/refresh-cache`,
