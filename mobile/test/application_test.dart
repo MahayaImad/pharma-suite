@@ -22,20 +22,21 @@ Future<SharedPreferences> _lancer(
 
   SharedPreferences.setMockInitialValues(preferences);
   final prefs = await SharedPreferences.getInstance();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      stockApiProvider.overrideWithValue(FausseStockApi()),
-      preferencesLocalesProvider.overrideWithValue(prefs),
-      routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
-    ],
-    child: const PharmaSuite(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        stockApiProvider.overrideWithValue(FausseStockApi()),
+        preferencesLocalesProvider.overrideWithValue(prefs),
+        routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
+      ],
+      child: const PharmaSuite(),
+    ),
+  );
   await tester.pumpAndSettle();
   return prefs;
 }
 
-ThemeData _theme(WidgetTester tester) =>
-    Theme.of(tester.element(find.byType(Scaffold).first));
+ThemeData _theme(WidgetTester tester) => Theme.of(tester.element(find.byType(Scaffold).first));
 
 const _pc = Size(1440, 900);
 const _portable = Size(390, 844);
@@ -61,8 +62,7 @@ void main() {
     expect(find.text('Ruptures, seuils et péremptions à traiter.'), findsOneWidget);
   });
 
-  testWidgets('sur portable : les préférences s\'ouvrent en plein écran et se referment',
-      (tester) async {
+  testWidgets('sur portable : les préférences s\'ouvrent en plein écran et se referment', (tester) async {
     await _lancer(tester, taille: _portable);
     await tester.tap(find.byTooltip('Préférences'));
     await tester.pumpAndSettle();
@@ -75,8 +75,9 @@ void main() {
     expect(find.text('Thème'), findsNothing);
   });
 
-  testWidgets('sur portable : préférences ouvertes par leur adresse, le retour mène au stock',
-      (tester) async {
+  testWidgets('sur portable : préférences ouvertes par leur adresse, le retour mène au stock', (
+    tester,
+  ) async {
     await _lancer(tester, taille: _portable, depart: '/preferences');
     await tester.tap(find.byTooltip('Retour'));
     await tester.pumpAndSettle();

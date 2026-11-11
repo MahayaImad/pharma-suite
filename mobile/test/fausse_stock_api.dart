@@ -12,17 +12,55 @@ class FausseStockApi implements StockApi {
 
   static final exemples = [
     Produit(
-        id: 1, nom: 'DOLIPRANE', dosage: '1000 MG', formeAbr: 'CPR', dci: 'Paracétamol', labo: 'SANOFI',
-        idFamille: 1, famille: 'Médicaments', stock: 48, seuil: 20, prixVente: 185, prixAchat: 130,
-        valeurAchat: 6240, valeurVente: 8880, vendu12Mois: 612, actif: true, classeAbc: 'A', classeXyz: 'X',
-        derniereVente: DateTime.now().subtract(const Duration(days: 1)), remboursable: 1),
+      id: 1,
+      nom: 'DOLIPRANE',
+      dosage: '1000 MG',
+      formeAbr: 'CPR',
+      dci: 'Paracétamol',
+      labo: 'SANOFI',
+      idFamille: 1,
+      famille: 'Médicaments',
+      stock: 48,
+      seuil: 20,
+      prixVente: 185,
+      prixAchat: 130,
+      valeurAchat: 6240,
+      valeurVente: 8880,
+      vendu12Mois: 612,
+      actif: true,
+      classeAbc: 'A',
+      classeXyz: 'X',
+      derniereVente: DateTime.now().subtract(const Duration(days: 1)),
+      remboursable: 1,
+    ),
     Produit(
-        id: 2, nom: 'AUGMENTIN', dosage: '1 G', formeAbr: 'SACH', dci: 'Amoxicilline', labo: 'GSK',
-        idFamille: 1, famille: 'Médicaments', stock: 3, seuil: 10, prixVente: 920, prixAchat: 700,
-        actif: true, classeAbc: 'B', vendu12Mois: 90),
+      id: 2,
+      nom: 'AUGMENTIN',
+      dosage: '1 G',
+      formeAbr: 'SACH',
+      dci: 'Amoxicilline',
+      labo: 'GSK',
+      idFamille: 1,
+      famille: 'Médicaments',
+      stock: 3,
+      seuil: 10,
+      prixVente: 920,
+      prixAchat: 700,
+      actif: true,
+      classeAbc: 'B',
+      vendu12Mois: 90,
+    ),
     const Produit(
-        id: 3, nom: 'BIOGAIA', formeAbr: 'GTT', labo: 'BIOGAIA', idFamille: 15, famille: 'BEBE ET MAMAN',
-        stock: 0, actif: true, prixVente: 1450),
+      id: 3,
+      nom: 'BIOGAIA',
+      formeAbr: 'GTT',
+      labo: 'BIOGAIA',
+      idFamille: 15,
+      famille: 'BEBE ET MAMAN',
+      stock: 0,
+      actif: true,
+      prixVente: 1450,
+    ),
   ];
 
   @override
@@ -69,11 +107,51 @@ class FausseStockApi implements StockApi {
   }
 
   @override
+  Future<IndicateursProduit> indicateurs(int id) async {
+    if (panne) throw const ErreurApi('Le serveur ne répond pas.', reseau: true);
+    return IndicateursProduit(
+      ventes12Mois: 612,
+      cmm: 51,
+      cmj: 1.7,
+      fournisseur: const FournisseurPrincipal(nom: 'HYDRAPHARM', delaiSaisi: true),
+      delaiLivraison: 3,
+      dateLivraison: DateTime(2026, 11, 15),
+      stockSecurite: 7,
+      stockSecuriteSimple: 4,
+      delaiSecurite: 2,
+      periodeCommande: 7,
+      stockMaximum: 19,
+      couverture: 28,
+      dvrMax: 400,
+      qteARisque: 5,
+      valeurARisque: 650,
+      lots: const [
+        RisqueLot(id: 10, dvr: 0, ecoulable: 0, aRisque: 5),
+        RisqueLot(id: 11, dvr: 750, ecoulable: 43, aRisque: 0),
+      ],
+    );
+  }
+
+  @override
   Future<List<Lot>> lots(int id, {bool epuises = false}) async => [
-        Lot(id: 10, lot: 'C7781', peremption: '01/26', peremptionDate: DateTime(2026, 1, 1), stock: 5,
-            fournisseur: 'HYDRAPHARM', dateEntree: DateTime(2025, 2, 3)),
-        Lot(id: 11, lot: 'A2341', peremption: '12/28', peremptionDate: DateTime(2028, 12, 1), stock: 43,
-            fournisseur: 'BIOPURE', numBl: '4512'),
-        if (epuises) const Lot(id: 12, lot: 'Z0001', peremption: '03/25', stock: 0),
-      ];
+    Lot(
+      id: 10,
+      lot: 'C7781',
+      peremption: '01/26',
+      peremptionDate: DateTime(2026, 1, 1),
+      stock: 5,
+      fournisseur: 'HYDRAPHARM',
+      dateEntree: DateTime(2025, 2, 3),
+    ),
+    Lot(
+      id: 11,
+      lot: 'A2341',
+      peremption: '12/28',
+      peremptionDate: DateTime(2028, 12, 1),
+      stock: 43,
+      fournisseur: 'BIOPURE',
+      numBl: '4512',
+    ),
+    if (epuises) const Lot(id: 12, lot: 'Z0001', peremption: '03/25', stock: 0),
+  ];
 }

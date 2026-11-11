@@ -85,6 +85,12 @@ final ficheProduitProvider = FutureProvider.family<Produit, int>(
   retry: _sansNouvelEssai,
 );
 
+/// Indicateurs de gestion d'un produit.
+final indicateursProduitProvider = FutureProvider.family<IndicateursProduit, int>(
+  (ref, id) => ref.watch(stockApiProvider).indicateurs(id),
+  retry: _sansNouvelEssai,
+);
+
 /// Lots d'un produit : `epuises` ajoute les lots à stock nul.
 final lotsProduitProvider = FutureProvider.family<List<Lot>, ({int id, bool epuises})>(
   (ref, p) => ref.watch(stockApiProvider).lots(p.id, epuises: p.epuises),

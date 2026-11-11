@@ -15,16 +15,14 @@ void main() {
       final theme = construireTheme(id);
       expect(theme.extension<CouleursEtat>(), isNotNull, reason: id.name);
       expect(theme.extension<CouleursApp>(), isNotNull, reason: id.name);
-      expect(theme.brightness, id == ThemeId.sombre ? Brightness.dark : Brightness.light,
-          reason: id.name);
+      expect(theme.brightness, id == ThemeId.sombre ? Brightness.dark : Brightness.light, reason: id.name);
     }
   });
 
   test('les couleurs d\'état sont les mêmes dans tous les thèmes clairs', () {
     final attendu = construireTheme(ThemeId.bleu).extension<CouleursEtat>()!;
     for (final id in ThemeId.values.where((t) => t != ThemeId.sombre)) {
-      expect(construireTheme(id).extension<CouleursEtat>()!.critique, attendu.critique,
-          reason: id.name);
+      expect(construireTheme(id).extension<CouleursEtat>()!.critique, attendu.critique, reason: id.name);
     }
   });
 
@@ -39,8 +37,7 @@ void main() {
     for (final id in ThemeId.values) {
       final s = construireTheme(id).colorScheme;
       expect(contraste(s.primary, s.onPrimary), greaterThanOrEqualTo(4.5), reason: id.name);
-      expect(contraste(s.primaryContainer, s.onPrimaryContainer), greaterThanOrEqualTo(4.5),
-          reason: id.name);
+      expect(contraste(s.primaryContainer, s.onPrimaryContainer), greaterThanOrEqualTo(4.5), reason: id.name);
       expect(contraste(s.surface, s.onSurface), greaterThanOrEqualTo(7), reason: id.name);
     }
   });

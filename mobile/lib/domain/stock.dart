@@ -107,6 +107,73 @@ abstract class Lot with _$Lot {
 /// `bloque` arrive en booléen ou en 0/1 selon la source.
 bool _versBool(Object? v) => v == true || v == 1 || v == '1';
 
+/// Risque de péremption d'un lot, calculé en FEFO par l'API.
+@freezed
+abstract class RisqueLot with _$RisqueLot {
+  const factory RisqueLot({
+    required int id,
+    /// Durée de vie restante en jours ; null si la date est inconnue.
+    int? dvr,
+    /// Ce que le lot vendra avant sa péremption ; null s'il est hors calcul
+    /// (bloqué, sans date).
+    int? ecoulable,
+    @JsonKey(name: 'a_risque') int? aRisque,
+    @JsonKey(name: 'valeur_a_risque') double? valeurARisque,
+  }) = _RisqueLot;
+
+  factory RisqueLot.fromJson(Map<String, dynamic> json) => _$RisqueLotFromJson(json);
+}
+
+/// Fournisseur principal d'un produit (celui de la dernière entrée).
+@freezed
+abstract class FournisseurPrincipal with _$FournisseurPrincipal {
+  const factory FournisseurPrincipal({
+    int? id,
+    String? nom,
+    @JsonKey(name: 'delai_jours_ouvres') @Default(1) int delaiJoursOuvres,
+    /// Faux : délai par défaut des réglages, non saisi pour ce fournisseur.
+    @JsonKey(name: 'delai_saisi') @Default(false) bool delaiSaisi,
+  }) = _FournisseurPrincipal;
+
+  factory FournisseurPrincipal.fromJson(Map<String, dynamic> json) =>
+      _$FournisseurPrincipalFromJson(json);
+}
+
+/// Indicateurs de gestion d'un produit (`GET /stock/products/{id}/indicateurs`).
+/// Définitions : docs/05-stock-guide.md, section 5.
+@freezed
+abstract class IndicateursProduit with _$IndicateursProduit {
+  const IndicateursProduit._();
+
+  const factory IndicateursProduit({
+    @JsonKey(name: 'ventes_12_mois') @Default(0) double ventes12Mois,
+    @JsonKey(name: 'mois_historique') @Default(12) int moisHistorique,
+    @Default(0) double cmm,
+    @Default(0) double cmj,
+    FournisseurPrincipal? fournisseur,
+    @JsonKey(name: 'delai_livraison_jours') @Default(1) int delaiLivraison,
+    @JsonKey(name: 'date_livraison') DateTime? dateLivraison,
+    @JsonKey(name: 'stock_securite') @Default(0) int stockSecurite,
+    @JsonKey(name: 'stock_securite_simple') @Default(0) int stockSecuriteSimple,
+    @JsonKey(name: 'delai_securite_jours') @Default(0) double delaiSecurite,
+    @JsonKey(name: 'periode_commande_jours') @Default(0) double periodeCommande,
+    @JsonKey(name: 'stock_maximum') @Default(0) int stockMaximum,
+    @JsonKey(name: 'couverture_jours') int? couverture,
+    @JsonKey(name: 'dvr_max') int? dvrMax,
+    @JsonKey(name: 'qte_a_risque') @Default(0) int qteARisque,
+    @JsonKey(name: 'valeur_a_risque') @Default(0) double valeurARisque,
+    @Default(<RisqueLot>[]) List<RisqueLot> lots,
+  }) = _IndicateursProduit;
+
+  factory IndicateursProduit.fromJson(Map<String, dynamic> json) => _$IndicateursProduitFromJson(json);
+
+  /// La couverture dépasse la durée de vie du lot le plus long : une partie
+  /// du stock périmera avant d'être vendue.
+  bool get couvertureTropLongue => couverture != null && dvrMax != null && couverture! > dvrMax!;
+
+  RisqueLot? risque(int idLot) => lots.where((l) => l.id == idLot).firstOrNull;
+}
+
 /// Une page de la liste des produits.
 @freezed
 abstract class PageProduits with _$PageProduits {
@@ -162,13 +229,6 @@ EtatStock etatStock({required double stock, int? seuil, required bool actif, boo
   if (stock <= 0) return actif ? EtatStock.rupture : EtatStock.inactif;
   if (seuil != null && seuil > 0 && stock < seuil) return EtatStock.sousSeuil;
   return EtatStock.enStock;
-}
-
-/// Couverture en jours : stock ÷ vente moyenne par jour sur 12 mois
-/// (docs/05-stock-guide.md, section 5). Null sans vente : non mesurable.
-int? couvertureJours(double stock, int? vendu12Mois) {
-  if (vendu12Mois == null || vendu12Mois <= 0) return null;
-  return (stock / (vendu12Mois / 365)).round();
 }
 
 /// Taux de marge sur le prix d'achat : (PV − PA) ÷ PA, en %. C'est la

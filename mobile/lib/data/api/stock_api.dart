@@ -15,6 +15,9 @@ abstract interface class StockApi {
   /// `GET /stock/products/{id}`.
   Future<Produit> fiche(int id);
 
+  /// `GET /stock/products/{id}/indicateurs`.
+  Future<IndicateursProduit> indicateurs(int id);
+
   /// `GET /stock/products/{id}/lots`, triés par péremption.
   Future<List<Lot>> lots(int id, {bool epuises = false});
 }
@@ -58,6 +61,10 @@ class StockApiDio implements StockApi {
   @override
   Future<Produit> fiche(int id) =>
       _lire('/stock/products/$id', (j) => Produit.fromJson(j as Map<String, dynamic>));
+
+  @override
+  Future<IndicateursProduit> indicateurs(int id) => _lire('/stock/products/$id/indicateurs',
+      (j) => IndicateursProduit.fromJson(j as Map<String, dynamic>));
 
   @override
   Future<List<Lot>> lots(int id, {bool epuises = false}) => _lire(

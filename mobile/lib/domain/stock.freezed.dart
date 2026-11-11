@@ -1236,6 +1236,923 @@ as bool,
 
 
 /// @nodoc
+mixin _$RisqueLot {
+
+ int get id;/// Durée de vie restante en jours ; null si la date est inconnue.
+ int? get dvr;/// Ce que le lot vendra avant sa péremption ; null s'il est hors calcul
+/// (bloqué, sans date).
+ int? get ecoulable;@JsonKey(name: 'a_risque') int? get aRisque;@JsonKey(name: 'valeur_a_risque') double? get valeurARisque;
+/// Create a copy of RisqueLot
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RisqueLotCopyWith<RisqueLot> get copyWith => _$RisqueLotCopyWithImpl<RisqueLot>(this as RisqueLot, _$identity);
+
+  /// Serializes this RisqueLot to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as RisqueLot;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RisqueLot&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.dvr, _this.dvr) || other.dvr == _this.dvr)&&(identical(other.ecoulable, _this.ecoulable) || other.ecoulable == _this.ecoulable)&&(identical(other.aRisque, _this.aRisque) || other.aRisque == _this.aRisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as RisqueLot;
+  return Object.hash(runtimeType,_this.id,_this.dvr,_this.ecoulable,_this.aRisque,_this.valeurARisque);
+}
+
+@override
+String toString() {
+  final _this = this as RisqueLot;
+  return 'RisqueLot(id: ${_this.id}, dvr: ${_this.dvr}, ecoulable: ${_this.ecoulable}, aRisque: ${_this.aRisque}, valeurARisque: ${_this.valeurARisque})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RisqueLotCopyWith<$Res>  {
+  factory $RisqueLotCopyWith(RisqueLot value, $Res Function(RisqueLot) _then) = _$RisqueLotCopyWithImpl;
+@useResult
+$Res call({
+ int id, int? dvr, int? ecoulable,@JsonKey(name: 'a_risque') int? aRisque,@JsonKey(name: 'valeur_a_risque') double? valeurARisque
+});
+
+
+
+
+}
+/// @nodoc
+class _$RisqueLotCopyWithImpl<$Res>
+    implements $RisqueLotCopyWith<$Res> {
+  _$RisqueLotCopyWithImpl(this._self, this._then);
+
+  final RisqueLot _self;
+  final $Res Function(RisqueLot) _then;
+
+/// Create a copy of RisqueLot
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? dvr = freezed,Object? ecoulable = freezed,Object? aRisque = freezed,Object? valeurARisque = freezed,}) {
+  return _then(RisqueLot(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,dvr: freezed == dvr ? _self.dvr : dvr // ignore: cast_nullable_to_non_nullable
+as int?,ecoulable: freezed == ecoulable ? _self.ecoulable : ecoulable // ignore: cast_nullable_to_non_nullable
+as int?,aRisque: freezed == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as int?,valeurARisque: freezed == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [RisqueLot].
+extension RisqueLotPatterns on RisqueLot {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RisqueLot value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _RisqueLot() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RisqueLot value)  $default,){
+final _that = this;
+switch (_that) {
+case _RisqueLot():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RisqueLot value)?  $default,){
+final _that = this;
+switch (_that) {
+case _RisqueLot() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int? dvr,  int? ecoulable, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _RisqueLot() when $default != null:
+return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARisque);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int? dvr,  int? ecoulable, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)  $default,) {final _that = this;
+switch (_that) {
+case _RisqueLot():
+return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARisque);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int? dvr,  int? ecoulable, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)?  $default,) {final _that = this;
+switch (_that) {
+case _RisqueLot() when $default != null:
+return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARisque);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _RisqueLot implements RisqueLot {
+  const _RisqueLot({required this.id, this.dvr, this.ecoulable, @JsonKey(name: 'a_risque') this.aRisque, @JsonKey(name: 'valeur_a_risque') this.valeurARisque});
+  factory _RisqueLot.fromJson(Map<String, dynamic> json) => _$RisqueLotFromJson(json);
+
+@override final  int id;
+/// Durée de vie restante en jours ; null si la date est inconnue.
+@override final  int? dvr;
+/// Ce que le lot vendra avant sa péremption ; null s'il est hors calcul
+/// (bloqué, sans date).
+@override final  int? ecoulable;
+@override@JsonKey(name: 'a_risque') final  int? aRisque;
+@override@JsonKey(name: 'valeur_a_risque') final  double? valeurARisque;
+
+/// Create a copy of RisqueLot
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RisqueLotCopyWith<_RisqueLot> get copyWith => __$RisqueLotCopyWithImpl<_RisqueLot>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$RisqueLotToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RisqueLot&&(identical(other.id, id) || other.id == id)&&(identical(other.dvr, dvr) || other.dvr == dvr)&&(identical(other.ecoulable, ecoulable) || other.ecoulable == ecoulable)&&(identical(other.aRisque, aRisque) || other.aRisque == aRisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,dvr,ecoulable,aRisque,valeurARisque);
+}
+
+@override
+String toString() {
+    return 'RisqueLot(id: $id, dvr: $dvr, ecoulable: $ecoulable, aRisque: $aRisque, valeurARisque: $valeurARisque)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RisqueLotCopyWith<$Res> implements $RisqueLotCopyWith<$Res> {
+  factory _$RisqueLotCopyWith(_RisqueLot value, $Res Function(_RisqueLot) _then) = __$RisqueLotCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, int? dvr, int? ecoulable,@JsonKey(name: 'a_risque') int? aRisque,@JsonKey(name: 'valeur_a_risque') double? valeurARisque
+});
+
+
+
+
+}
+/// @nodoc
+class __$RisqueLotCopyWithImpl<$Res>
+    implements _$RisqueLotCopyWith<$Res> {
+  __$RisqueLotCopyWithImpl(this._self, this._then);
+
+  final _RisqueLot _self;
+  final $Res Function(_RisqueLot) _then;
+
+/// Create a copy of RisqueLot
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? dvr = freezed,Object? ecoulable = freezed,Object? aRisque = freezed,Object? valeurARisque = freezed,}) {
+  return _then(_RisqueLot(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,dvr: freezed == dvr ? _self.dvr : dvr // ignore: cast_nullable_to_non_nullable
+as int?,ecoulable: freezed == ecoulable ? _self.ecoulable : ecoulable // ignore: cast_nullable_to_non_nullable
+as int?,aRisque: freezed == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as int?,valeurARisque: freezed == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$FournisseurPrincipal {
+
+ int? get id; String? get nom;@JsonKey(name: 'delai_jours_ouvres') int get delaiJoursOuvres;/// Faux : délai par défaut des réglages, non saisi pour ce fournisseur.
+@JsonKey(name: 'delai_saisi') bool get delaiSaisi;
+/// Create a copy of FournisseurPrincipal
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FournisseurPrincipalCopyWith<FournisseurPrincipal> get copyWith => _$FournisseurPrincipalCopyWithImpl<FournisseurPrincipal>(this as FournisseurPrincipal, _$identity);
+
+  /// Serializes this FournisseurPrincipal to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as FournisseurPrincipal;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FournisseurPrincipal&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.delaiJoursOuvres, _this.delaiJoursOuvres) || other.delaiJoursOuvres == _this.delaiJoursOuvres)&&(identical(other.delaiSaisi, _this.delaiSaisi) || other.delaiSaisi == _this.delaiSaisi));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as FournisseurPrincipal;
+  return Object.hash(runtimeType,_this.id,_this.nom,_this.delaiJoursOuvres,_this.delaiSaisi);
+}
+
+@override
+String toString() {
+  final _this = this as FournisseurPrincipal;
+  return 'FournisseurPrincipal(id: ${_this.id}, nom: ${_this.nom}, delaiJoursOuvres: ${_this.delaiJoursOuvres}, delaiSaisi: ${_this.delaiSaisi})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FournisseurPrincipalCopyWith<$Res>  {
+  factory $FournisseurPrincipalCopyWith(FournisseurPrincipal value, $Res Function(FournisseurPrincipal) _then) = _$FournisseurPrincipalCopyWithImpl;
+@useResult
+$Res call({
+ int? id, String? nom,@JsonKey(name: 'delai_jours_ouvres') int delaiJoursOuvres,@JsonKey(name: 'delai_saisi') bool delaiSaisi
+});
+
+
+
+
+}
+/// @nodoc
+class _$FournisseurPrincipalCopyWithImpl<$Res>
+    implements $FournisseurPrincipalCopyWith<$Res> {
+  _$FournisseurPrincipalCopyWithImpl(this._self, this._then);
+
+  final FournisseurPrincipal _self;
+  final $Res Function(FournisseurPrincipal) _then;
+
+/// Create a copy of FournisseurPrincipal
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? nom = freezed,Object? delaiJoursOuvres = null,Object? delaiSaisi = null,}) {
+  return _then(FournisseurPrincipal(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,delaiJoursOuvres: null == delaiJoursOuvres ? _self.delaiJoursOuvres : delaiJoursOuvres // ignore: cast_nullable_to_non_nullable
+as int,delaiSaisi: null == delaiSaisi ? _self.delaiSaisi : delaiSaisi // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FournisseurPrincipal].
+extension FournisseurPrincipalPatterns on FournisseurPrincipal {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FournisseurPrincipal value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FournisseurPrincipal() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FournisseurPrincipal value)  $default,){
+final _that = this;
+switch (_that) {
+case _FournisseurPrincipal():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FournisseurPrincipal value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FournisseurPrincipal() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? id,  String? nom, @JsonKey(name: 'delai_jours_ouvres')  int delaiJoursOuvres, @JsonKey(name: 'delai_saisi')  bool delaiSaisi)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FournisseurPrincipal() when $default != null:
+return $default(_that.id,_that.nom,_that.delaiJoursOuvres,_that.delaiSaisi);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? id,  String? nom, @JsonKey(name: 'delai_jours_ouvres')  int delaiJoursOuvres, @JsonKey(name: 'delai_saisi')  bool delaiSaisi)  $default,) {final _that = this;
+switch (_that) {
+case _FournisseurPrincipal():
+return $default(_that.id,_that.nom,_that.delaiJoursOuvres,_that.delaiSaisi);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? id,  String? nom, @JsonKey(name: 'delai_jours_ouvres')  int delaiJoursOuvres, @JsonKey(name: 'delai_saisi')  bool delaiSaisi)?  $default,) {final _that = this;
+switch (_that) {
+case _FournisseurPrincipal() when $default != null:
+return $default(_that.id,_that.nom,_that.delaiJoursOuvres,_that.delaiSaisi);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _FournisseurPrincipal implements FournisseurPrincipal {
+  const _FournisseurPrincipal({this.id, this.nom, @JsonKey(name: 'delai_jours_ouvres') this.delaiJoursOuvres = 1, @JsonKey(name: 'delai_saisi') this.delaiSaisi = false});
+  factory _FournisseurPrincipal.fromJson(Map<String, dynamic> json) => _$FournisseurPrincipalFromJson(json);
+
+@override final  int? id;
+@override final  String? nom;
+@override@JsonKey(name: 'delai_jours_ouvres') final  int delaiJoursOuvres;
+/// Faux : délai par défaut des réglages, non saisi pour ce fournisseur.
+@override@JsonKey(name: 'delai_saisi') final  bool delaiSaisi;
+
+/// Create a copy of FournisseurPrincipal
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FournisseurPrincipalCopyWith<_FournisseurPrincipal> get copyWith => __$FournisseurPrincipalCopyWithImpl<_FournisseurPrincipal>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$FournisseurPrincipalToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FournisseurPrincipal&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.delaiJoursOuvres, delaiJoursOuvres) || other.delaiJoursOuvres == delaiJoursOuvres)&&(identical(other.delaiSaisi, delaiSaisi) || other.delaiSaisi == delaiSaisi));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,nom,delaiJoursOuvres,delaiSaisi);
+}
+
+@override
+String toString() {
+    return 'FournisseurPrincipal(id: $id, nom: $nom, delaiJoursOuvres: $delaiJoursOuvres, delaiSaisi: $delaiSaisi)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FournisseurPrincipalCopyWith<$Res> implements $FournisseurPrincipalCopyWith<$Res> {
+  factory _$FournisseurPrincipalCopyWith(_FournisseurPrincipal value, $Res Function(_FournisseurPrincipal) _then) = __$FournisseurPrincipalCopyWithImpl;
+@override @useResult
+$Res call({
+ int? id, String? nom,@JsonKey(name: 'delai_jours_ouvres') int delaiJoursOuvres,@JsonKey(name: 'delai_saisi') bool delaiSaisi
+});
+
+
+
+
+}
+/// @nodoc
+class __$FournisseurPrincipalCopyWithImpl<$Res>
+    implements _$FournisseurPrincipalCopyWith<$Res> {
+  __$FournisseurPrincipalCopyWithImpl(this._self, this._then);
+
+  final _FournisseurPrincipal _self;
+  final $Res Function(_FournisseurPrincipal) _then;
+
+/// Create a copy of FournisseurPrincipal
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? nom = freezed,Object? delaiJoursOuvres = null,Object? delaiSaisi = null,}) {
+  return _then(_FournisseurPrincipal(
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,delaiJoursOuvres: null == delaiJoursOuvres ? _self.delaiJoursOuvres : delaiJoursOuvres // ignore: cast_nullable_to_non_nullable
+as int,delaiSaisi: null == delaiSaisi ? _self.delaiSaisi : delaiSaisi // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$IndicateursProduit {
+
+@JsonKey(name: 'ventes_12_mois') double get ventes12Mois;@JsonKey(name: 'mois_historique') int get moisHistorique; double get cmm; double get cmj; FournisseurPrincipal? get fournisseur;@JsonKey(name: 'delai_livraison_jours') int get delaiLivraison;@JsonKey(name: 'date_livraison') DateTime? get dateLivraison;@JsonKey(name: 'stock_securite') int get stockSecurite;@JsonKey(name: 'stock_securite_simple') int get stockSecuriteSimple;@JsonKey(name: 'delai_securite_jours') double get delaiSecurite;@JsonKey(name: 'periode_commande_jours') double get periodeCommande;@JsonKey(name: 'stock_maximum') int get stockMaximum;@JsonKey(name: 'couverture_jours') int? get couverture;@JsonKey(name: 'dvr_max') int? get dvrMax;@JsonKey(name: 'qte_a_risque') int get qteARisque;@JsonKey(name: 'valeur_a_risque') double get valeurARisque; List<RisqueLot> get lots;
+/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$IndicateursProduitCopyWith<IndicateursProduit> get copyWith => _$IndicateursProduitCopyWithImpl<IndicateursProduit>(this as IndicateursProduit, _$identity);
+
+  /// Serializes this IndicateursProduit to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as IndicateursProduit;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IndicateursProduit&&(identical(other.ventes12Mois, _this.ventes12Mois) || other.ventes12Mois == _this.ventes12Mois)&&(identical(other.moisHistorique, _this.moisHistorique) || other.moisHistorique == _this.moisHistorique)&&(identical(other.cmm, _this.cmm) || other.cmm == _this.cmm)&&(identical(other.cmj, _this.cmj) || other.cmj == _this.cmj)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur)&&(identical(other.delaiLivraison, _this.delaiLivraison) || other.delaiLivraison == _this.delaiLivraison)&&(identical(other.dateLivraison, _this.dateLivraison) || other.dateLivraison == _this.dateLivraison)&&(identical(other.stockSecurite, _this.stockSecurite) || other.stockSecurite == _this.stockSecurite)&&(identical(other.stockSecuriteSimple, _this.stockSecuriteSimple) || other.stockSecuriteSimple == _this.stockSecuriteSimple)&&(identical(other.delaiSecurite, _this.delaiSecurite) || other.delaiSecurite == _this.delaiSecurite)&&(identical(other.periodeCommande, _this.periodeCommande) || other.periodeCommande == _this.periodeCommande)&&(identical(other.stockMaximum, _this.stockMaximum) || other.stockMaximum == _this.stockMaximum)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.dvrMax, _this.dvrMax) || other.dvrMax == _this.dvrMax)&&(identical(other.qteARisque, _this.qteARisque) || other.qteARisque == _this.qteARisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque)&&const DeepCollectionEquality().equals(other.lots, _this.lots));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as IndicateursProduit;
+  return Object.hash(runtimeType,_this.ventes12Mois,_this.moisHistorique,_this.cmm,_this.cmj,_this.fournisseur,_this.delaiLivraison,_this.dateLivraison,_this.stockSecurite,_this.stockSecuriteSimple,_this.delaiSecurite,_this.periodeCommande,_this.stockMaximum,_this.couverture,_this.dvrMax,_this.qteARisque,_this.valeurARisque,const DeepCollectionEquality().hash(_this.lots));
+}
+
+@override
+String toString() {
+  final _this = this as IndicateursProduit;
+  return 'IndicateursProduit(ventes12Mois: ${_this.ventes12Mois}, moisHistorique: ${_this.moisHistorique}, cmm: ${_this.cmm}, cmj: ${_this.cmj}, fournisseur: ${_this.fournisseur}, delaiLivraison: ${_this.delaiLivraison}, dateLivraison: ${_this.dateLivraison}, stockSecurite: ${_this.stockSecurite}, stockSecuriteSimple: ${_this.stockSecuriteSimple}, delaiSecurite: ${_this.delaiSecurite}, periodeCommande: ${_this.periodeCommande}, stockMaximum: ${_this.stockMaximum}, couverture: ${_this.couverture}, dvrMax: ${_this.dvrMax}, qteARisque: ${_this.qteARisque}, valeurARisque: ${_this.valeurARisque}, lots: ${_this.lots})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $IndicateursProduitCopyWith<$Res>  {
+  factory $IndicateursProduitCopyWith(IndicateursProduit value, $Res Function(IndicateursProduit) _then) = _$IndicateursProduitCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'ventes_12_mois') double ventes12Mois,@JsonKey(name: 'mois_historique') int moisHistorique, double cmm, double cmj, FournisseurPrincipal? fournisseur,@JsonKey(name: 'delai_livraison_jours') int delaiLivraison,@JsonKey(name: 'date_livraison') DateTime? dateLivraison,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_securite_simple') int stockSecuriteSimple,@JsonKey(name: 'delai_securite_jours') double delaiSecurite,@JsonKey(name: 'periode_commande_jours') double periodeCommande,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'dvr_max') int? dvrMax,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, List<RisqueLot> lots
+});
+
+
+$FournisseurPrincipalCopyWith<$Res>? get fournisseur;
+
+}
+/// @nodoc
+class _$IndicateursProduitCopyWithImpl<$Res>
+    implements $IndicateursProduitCopyWith<$Res> {
+  _$IndicateursProduitCopyWithImpl(this._self, this._then);
+
+  final IndicateursProduit _self;
+  final $Res Function(IndicateursProduit) _then;
+
+/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? ventes12Mois = null,Object? moisHistorique = null,Object? cmm = null,Object? cmj = null,Object? fournisseur = freezed,Object? delaiLivraison = null,Object? dateLivraison = freezed,Object? stockSecurite = null,Object? stockSecuriteSimple = null,Object? delaiSecurite = null,Object? periodeCommande = null,Object? stockMaximum = null,Object? couverture = freezed,Object? dvrMax = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? lots = null,}) {
+  return _then(IndicateursProduit(
+ventes12Mois: null == ventes12Mois ? _self.ventes12Mois : ventes12Mois // ignore: cast_nullable_to_non_nullable
+as double,moisHistorique: null == moisHistorique ? _self.moisHistorique : moisHistorique // ignore: cast_nullable_to_non_nullable
+as int,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
+as double,cmj: null == cmj ? _self.cmj : cmj // ignore: cast_nullable_to_non_nullable
+as double,fournisseur: freezed == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
+as FournisseurPrincipal?,delaiLivraison: null == delaiLivraison ? _self.delaiLivraison : delaiLivraison // ignore: cast_nullable_to_non_nullable
+as int,dateLivraison: freezed == dateLivraison ? _self.dateLivraison : dateLivraison // ignore: cast_nullable_to_non_nullable
+as DateTime?,stockSecurite: null == stockSecurite ? _self.stockSecurite : stockSecurite // ignore: cast_nullable_to_non_nullable
+as int,stockSecuriteSimple: null == stockSecuriteSimple ? _self.stockSecuriteSimple : stockSecuriteSimple // ignore: cast_nullable_to_non_nullable
+as int,delaiSecurite: null == delaiSecurite ? _self.delaiSecurite : delaiSecurite // ignore: cast_nullable_to_non_nullable
+as double,periodeCommande: null == periodeCommande ? _self.periodeCommande : periodeCommande // ignore: cast_nullable_to_non_nullable
+as double,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
+as int,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
+as int?,dvrMax: freezed == dvrMax ? _self.dvrMax : dvrMax // ignore: cast_nullable_to_non_nullable
+as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
+as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double,lots: null == lots ? _self.lots : lots // ignore: cast_nullable_to_non_nullable
+as List<RisqueLot>,
+  ));
+}
+/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FournisseurPrincipalCopyWith<$Res>? get fournisseur {
+    if (_self.fournisseur == null) {
+    return null;
+  }
+
+  return $FournisseurPrincipalCopyWith<$Res>(_self.fournisseur!, (value) {
+    return _then(_self.copyWith(fournisseur: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [IndicateursProduit].
+extension IndicateursProduitPatterns on IndicateursProduit {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _IndicateursProduit value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _IndicateursProduit() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _IndicateursProduit value)  $default,){
+final _that = this;
+switch (_that) {
+case _IndicateursProduit():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _IndicateursProduit value)?  $default,){
+final _that = this;
+switch (_that) {
+case _IndicateursProduit() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _IndicateursProduit() when $default != null:
+return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots)  $default,) {final _that = this;
+switch (_that) {
+case _IndicateursProduit():
+return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots)?  $default,) {final _that = this;
+switch (_that) {
+case _IndicateursProduit() when $default != null:
+return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _IndicateursProduit extends IndicateursProduit {
+  const _IndicateursProduit({@JsonKey(name: 'ventes_12_mois') this.ventes12Mois = 0, @JsonKey(name: 'mois_historique') this.moisHistorique = 12, this.cmm = 0, this.cmj = 0, this.fournisseur, @JsonKey(name: 'delai_livraison_jours') this.delaiLivraison = 1, @JsonKey(name: 'date_livraison') this.dateLivraison, @JsonKey(name: 'stock_securite') this.stockSecurite = 0, @JsonKey(name: 'stock_securite_simple') this.stockSecuriteSimple = 0, @JsonKey(name: 'delai_securite_jours') this.delaiSecurite = 0, @JsonKey(name: 'periode_commande_jours') this.periodeCommande = 0, @JsonKey(name: 'stock_maximum') this.stockMaximum = 0, @JsonKey(name: 'couverture_jours') this.couverture, @JsonKey(name: 'dvr_max') this.dvrMax, @JsonKey(name: 'qte_a_risque') this.qteARisque = 0, @JsonKey(name: 'valeur_a_risque') this.valeurARisque = 0,  List<RisqueLot> lots = const <RisqueLot>[]}): _lots = lots,super._();
+  factory _IndicateursProduit.fromJson(Map<String, dynamic> json) => _$IndicateursProduitFromJson(json);
+
+@override@JsonKey(name: 'ventes_12_mois') final  double ventes12Mois;
+@override@JsonKey(name: 'mois_historique') final  int moisHistorique;
+@override@JsonKey() final  double cmm;
+@override@JsonKey() final  double cmj;
+@override final  FournisseurPrincipal? fournisseur;
+@override@JsonKey(name: 'delai_livraison_jours') final  int delaiLivraison;
+@override@JsonKey(name: 'date_livraison') final  DateTime? dateLivraison;
+@override@JsonKey(name: 'stock_securite') final  int stockSecurite;
+@override@JsonKey(name: 'stock_securite_simple') final  int stockSecuriteSimple;
+@override@JsonKey(name: 'delai_securite_jours') final  double delaiSecurite;
+@override@JsonKey(name: 'periode_commande_jours') final  double periodeCommande;
+@override@JsonKey(name: 'stock_maximum') final  int stockMaximum;
+@override@JsonKey(name: 'couverture_jours') final  int? couverture;
+@override@JsonKey(name: 'dvr_max') final  int? dvrMax;
+@override@JsonKey(name: 'qte_a_risque') final  int qteARisque;
+@override@JsonKey(name: 'valeur_a_risque') final  double valeurARisque;
+ final  List<RisqueLot> _lots;
+@override@JsonKey() List<RisqueLot> get lots {
+  if (_lots is EqualUnmodifiableListView) return _lots;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_lots);
+}
+
+
+/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$IndicateursProduitCopyWith<_IndicateursProduit> get copyWith => __$IndicateursProduitCopyWithImpl<_IndicateursProduit>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$IndicateursProduitToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IndicateursProduit&&(identical(other.ventes12Mois, ventes12Mois) || other.ventes12Mois == ventes12Mois)&&(identical(other.moisHistorique, moisHistorique) || other.moisHistorique == moisHistorique)&&(identical(other.cmm, cmm) || other.cmm == cmm)&&(identical(other.cmj, cmj) || other.cmj == cmj)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur)&&(identical(other.delaiLivraison, delaiLivraison) || other.delaiLivraison == delaiLivraison)&&(identical(other.dateLivraison, dateLivraison) || other.dateLivraison == dateLivraison)&&(identical(other.stockSecurite, stockSecurite) || other.stockSecurite == stockSecurite)&&(identical(other.stockSecuriteSimple, stockSecuriteSimple) || other.stockSecuriteSimple == stockSecuriteSimple)&&(identical(other.delaiSecurite, delaiSecurite) || other.delaiSecurite == delaiSecurite)&&(identical(other.periodeCommande, periodeCommande) || other.periodeCommande == periodeCommande)&&(identical(other.stockMaximum, stockMaximum) || other.stockMaximum == stockMaximum)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.dvrMax, dvrMax) || other.dvrMax == dvrMax)&&(identical(other.qteARisque, qteARisque) || other.qteARisque == qteARisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque)&&const DeepCollectionEquality().equals(other.lots, _lots));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,ventes12Mois,moisHistorique,cmm,cmj,fournisseur,delaiLivraison,dateLivraison,stockSecurite,stockSecuriteSimple,delaiSecurite,periodeCommande,stockMaximum,couverture,dvrMax,qteARisque,valeurARisque,const DeepCollectionEquality().hash(_lots));
+}
+
+@override
+String toString() {
+    return 'IndicateursProduit(ventes12Mois: $ventes12Mois, moisHistorique: $moisHistorique, cmm: $cmm, cmj: $cmj, fournisseur: $fournisseur, delaiLivraison: $delaiLivraison, dateLivraison: $dateLivraison, stockSecurite: $stockSecurite, stockSecuriteSimple: $stockSecuriteSimple, delaiSecurite: $delaiSecurite, periodeCommande: $periodeCommande, stockMaximum: $stockMaximum, couverture: $couverture, dvrMax: $dvrMax, qteARisque: $qteARisque, valeurARisque: $valeurARisque, lots: $lots)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$IndicateursProduitCopyWith<$Res> implements $IndicateursProduitCopyWith<$Res> {
+  factory _$IndicateursProduitCopyWith(_IndicateursProduit value, $Res Function(_IndicateursProduit) _then) = __$IndicateursProduitCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'ventes_12_mois') double ventes12Mois,@JsonKey(name: 'mois_historique') int moisHistorique, double cmm, double cmj, FournisseurPrincipal? fournisseur,@JsonKey(name: 'delai_livraison_jours') int delaiLivraison,@JsonKey(name: 'date_livraison') DateTime? dateLivraison,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_securite_simple') int stockSecuriteSimple,@JsonKey(name: 'delai_securite_jours') double delaiSecurite,@JsonKey(name: 'periode_commande_jours') double periodeCommande,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'dvr_max') int? dvrMax,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, List<RisqueLot> lots
+});
+
+
+@override $FournisseurPrincipalCopyWith<$Res>? get fournisseur;
+
+}
+/// @nodoc
+class __$IndicateursProduitCopyWithImpl<$Res>
+    implements _$IndicateursProduitCopyWith<$Res> {
+  __$IndicateursProduitCopyWithImpl(this._self, this._then);
+
+  final _IndicateursProduit _self;
+  final $Res Function(_IndicateursProduit) _then;
+
+/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? ventes12Mois = null,Object? moisHistorique = null,Object? cmm = null,Object? cmj = null,Object? fournisseur = freezed,Object? delaiLivraison = null,Object? dateLivraison = freezed,Object? stockSecurite = null,Object? stockSecuriteSimple = null,Object? delaiSecurite = null,Object? periodeCommande = null,Object? stockMaximum = null,Object? couverture = freezed,Object? dvrMax = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? lots = null,}) {
+  return _then(_IndicateursProduit(
+ventes12Mois: null == ventes12Mois ? _self.ventes12Mois : ventes12Mois // ignore: cast_nullable_to_non_nullable
+as double,moisHistorique: null == moisHistorique ? _self.moisHistorique : moisHistorique // ignore: cast_nullable_to_non_nullable
+as int,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
+as double,cmj: null == cmj ? _self.cmj : cmj // ignore: cast_nullable_to_non_nullable
+as double,fournisseur: freezed == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
+as FournisseurPrincipal?,delaiLivraison: null == delaiLivraison ? _self.delaiLivraison : delaiLivraison // ignore: cast_nullable_to_non_nullable
+as int,dateLivraison: freezed == dateLivraison ? _self.dateLivraison : dateLivraison // ignore: cast_nullable_to_non_nullable
+as DateTime?,stockSecurite: null == stockSecurite ? _self.stockSecurite : stockSecurite // ignore: cast_nullable_to_non_nullable
+as int,stockSecuriteSimple: null == stockSecuriteSimple ? _self.stockSecuriteSimple : stockSecuriteSimple // ignore: cast_nullable_to_non_nullable
+as int,delaiSecurite: null == delaiSecurite ? _self.delaiSecurite : delaiSecurite // ignore: cast_nullable_to_non_nullable
+as double,periodeCommande: null == periodeCommande ? _self.periodeCommande : periodeCommande // ignore: cast_nullable_to_non_nullable
+as double,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
+as int,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
+as int?,dvrMax: freezed == dvrMax ? _self.dvrMax : dvrMax // ignore: cast_nullable_to_non_nullable
+as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
+as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double,lots: null == lots ? _self._lots : lots // ignore: cast_nullable_to_non_nullable
+as List<RisqueLot>,
+  ));
+}
+
+/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FournisseurPrincipalCopyWith<$Res>? get fournisseur {
+    if (_self.fournisseur == null) {
+    return null;
+  }
+
+  return $FournisseurPrincipalCopyWith<$Res>(_self.fournisseur!, (value) {
+    return _then(_self.copyWith(fournisseur: value));
+  });
+}
+}
+
+
+/// @nodoc
 mixin _$PageProduits {
 
  int get total; List<Produit> get items;

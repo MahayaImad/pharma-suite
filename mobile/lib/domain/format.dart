@@ -54,9 +54,11 @@ String horodatage(DateTime utc, DateTime maintenantUtc) {
 /// Ancienneté d'une date : « aujourd'hui », « hier », « il y a 5 jours »,
 /// « il y a 3 mois », « il y a 2 ans ».
 String depuis(DateTime date, DateTime aujourdhui) {
-  final j = DateTime.utc(aujourdhui.year, aujourdhui.month, aujourdhui.day)
-      .difference(DateTime.utc(date.year, date.month, date.day))
-      .inDays;
+  final j = DateTime.utc(
+    aujourdhui.year,
+    aujourdhui.month,
+    aujourdhui.day,
+  ).difference(DateTime.utc(date.year, date.month, date.day)).inDays;
   if (j <= 0) return "aujourd'hui";
   if (j == 1) return 'hier';
   if (j < 31) return 'il y a $j jours';
@@ -83,3 +85,15 @@ String duree(int jours) {
   if (jours < 365) return '${(jours / 30).round()} mois';
   return "plus d'un an";
 }
+
+/// Nombre décimal à la française : « 3,04 », « 91,3 » ; entier sans virgule.
+String decimal(num valeur, {int chiffres = 1}) {
+  final t = valeur.toStringAsFixed(chiffres).replaceAll('.', ',');
+  final propre = t.contains(',') ? t.replaceFirst(RegExp(r',?0+$'), '') : t;
+  return propre.isEmpty ? '0' : propre;
+}
+
+const _jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+
+/// « dimanche 15/11 ».
+String jourEtDate(DateTime d) => '${_jours[d.weekday - 1]} ${_deux(d.day)}/${_deux(d.month)}';

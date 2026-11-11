@@ -28,8 +28,7 @@ class FausseAuthApi implements AuthApi {
   }
 
   @override
-  Future<Profil> moi(String jeton) async =>
-      const Profil(utilisateur: 'sara', nom: 'Benali', prenom: 'Sara');
+  Future<Profil> moi(String jeton) async => const Profil(utilisateur: 'sara', nom: 'Benali', prenom: 'Sara');
 }
 
 Future<SharedPreferences> _lancer(
@@ -43,14 +42,16 @@ Future<SharedPreferences> _lancer(
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues(preferences);
   final prefs = await SharedPreferences.getInstance();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      stockApiProvider.overrideWithValue(FausseStockApi()),
-      preferencesLocalesProvider.overrideWithValue(prefs),
-      authApiProvider.overrideWithValue(api),
-    ],
-    child: const PharmaSuite(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        stockApiProvider.overrideWithValue(FausseStockApi()),
+        preferencesLocalesProvider.overrideWithValue(prefs),
+        authApiProvider.overrideWithValue(api),
+      ],
+      child: const PharmaSuite(),
+    ),
+  );
   await tester.pumpAndSettle();
   return prefs;
 }
@@ -86,7 +87,11 @@ void main() {
 
     expect(find.text(EchecConnexion.identifiants.message), findsOneWidget);
     final champ = tester.widget<EditableText>(
-        find.descendant(of: find.byKey(const ValueKey('champ-mot-de-passe')), matching: find.byType(EditableText)));
+      find.descendant(
+        of: find.byKey(const ValueKey('champ-mot-de-passe')),
+        matching: find.byType(EditableText),
+      ),
+    );
     expect(champ.controller.text, isEmpty);
     expect(find.text('Connexion'), findsOneWidget);
   });
@@ -108,15 +113,25 @@ void main() {
   });
 
   testWidgets('session enregistrée : on arrive directement dans l\'application', (tester) async {
-    const session = Session(jeton: 'j', profil: Profil(utilisateur: 'sara', prenom: 'Sara', nom: 'Benali'));
+    const session = Session(
+      jeton: 'j',
+      profil: Profil(utilisateur: 'sara', prenom: 'Sara', nom: 'Benali'),
+    );
     await _lancer(tester, api: FausseAuthApi(), preferences: {cleSession: jsonEncode(session.toJson())});
     expect(find.text('Connexion'), findsNothing);
     expect(find.text('Sara Benali'), findsOneWidget);
   });
 
   testWidgets('se déconnecter ramène à la connexion et oublie la session', (tester) async {
-    const session = Session(jeton: 'j', profil: Profil(utilisateur: 'sara'));
-    final prefs = await _lancer(tester, api: FausseAuthApi(), preferences: {cleSession: jsonEncode(session.toJson())});
+    const session = Session(
+      jeton: 'j',
+      profil: Profil(utilisateur: 'sara'),
+    );
+    final prefs = await _lancer(
+      tester,
+      api: FausseAuthApi(),
+      preferences: {cleSession: jsonEncode(session.toJson())},
+    );
     await tester.tap(find.byTooltip('Se déconnecter'));
     await tester.pumpAndSettle();
     expect(find.text('Connexion'), findsOneWidget);

@@ -15,13 +15,6 @@ void main() {
     });
   });
 
-  test('couverture : stock ÷ vente moyenne par jour', () {
-    expect(couvertureJours(30, 365), 30); // 1 par jour
-    expect(couvertureJours(10, 0), isNull);
-    expect(couvertureJours(10, null), isNull);
-    expect(couvertureJours(0, 120), 0);
-  });
-
   test('taux de marge sur le prix d\'achat', () {
     expect(tauxMarge(150, 100), 50);
     expect(tauxMarge(150, 0), isNull);
@@ -79,15 +72,27 @@ void main() {
   });
 
   test('désignation : le dosage n\'est pas répété', () {
-    expect(const Produit(id: 1, nom: 'DOLIPRANE', dosage: '1000 MG', formeAbr: 'CPR').designation,
-        'DOLIPRANE 1000 MG CPR');
-    expect(const Produit(id: 1, nom: 'DOLIPRANE 1000 MG', dosage: '1000 MG').designation, 'DOLIPRANE 1000 MG');
+    expect(
+      const Produit(id: 1, nom: 'DOLIPRANE', dosage: '1000 MG', formeAbr: 'CPR').designation,
+      'DOLIPRANE 1000 MG CPR',
+    );
+    expect(
+      const Produit(id: 1, nom: 'DOLIPRANE 1000 MG', dosage: '1000 MG').designation,
+      'DOLIPRANE 1000 MG',
+    );
   });
 
   test('lecture JSON de l\'API', () {
     final p = Produit.fromJson({
-      'id': 7, 'nom': 'X', 'stock': 3.0, 'qte_alerte': 5, 'prix_vente': 120.0, 'id_famille': 15,
-      'famille': 'BEBE ET MAMAN', 'actif': true, 'derniere_vente': '2026-11-10',
+      'id': 7,
+      'nom': 'X',
+      'stock': 3.0,
+      'qte_alerte': 5,
+      'prix_vente': 120.0,
+      'id_famille': 15,
+      'famille': 'BEBE ET MAMAN',
+      'actif': true,
+      'derniere_vente': '2026-11-10',
     });
     expect((p.etat, p.idFamille, p.derniereVente), (EtatStock.sousSeuil, 15, DateTime(2026, 11, 10)));
     final l = Lot.fromJson({'id': 1, 'stock': 4, 'bloque': 1, 'peremption_date': '2027-03-01'});

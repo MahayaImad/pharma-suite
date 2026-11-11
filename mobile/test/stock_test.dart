@@ -13,21 +13,27 @@ import 'fausse_stock_api.dart';
 const _pc = Size(1440, 900);
 const _portable = Size(390, 844);
 
-Future<void> _lancer(WidgetTester tester, FausseStockApi api,
-    {Size taille = _portable, String depart = '/stock'}) async {
+Future<void> _lancer(
+  WidgetTester tester,
+  FausseStockApi api, {
+  Size taille = _portable,
+  String depart = '/stock',
+}) async {
   tester.view.physicalSize = taille;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      preferencesLocalesProvider.overrideWithValue(prefs),
-      stockApiProvider.overrideWithValue(api),
-      routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
-    ],
-    child: const PharmaSuite(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        preferencesLocalesProvider.overrideWithValue(prefs),
+        stockApiProvider.overrideWithValue(api),
+        routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
+      ],
+      child: const PharmaSuite(),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -106,12 +112,19 @@ void main() {
     expect(find.byKey(const ValueKey('champ-recherche')), findsNothing);
     expect(find.text('MÉDICAMENTS'), findsOneWidget);
     expect(find.text('Paracétamol · SANOFI'), findsOneWidget);
-    // Couverture : 48 ÷ (612 / 365) = 28,6 → 29 jours
-    expect(find.text('29 jours'), findsOneWidget);
+    // Indicateurs donnés par l'API
+    expect(find.text('28 jours'), findsOneWidget);
+    expect(find.text('51'), findsOneWidget); // CMM
+    await tester.scrollUntilVisible(find.byKey(const ValueKey('cmj')), 200);
+    expect(find.text('1,7 / jour'), findsOneWidget);
+    expect(find.textContaining('commande du jour livrée dimanche 15/11'), findsOneWidget);
     // Marge : 185 − 130 = 55 DA, soit 42,3 % du prix d'achat
+    await tester.scrollUntilVisible(find.byKey(const ValueKey('prix-2')), 200);
     expect(find.text('55 DA  ·  42,3 %'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Lot C7781'), 200);
     expect(find.text('Périmé'), findsOneWidget); // 01/26
+    expect(find.text('5 unités risquent de périmer avant d\'être vendues · 650 DA'), findsOneWidget);
+    expect(find.text('5 à risque · 0 écoulables en 0 j'), findsOneWidget);
     expect(find.text('HYDRAPHARM · entré le 03/02/2025'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Retour'));

@@ -141,6 +141,94 @@ Map<String, dynamic> _$LotToJson(_Lot instance) => <String, dynamic>{
   'bloque': instance.bloque,
 };
 
+_RisqueLot _$RisqueLotFromJson(Map<String, dynamic> json) => _RisqueLot(
+  id: (json['id'] as num).toInt(),
+  dvr: (json['dvr'] as num?)?.toInt(),
+  ecoulable: (json['ecoulable'] as num?)?.toInt(),
+  aRisque: (json['a_risque'] as num?)?.toInt(),
+  valeurARisque: (json['valeur_a_risque'] as num?)?.toDouble(),
+);
+
+Map<String, dynamic> _$RisqueLotToJson(_RisqueLot instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'dvr': instance.dvr,
+      'ecoulable': instance.ecoulable,
+      'a_risque': instance.aRisque,
+      'valeur_a_risque': instance.valeurARisque,
+    };
+
+_FournisseurPrincipal _$FournisseurPrincipalFromJson(
+  Map<String, dynamic> json,
+) => _FournisseurPrincipal(
+  id: (json['id'] as num?)?.toInt(),
+  nom: json['nom'] as String?,
+  delaiJoursOuvres: (json['delai_jours_ouvres'] as num?)?.toInt() ?? 1,
+  delaiSaisi: json['delai_saisi'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$FournisseurPrincipalToJson(
+  _FournisseurPrincipal instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'nom': instance.nom,
+  'delai_jours_ouvres': instance.delaiJoursOuvres,
+  'delai_saisi': instance.delaiSaisi,
+};
+
+_IndicateursProduit _$IndicateursProduitFromJson(
+  Map<String, dynamic> json,
+) => _IndicateursProduit(
+  ventes12Mois: (json['ventes_12_mois'] as num?)?.toDouble() ?? 0,
+  moisHistorique: (json['mois_historique'] as num?)?.toInt() ?? 12,
+  cmm: (json['cmm'] as num?)?.toDouble() ?? 0,
+  cmj: (json['cmj'] as num?)?.toDouble() ?? 0,
+  fournisseur: json['fournisseur'] == null
+      ? null
+      : FournisseurPrincipal.fromJson(
+          json['fournisseur'] as Map<String, dynamic>,
+        ),
+  delaiLivraison: (json['delai_livraison_jours'] as num?)?.toInt() ?? 1,
+  dateLivraison: json['date_livraison'] == null
+      ? null
+      : DateTime.parse(json['date_livraison'] as String),
+  stockSecurite: (json['stock_securite'] as num?)?.toInt() ?? 0,
+  stockSecuriteSimple: (json['stock_securite_simple'] as num?)?.toInt() ?? 0,
+  delaiSecurite: (json['delai_securite_jours'] as num?)?.toDouble() ?? 0,
+  periodeCommande: (json['periode_commande_jours'] as num?)?.toDouble() ?? 0,
+  stockMaximum: (json['stock_maximum'] as num?)?.toInt() ?? 0,
+  couverture: (json['couverture_jours'] as num?)?.toInt(),
+  dvrMax: (json['dvr_max'] as num?)?.toInt(),
+  qteARisque: (json['qte_a_risque'] as num?)?.toInt() ?? 0,
+  valeurARisque: (json['valeur_a_risque'] as num?)?.toDouble() ?? 0,
+  lots:
+      (json['lots'] as List<dynamic>?)
+          ?.map((e) => RisqueLot.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <RisqueLot>[],
+);
+
+Map<String, dynamic> _$IndicateursProduitToJson(_IndicateursProduit instance) =>
+    <String, dynamic>{
+      'ventes_12_mois': instance.ventes12Mois,
+      'mois_historique': instance.moisHistorique,
+      'cmm': instance.cmm,
+      'cmj': instance.cmj,
+      'fournisseur': instance.fournisseur,
+      'delai_livraison_jours': instance.delaiLivraison,
+      'date_livraison': instance.dateLivraison?.toIso8601String(),
+      'stock_securite': instance.stockSecurite,
+      'stock_securite_simple': instance.stockSecuriteSimple,
+      'delai_securite_jours': instance.delaiSecurite,
+      'periode_commande_jours': instance.periodeCommande,
+      'stock_maximum': instance.stockMaximum,
+      'couverture_jours': instance.couverture,
+      'dvr_max': instance.dvrMax,
+      'qte_a_risque': instance.qteARisque,
+      'valeur_a_risque': instance.valeurARisque,
+      'lots': instance.lots,
+    };
+
 _PageProduits _$PageProduitsFromJson(Map<String, dynamic> json) =>
     _PageProduits(
       total: (json['total'] as num?)?.toInt() ?? 0,

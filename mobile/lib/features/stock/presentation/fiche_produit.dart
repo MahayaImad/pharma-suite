@@ -96,7 +96,10 @@ class _Contenu extends StatelessWidget {
         const SizedBox(height: 20),
         _Chiffres(produit: p),
         const SizedBox(height: 24),
-        _Titre('Prix'),
+        const _Titre('Réapprovisionnement'),
+        _Reappro(produit: p),
+        const SizedBox(height: 24),
+        const _Titre('Prix'),
         _Prix(produit: p),
         const SizedBox(height: 24),
         _Lots(id: p.id),
@@ -134,28 +137,32 @@ class _Titre extends StatelessWidget {
   );
 }
 
-/// Stock, seuil, vendu sur 12 mois, couverture.
-class _Chiffres extends StatelessWidget {
+/// Quatre chiffres clés : stock, CMM, couverture, stock maximum.
+class _Chiffres extends ConsumerWidget {
   const _Chiffres({required this.produit});
   final Produit produit;
 
   @override
-  Widget build(BuildContext context) {
-    final p = produit;
-    final couverture = couvertureJours(p.stock, p.vendu12Mois);
-    final tuiles = [
-      ('Stock', entier(p.stock), 'unités'),
-      (
-        "Seuil d'alerte",
-        p.seuil == null || p.seuil == 0 ? '—' : entier(p.seuil!),
-        p.seuil == null || p.seuil == 0 ? 'non défini' : 'unités',
-      ),
-      ('Vendu', entier(p.vendu12Mois ?? 0), 'sur 12 mois'),
-      (
+  Widget build(BuildContext context, WidgetRef ref) {
+    final i = ref.watch(indicateursProduitProvider(produit.id)).value;
+    final attente = i == null;
+    final couverture = i?.couverture;
+    final tuiles = <_Tuile>[
+      _Tuile('Stock', entier(produit.stock), 'unités'),
+      _Tuile('CMM', attente ? '…' : decimal(i.cmm), 'unités par mois'),
+      _Tuile(
         'Couverture',
-        couverture == null ? '—' : duree(couverture),
-        couverture == null ? 'aucune vente' : 'au rythme actuel',
+        attente ? '…' : (couverture == null ? '—' : duree(couverture)),
+        attente
+            ? ''
+            : couverture == null
+            ? 'aucune vente'
+            : i.couvertureTropLongue
+            ? 'au-delà de la péremption'
+            : 'stock ÷ CMJ',
+        alerte: i?.couvertureTropLongue ?? false,
       ),
+      _Tuile('Stock maximum', attente ? '…' : entier(i.stockMaximum), 'unités'),
     ];
     return LayoutBuilder(
       builder: (context, c) {
@@ -165,32 +172,179 @@ class _Chiffres extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final (titre, valeur, unite) in tuiles)
+            for (final t in tuiles)
               Container(
+                key: ValueKey('tuile-${t.titre}'),
                 width: largeur,
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 decoration: BoxDecoration(
-                  color: context.schema.surface,
+                  color: t.alerte ? context.etats.critiqueDoux : context.schema.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: context.couleurs.bord),
+                  border: Border.all(color: t.alerte ? context.etats.critique : context.couleurs.bord),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(titre, style: TextStyle(fontSize: 12, color: context.couleurs.encre2)),
+                    Text(t.titre, style: TextStyle(fontSize: 12, color: context.couleurs.encre2)),
                     const SizedBox(height: 4),
                     Text(
-                      valeur,
+                      t.valeur,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontFamily: 'Sora', fontSize: 20, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: t.alerte ? context.etats.critique : null,
+                      ),
                     ),
-                    Text(unite, style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
+                    Text(
+                      t.detail,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: t.alerte ? context.etats.critique : context.couleurs.encre3,
+                      ),
+                    ),
                   ],
                 ),
               ),
           ],
         );
+      },
+    );
+  }
+}
+
+class _Tuile {
+  const _Tuile(this.titre, this.valeur, this.detail, {this.alerte = false});
+  final String titre, valeur, detail;
+  final bool alerte;
+}
+
+/// Une ligne « libellé · valeur », avec une explication discrète.
+class _Ligne extends StatelessWidget {
+  const _Ligne(this.titre, this.valeur, {this.detail, this.cle});
+  final String titre, valeur;
+  final String? detail;
+  final String? cle;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(titre, style: TextStyle(color: context.couleurs.encre2)),
+              if (detail != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(detail!, style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          valeur,
+          key: cle == null ? null : ValueKey<String>(cle!),
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Carte blanche à lignes séparées.
+class _Carte extends StatelessWidget {
+  const _Carte(this.lignes);
+  final List<Widget> lignes;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: context.schema.surface,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: context.couleurs.bord),
+    ),
+    child: Column(
+      children: [
+        for (final (i, l) in lignes.indexed) ...[if (i > 0) const Divider(indent: 14, endIndent: 14), l],
+      ],
+    ),
+  );
+}
+
+/// CMJ, délai de livraison, stock de sécurité, stock maximum.
+class _Reappro extends ConsumerWidget {
+  const _Reappro({required this.produit});
+  final Produit produit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final indicateurs = ref.watch(indicateursProduitProvider(produit.id));
+    return indicateurs.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+      ),
+      error: (e, _) =>
+          MessageErreur(erreur: e, reessayer: () => ref.invalidate(indicateursProduitProvider(produit.id))),
+      data: (i) {
+        final f = i.fournisseur;
+        final livraison = i.dateLivraison;
+        final jours = '${i.delaiLivraison} jour${i.delaiLivraison > 1 ? 's' : ''}';
+        final classe = produit.classeAbc;
+        final service = switch (classe) {
+          'A' => '95 %',
+          'C' => '85 %',
+          _ => '90 %',
+        };
+        final seuil = produit.seuil;
+        return _Carte([
+          _Ligne(
+            'Consommation journalière (CMJ)',
+            '${decimal(i.cmj, chiffres: 2)} / jour',
+            detail: i.moisHistorique < 12
+                ? 'CMM ÷ 30, sur ${i.moisHistorique} mois de ventes'
+                : 'CMM ÷ 30, ventes des 12 derniers mois',
+            cle: 'cmj',
+          ),
+          _Ligne(
+            'Délai de livraison',
+            jours,
+            detail: [
+              f?.nom ?? 'Fournisseur inconnu',
+              if (livraison != null) 'commande du jour livrée ${jourEtDate(livraison)}',
+              if (f != null && !f.delaiSaisi) 'délai par défaut',
+            ].join(' · '),
+            cle: 'delai',
+          ),
+          _Ligne(
+            'Stock de sécurité',
+            entier(i.stockSecurite),
+            detail:
+                'Z × σ × √L, ${classe == null ? 'non classé' : 'classe $classe'}, $service de service'
+                ' · simple (CMJ × ${decimal(i.delaiSecurite)} j) : ${entier(i.stockSecuriteSimple)}',
+            cle: 'ss',
+          ),
+          _Ligne(
+            'Stock maximum',
+            entier(i.stockMaximum),
+            detail: 'SS + CMM × ${decimal(i.periodeCommande)} jours entre deux commandes',
+          ),
+          _Ligne(
+            "Seuil d'alerte EASYPHARM",
+            seuil == null || seuil == 0 ? '—' : entier(seuil),
+            detail: seuil == null || seuil == 0 ? 'non défini dans EASYPHARM' : null,
+          ),
+          _Ligne('Vendu sur 12 mois', entier(i.ventes12Mois), detail: 'quantité nette, retours déduits'),
+        ]);
       },
     );
   }
@@ -212,35 +366,7 @@ class _Prix extends StatelessWidget {
       ('Valeur du stock (achat)', dinars(p.valeurAchat)),
       ('Valeur du stock (vente)', dinars(p.valeurVente)),
     ];
-    return Container(
-      decoration: BoxDecoration(
-        color: context.schema.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.couleurs.bord),
-      ),
-      child: Column(
-        children: [
-          for (final (i, (titre, valeur)) in lignes.indexed) ...[
-            if (i > 0) const Divider(indent: 14, endIndent: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(titre, style: TextStyle(color: context.couleurs.encre2)),
-                  ),
-                  Text(
-                    valeur,
-                    key: ValueKey('prix-$i'),
-                    style: TextStyle(fontWeight: i == 2 ? FontWeight.w700 : FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
+    return _Carte([for (final (i, (titre, valeur)) in lignes.indexed) _Ligne(titre, valeur, cle: 'prix-$i')]);
   }
 }
 
@@ -260,6 +386,7 @@ class _LotsState extends ConsumerState<_Lots> {
   Widget build(BuildContext context) {
     final cle = (id: widget.id, epuises: _epuises);
     final lots = ref.watch(lotsProduitProvider(cle));
+    final indicateurs = ref.watch(indicateursProduitProvider(widget.id)).value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -277,6 +404,7 @@ class _LotsState extends ConsumerState<_Lots> {
             ],
           ),
         ),
+        if (indicateurs != null && indicateurs.qteARisque > 0) _BandeauRisque(indicateurs),
         lots.when(
           data: (liste) => liste.isEmpty
               ? Padding(
@@ -289,7 +417,10 @@ class _LotsState extends ConsumerState<_Lots> {
               : Column(
                   children: [
                     for (final l in liste)
-                      Padding(padding: const EdgeInsets.only(bottom: 8), child: _LigneLot(l)),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _LigneLot(l, risque: indicateurs?.risque(l.id)),
+                      ),
                   ],
                 ),
           loading: () => const Padding(
@@ -304,9 +435,57 @@ class _LotsState extends ConsumerState<_Lots> {
   }
 }
 
+/// Quantité qui périmera avant d'être vendue, et ce qu'il faut faire.
+class _BandeauRisque extends StatelessWidget {
+  const _BandeauRisque(this.indicateurs);
+  final IndicateursProduit indicateurs;
+
+  @override
+  Widget build(BuildContext context) {
+    final e = context.etats;
+    final q = indicateurs.qteARisque;
+    return Container(
+      key: const ValueKey('bandeau-risque'),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: e.critiqueDoux,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: e.critique.withValues(alpha: .5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.hourglass_bottom_rounded, color: e.critique),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${entier(q)} unité${q > 1 ? 's' : ''} risque${q > 1 ? 'nt' : ''} de périmer avant d\'être '
+                  'vendue${q > 1 ? 's' : ''} · ${dinars(indicateurs.valeurARisque)}',
+                  style: TextStyle(color: e.critique, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'À traiter maintenant : retour fournisseur, échange avec une autre pharmacie '
+                  'ou mise en avant.',
+                  style: TextStyle(color: e.critique, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _LigneLot extends StatelessWidget {
-  const _LigneLot(this.lot);
+  const _LigneLot(this.lot, {this.risque});
   final Lot lot;
+  final RisqueLot? risque;
 
   @override
   Widget build(BuildContext context) {
@@ -377,6 +556,21 @@ class _LigneLot extends StatelessWidget {
                     ),
                   const SizedBox(height: 6),
                   if (!epuise) PastilleEtat(niveau: niveau, libelle: texte),
+                  if (!epuise && risque?.ecoulable != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      (risque!.aRisque ?? 0) > 0
+                          ? '${entier(risque!.aRisque!)} à risque · ${entier(risque!.ecoulable!)} écoulables '
+                                'en ${entier(risque!.dvr ?? 0)} j'
+                          : 'Écoulé avant péremption (${entier(risque!.dvr ?? 0)} j restants)',
+                      key: ValueKey('risque-lot-${lot.id}'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: (risque!.aRisque ?? 0) > 0 ? context.etats.critique : context.couleurs.encre2,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
