@@ -18,6 +18,7 @@ from app.models.stock_responsabilite import NomenclatureClassification
 from app.models.performance import Employe
 from app.services.stock_segmentation import compute_abc, compute_xyz, update_disponibilite
 from app.services import indicateurs_stock as ind
+from app.services import indicateurs_stock_lot as ind_lot
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
@@ -46,6 +47,47 @@ _ETATS = {
     "sous_seuil": ("COALESCE(mv.stock_actuel, 0) > 0 AND n.qte_alerte > 0 "
                    "AND COALESCE(mv.stock_actuel, 0) < n.qte_alerte"),
 }
+# « À commander » : rupture ou sous le seuil EASYPHARM.
+_ETATS["a_commander"] = f"(({_ETATS['rupture']}) OR ({_ETATS['sous_seuil']}))"
+# États calculés en Python (indicateurs_stock_lot), pas en SQL.
+_ETATS_CALCULES = {"a_risque", "surstock"}
+
+_COLONNES_PRODUIT = f"""
+            n.id, n.nom, n.dci, n.dosage, n.forme_abr, n.id_famille,
+            {_NOM_FAMILLE} AS famille, n.labo,
+            COALESCE(mv.prix_vente, 0) AS prix_vente,
+            n.qte_alerte, n.psychotrope, n.conditionnement, n.code_barre_original,
+            n.archive, n.segment_abc, n.segment_xyz, n.disponibilite, n.categorie,
+            COALESCE(mv.stock_actuel,       0) AS stock,
+            COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen,
+            COALESCE(mv.valeur_achat, 0)       AS valeur_achat,
+            COALESCE(mv.actif, false)          AS actif,
+            mv.derniere_vente
+"""
+
+
+def _item_produit(r, indic: "Optional[ind_lot.Indicateurs]") -> dict:
+    """Une ligne de liste : le produit et ses indicateurs de gestion."""
+    return {
+        "id": r.id, "nom": r.nom, "dci": r.dci, "dosage": r.dosage,
+        "forme_abr": r.forme_abr, "id_famille": r.id_famille, "famille": r.famille,
+        "labo": r.labo,
+        "prix_vente": _f(r.prix_vente), "prix_achat_moyen": _f(r.prix_achat_moyen),
+        "valeur_achat": _f(r.valeur_achat), "stock": _f(r.stock),
+        "qte_alerte": r.qte_alerte, "psychotrope": r.psychotrope,
+        "conditionnement": r.conditionnement, "code_barre_original": r.code_barre_original,
+        "archive": r.archive, "segment_abc": r.segment_abc, "segment_xyz": r.segment_xyz,
+        "disponibilite": r.disponibilite, "categorie": r.categorie, "actif": r.actif,
+        "derniere_vente": r.derniere_vente.isoformat() if r.derniere_vente else None,
+        "cmm": round(indic.cmm, 2) if indic else 0,
+        "stock_securite": indic.stock_securite if indic else 0,
+        "stock_maximum": indic.stock_maximum if indic else 0,
+        "couverture_jours": indic.couverture_jours if indic else None,
+        "qte_a_risque": indic.qte_a_risque if indic else 0,
+        "valeur_a_risque": _f(indic.valeur_a_risque) if indic else 0,
+        "qte_surstock": indic.qte_surstock if indic else 0,
+        "valeur_surstock": _f(indic.valeur_surstock) if indic else 0,
+    }
 
 
 def _f(val) -> float:
@@ -155,7 +197,7 @@ async def list_products(
     q: Optional[str] = Query(None, description="Recherche sur nom, DCI, code-barre"),
     famille: Optional[str] = Query(None, description="Ancien filtre par nom ; préférer id_famille"),
     id_famille: Optional[int] = Query(None, description="Filtrer par famille (familles.id)"),
-    etat: Optional[Literal["en_stock", "rupture", "sous_seuil"]] = Query(None),
+    etat: Optional[Literal["en_stock", "rupture", "sous_seuil", "a_commander", "a_risque", "surstock"]] = Query(None),
     tri: Literal["nom", "stock", "valeur", "derniere_vente"] = Query("nom"),
     forme: Optional[str] = Query(None),
     in_stock_only: bool = Query(False),
@@ -198,7 +240,13 @@ async def list_products(
     if id_famille is not None:
         conditions.append("n.id_famille = :id_famille")
         params["id_famille"] = id_famille
-    if etat:
+    tous = await ind_lot.calculer_tous(db, _aujourdhui_alger())
+    if etat in _ETATS_CALCULES:
+        ids = [i for i, x in tous.items()
+               if (x.qte_a_risque if etat == "a_risque" else x.qte_surstock) > 0]
+        conditions.append("n.id = ANY(:ids_etat)")
+        params["ids_etat"] = ids
+    elif etat:
         conditions.append(_ETATS[etat])
     if forme:
         conditions.append("n.forme ILIKE :forme")
@@ -234,30 +282,7 @@ async def list_products(
     params["limit"] = limit
     params["offset"] = offset
     res = await db.execute(text(f"""
-        SELECT
-            n.id,
-            n.nom,
-            n.dci,
-            n.dosage,
-            n.forme_abr,
-            n.id_famille,
-            {_NOM_FAMILLE} AS famille,
-            n.labo,
-            COALESCE(mv.prix_vente, 0) AS prix_vente,
-            n.qte_alerte,
-            n.psychotrope,
-            n.conditionnement,
-            n.code_barre_original,
-            n.archive,
-            n.segment_abc,
-            n.segment_xyz,
-            n.disponibilite,
-            n.categorie,
-            COALESCE(mv.stock_actuel,       0) AS stock,
-            COALESCE(mv.prix_moyen_pondere, 0) AS prix_achat_moyen,
-            COALESCE(mv.valeur_achat, 0)       AS valeur_achat,
-            COALESCE(mv.actif, false)          AS actif,
-            mv.derniere_vente
+        SELECT {_COLONNES_PRODUIT}
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
         {_JOINTURE_FAMILLE}
@@ -265,37 +290,77 @@ async def list_products(
         ORDER BY {_TRIS[tri]}
         LIMIT :limit OFFSET :offset
     """), params)
-
-    items = [
-        {
-            "id": r.id,
-            "nom": r.nom,
-            "dci": r.dci,
-            "dosage": r.dosage,
-            "forme_abr": r.forme_abr,
-            "id_famille": r.id_famille,
-            "famille": r.famille,
-            "labo": r.labo,
-            "prix_vente": _f(r.prix_vente),
-            "prix_achat_moyen": _f(r.prix_achat_moyen),
-            "valeur_achat": _f(r.valeur_achat),
-            "stock": _f(r.stock),
-            "qte_alerte": r.qte_alerte,
-            "psychotrope": r.psychotrope,
-            "conditionnement": r.conditionnement,
-            "code_barre_original": r.code_barre_original,
-            "archive": r.archive,
-            "segment_abc": r.segment_abc,
-            "segment_xyz": r.segment_xyz,
-            "disponibilite": r.disponibilite,
-            "categorie": r.categorie,
-            "actif": r.actif,
-            "derniere_vente": r.derniere_vente.isoformat() if r.derniere_vente else None,
-        }
-        for r in res.fetchall()
-    ]
+    items = [_item_produit(r, tous.get(r.id)) for r in res.fetchall()]
 
     return {"total": total, "limit": limit, "offset": offset, "items": items}
+
+
+async def _produits_par_ids(db: AsyncSession, ids: list[int], tous: dict) -> list[dict]:
+    """Lignes de liste des produits [ids], dans cet ordre."""
+    if not ids:
+        return []
+    lignes = {r.id: r for r in await db.execute(text(f"""
+        SELECT {_COLONNES_PRODUIT}
+        FROM nomenclature n
+        LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        {_JOINTURE_FAMILLE}
+        WHERE n.id = ANY(:ids)
+    """), {"ids": ids})}
+    return [_item_produit(lignes[i], tous.get(i)) for i in ids if i in lignes]
+
+
+@router.get("/a-traiter")
+async def a_traiter(
+    limite: int = Query(5, ge=1, le=50, description="Produits montrés par groupe"),
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """Ce qui demande une action, par groupe, les plus importants d'abord.
+
+    - a_commander : ruptures (produit actif à stock nul) et produits sous le
+      seuil EASYPHARM ; classe A d'abord, puis la plus forte consommation ;
+    - a_risque : lots qui périmeront avant d'être vendus (FEFO) ; plus forte
+      valeur à risque d'abord ;
+    - surstock : stock au-delà du stock maximum ; plus forte valeur
+      excédentaire d'abord.
+    """
+    tous = await ind_lot.calculer_tous(db, _aujourdhui_alger())
+    compte = (await db.execute(text(f"""
+        SELECT count(*) FILTER (WHERE {_ETATS['rupture']})    AS ruptures,
+               count(*) FILTER (WHERE {_ETATS['sous_seuil']}) AS sous_seuil
+        FROM nomenclature n
+        LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        WHERE n.archive = false
+    """))).one()
+    commander = [r.id for r in await db.execute(text(f"""
+        SELECT n.id, n.segment_abc
+        FROM nomenclature n
+        LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        WHERE n.archive = false AND {_ETATS['a_commander']}
+    """))]
+    ordre_classe = {"A": 0, "B": 1, "C": 2}
+    classes = {r.id: r.segment_abc for r in await db.execute(text(
+        "SELECT id, segment_abc FROM nomenclature WHERE id = ANY(:ids)"), {"ids": commander})}
+    commander.sort(key=lambda i: (ordre_classe.get(classes.get(i) or "", 3),
+                                  -(tous[i].cmm if i in tous else 0), i))
+    risque = sorted((x for x in tous.values() if x.qte_a_risque > 0),
+                    key=lambda x: (-x.valeur_a_risque, x.id_nom))
+    surstock = sorted((x for x in tous.values() if x.qte_surstock > 0),
+                      key=lambda x: (-x.valeur_surstock, x.id_nom))
+    return {
+        "compteurs": {
+            "ruptures": compte.ruptures,
+            "sous_seuil": compte.sous_seuil,
+            "a_commander": len(commander),
+            "a_risque": len(risque),
+            "valeur_a_risque": _f(sum((x.valeur_a_risque for x in risque), Decimal(0))),
+            "surstock": len(surstock),
+            "valeur_surstock": _f(sum((x.valeur_surstock for x in surstock), Decimal(0))),
+        },
+        "a_commander": await _produits_par_ids(db, commander[:limite], tous),
+        "a_risque": await _produits_par_ids(db, [x.id_nom for x in risque[:limite]], tous),
+        "surstock": await _produits_par_ids(db, [x.id_nom for x in surstock[:limite]], tous),
+    }
 
 
 @router.get("/products/{product_id}")

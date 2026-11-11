@@ -37,6 +37,8 @@ async def db():
         await engine.dispose()
         pytest.skip(f"base de test injoignable : {str(erreur).splitlines()[0][:80]}")
 
+    from app.services.indicateurs_stock_lot import vider_cache
+    vider_cache()
     async with AsyncSession(engine, expire_on_commit=False) as session:
         await session.execute(text(f"TRUNCATE {', '.join(TABLES_VIDEES)}"))
         await session.commit()

@@ -186,3 +186,75 @@ async def test_reglages_modifiables_par_un_administrateur(api, db):
     assert (await api.patch("/stock/reglages", json={"delai_securite_jours": -1})).status_code == 422
     # Remise en état : la table n'est pas vidée entre les tests.
     await api.patch("/stock/reglages", json={"periode_commande_jours": 7})
+
+
+# ── Partie 3 : calcul pour tous les produits, et « à traiter » ───────────────
+
+def test_ecart_type_depuis_sommes_egal_au_calcul_jour_par_jour():
+    from app.services.indicateurs_stock_lot import ecart_type_depuis_sommes
+    ventes = [3, 1, 4, 1, 5]
+    assert math.isclose(ecart_type_depuis_sommes(sum(ventes), sum(v * v for v in ventes), 30),
+                        ind.ecart_type_journalier(ventes, 30))
+
+
+async def _jeu_a_traiter(db):
+    """
+    1 RUPT   classe A, stock 0, vendu 2/j      → rupture (à commander)
+    2 SEUIL  classe B, stock 3 < seuil 5       → sous le seuil (à commander)
+    3 LENT   stock 20 périmant fin novembre (DVR 19), vendu 1 tous les 10 j
+             → CMJ ≈ 0,1 ; écoulable 1 → 19 à risque × 10 DA = 190 DA
+    4 GROS   stock 500 longue date, vendu 1/j → 365 en 12 mois, CMM 30,42, SS 0,
+             max ⌈30,42 × 7 ÷ 30⌉ = ⌈7,1⌉ = 8 → surstock 492 × 2 DA = 984 DA
+    """
+    await db.execute(text("""
+        INSERT INTO nomenclature (id, nom, segment_abc, qte_alerte, archive, desactiv_alrt_rup) VALUES
+        (1, 'RUPT', 'A', 0, false, 0), (2, 'SEUIL', 'B', 5, false, 0),
+        (3, 'LENT', 'C', 0, false, 0), (4, 'GROS', 'B', 0, false, 0)
+    """))
+    n = 0
+    for jour in range(400):
+        d = MERCREDI - timedelta(days=jour)
+        for id_nom, qte in ((1, 2), (2, 1), (4, 1)) + (((3, 1),) if jour % 10 == 0 else ()):
+            n += 1
+            await db.execute(text(
+                "INSERT INTO sorties_produits (id, id_nom, date, qte_sortie, prix_vente, type_sortie) "
+                "VALUES (:i, :n, :d, :q, 10, 'V')"), {"i": n, "n": id_nom, "d": d, "q": qte})
+    await db.execute(text("""
+        INSERT INTO entrees_produits (id, id_nom, stock, qte_entree, prix_achat, prix_vente, peremption_date) VALUES
+        (1, 2, 3, 3, 10, 15, '2028-01-01'), (2, 3, 20, 20, 10, 15, '2026-11-01'),
+        (3, 4, 500, 500, 2, 3, '2029-01-01')
+    """))
+    await db.commit()
+
+
+async def test_a_traiter(api, db):
+    await _jeu_a_traiter(db)
+    await api.post("/stock/refresh-cache")
+    r = (await api.get("/stock/a-traiter")).json()
+    c = r["compteurs"]
+    assert (c["ruptures"], c["sous_seuil"], c["a_commander"]) == (1, 1, 2)
+    assert [p["nom"] for p in r["a_commander"]] == ["RUPT", "SEUIL"]      # classe A d'abord
+    assert [p["nom"] for p in r["a_risque"]] == ["LENT"]
+    lent = r["a_risque"][0]
+    assert (lent["qte_a_risque"], lent["valeur_a_risque"]) == (19, 190)
+    assert c["valeur_a_risque"] == 190
+    gros = next(p for p in r["surstock"] if p["nom"] == "GROS")
+    assert (gros["stock_maximum"], gros["qte_surstock"], gros["valeur_surstock"]) == (8, 492, 984)
+
+    noms = lambda etat: api.get("/stock/products", params={"etat": etat})
+    assert [p["nom"] for p in (await noms("a_risque")).json()["items"]] == ["LENT"]
+    assert [p["nom"] for p in (await noms("a_commander")).json()["items"]] == ["RUPT", "SEUIL"]
+    assert "GROS" in [p["nom"] for p in (await noms("surstock")).json()["items"]]
+
+
+async def test_le_calcul_groupe_donne_les_memes_chiffres_que_la_fiche(api, db):
+    await _jeu_a_traiter(db)
+    await api.post("/stock/refresh-cache")
+    liste = {p["id"]: p for p in (await api.get("/stock/products", params={"limit": 200})).json()["items"]}
+    for id_nom in (1, 2, 3, 4):
+        fiche = (await api.get(f"/stock/products/{id_nom}/indicateurs")).json()
+        ligne = liste[id_nom]
+        assert (ligne["stock_securite"], ligne["stock_maximum"], ligne["couverture_jours"],
+                ligne["qte_a_risque"], ligne["cmm"]) == (
+            fiche["stock_securite"], fiche["stock_maximum"], fiche["couverture_jours"],
+            fiche["qte_a_risque"], fiche["cmm"]), id_nom
