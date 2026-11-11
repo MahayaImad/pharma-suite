@@ -27,16 +27,21 @@ class PastilleEtat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 3, 10, 3),
       decoration: BoxDecoration(color: fond, borderRadius: BorderRadius.circular(999)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(this.icone ?? icone, size: 15, color: texte),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(libelle,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(this.icone ?? icone, size: 15, color: texte),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              libelle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: texte, fontSize: 13, fontWeight: FontWeight.w600)),
-        ),
-      ]),
+              style: TextStyle(color: texte, fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

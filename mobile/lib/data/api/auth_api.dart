@@ -56,8 +56,7 @@ class AuthApiDio implements AuthApi {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.connectionError ||
       DioExceptionType.receiveTimeout ||
-      DioExceptionType.sendTimeout =>
-        EchecConnexion.serveurInjoignable,
+      DioExceptionType.sendTimeout => EchecConnexion.serveurInjoignable,
       _ => EchecConnexion.inattendu,
     };
   }

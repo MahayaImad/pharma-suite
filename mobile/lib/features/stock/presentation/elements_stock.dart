@@ -187,3 +187,196 @@ class Squelette extends StatelessWidget {
     decoration: BoxDecoration(color: context.couleurs.neutreDoux, borderRadius: BorderRadius.circular(6)),
   );
 }
+
+// ── Familles ────────────────────────────────────────────────────────────────
+
+/// Couleur et icône d'une famille, par son id EASYPHARM (`familles.id`).
+/// Simple habillage : une famille inconnue prend l'icône par défaut, la liste
+/// elle-même vient toujours de la base.
+({Color couleur, IconData icone}) visuelFamille(int? id) => switch (id) {
+  1 => (couleur: const Color(0xFF1F5FBF), icone: Icons.medication_outlined),
+  3 => (couleur: const Color(0xFFC2417A), icone: Icons.water_drop_outlined),
+  4 => (couleur: const Color(0xFFB26A00), icone: Icons.baby_changing_station_outlined),
+  9 => (couleur: const Color(0xFF2E8B57), icone: Icons.eco_outlined),
+  10 => (couleur: const Color(0xFF7A4DD1), icone: Icons.spa_outlined),
+  11 => (couleur: const Color(0xFF0B7A8C), icone: Icons.soap_outlined),
+  12 => (couleur: const Color(0xFF5B6B7A), icone: Icons.accessible_outlined),
+  13 => (couleur: const Color(0xFF0E8A9A), icone: Icons.brush_outlined),
+  15 => (couleur: const Color(0xFFD2556B), icone: Icons.child_friendly_outlined),
+  _ => (couleur: const Color(0xFF5B6B7A), icone: Icons.inventory_2_outlined),
+};
+
+class IconeFamille extends StatelessWidget {
+  const IconeFamille(this.idFamille, {super.key, this.taille = 40});
+  final int? idFamille;
+  final double taille;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = visuelFamille(idFamille);
+    final sombre = Theme.of(context).brightness == Brightness.dark;
+    final couleur = sombre ? Color.lerp(v.couleur, Colors.white, .35)! : v.couleur;
+    return Container(
+      width: taille,
+      height: taille,
+      decoration: BoxDecoration(
+        color: v.couleur.withValues(alpha: sombre ? .22 : .11),
+        borderRadius: BorderRadius.circular(taille * .3),
+      ),
+      child: Icon(v.icone, size: taille * .55, color: couleur),
+    );
+  }
+}
+
+// ── Signaux ─────────────────────────────────────────────────────────────────
+
+/// Couleur de texte et de fond d'un signal, dans le thème courant.
+({Color texte, Color fond}) couleursSignal(BuildContext context, Signal s) {
+  final e = context.etats;
+  final sombre = Theme.of(context).brightness == Brightness.dark;
+  final violet = sombre ? const Color(0xFFC3A8F5) : const Color(0xFF6B3FC4);
+  return switch (s) {
+    Signal.rupture => (texte: e.critique, fond: e.critiqueDoux),
+    Signal.sousSeuil => (texte: e.alerte, fond: e.alerteDoux),
+    Signal.risque => (texte: violet, fond: violet.withValues(alpha: sombre ? .18 : .1)),
+    Signal.surstock || Signal.inactif => (texte: context.couleurs.encre2, fond: context.couleurs.neutreDoux),
+    Signal.ok => (texte: e.bon, fond: e.bonDoux),
+  };
+}
+
+String libelleSignal(Signal s) => switch (s) {
+  Signal.rupture => 'Rupture',
+  Signal.sousSeuil => 'Sous le seuil',
+  Signal.risque => 'Péremption à risque',
+  Signal.surstock => 'Surstock',
+  Signal.inactif => 'Inactif',
+  Signal.ok => 'En stock',
+};
+
+IconData iconeSignal(Signal s) => switch (s) {
+  Signal.rupture => Icons.remove_circle_outline,
+  Signal.sousSeuil => Icons.trending_down,
+  Signal.risque => Icons.hourglass_bottom_rounded,
+  Signal.surstock => Icons.layers_outlined,
+  Signal.inactif => Icons.remove,
+  Signal.ok => Icons.check_circle_outline,
+};
+
+/// Pastille d'état : couleur, icône et libellé, jamais la couleur seule.
+class PastilleSignal extends StatelessWidget {
+  const PastilleSignal(this.signal, {super.key});
+  final Signal signal;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = couleursSignal(context, signal);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 3, 10, 3),
+      decoration: BoxDecoration(color: c.fond, borderRadius: BorderRadius.circular(999)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(iconeSignal(signal), size: 14, color: c.texte),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              libelleSignal(signal),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: c.texte, fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Jauge du stock : remplie jusqu'au stock, sur une échelle qui va jusqu'au
+/// stock maximum ; un trait marque le stock de sécurité.
+class JaugeStock extends StatelessWidget {
+  const JaugeStock({super.key, required this.produit, this.legende = true});
+  final Produit produit;
+  final bool legende;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = produit;
+    final echelle = [p.stockMaximum.toDouble(), p.stock, 1.0].reduce((a, b) => a > b ? a : b);
+    final rempli = (p.stock / echelle).clamp(0.0, 1.0);
+    final securite = (p.stockSecurite / echelle).clamp(0.0, 1.0);
+    final c = couleursSignal(context, p.signal).texte;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (legende)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Row(
+              children: [
+                Text.rich(
+                  maxLines: 1,
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: entier(p.stock),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
+                      TextSpan(
+                        text: ' u',
+                        style: TextStyle(color: context.couleurs.encre3, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    p.stockMaximum > 0 ? 'max ${entier(p.stockMaximum)}' : '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(color: context.couleurs.encre3, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        SizedBox(
+          height: 6,
+          child: LayoutBuilder(
+            builder: (context, c2) => Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.couleurs.neutreDoux,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                Container(
+                  width: c2.maxWidth * rempli,
+                  decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(6)),
+                ),
+                if (p.stockSecurite > 0)
+                  Positioned(
+                    left: (c2.maxWidth * securite - 1).clamp(0, c2.maxWidth - 2),
+                    top: -3,
+                    bottom: -3,
+                    child: Container(
+                      width: 2,
+                      decoration: BoxDecoration(
+                        color: context.couleurs.encre3,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

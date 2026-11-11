@@ -10,8 +10,10 @@ Future<void> main() async {
   // Lues avant la première image : l'application s'ouvre directement dans le
   // thème choisi.
   final preferences = await SharedPreferences.getInstance();
-  runApp(ProviderScope(
-    overrides: [preferencesLocalesProvider.overrideWithValue(preferences)],
-    child: const PharmaSuite(),
-  ));
+  runApp(
+    ProviderScope(
+      overrides: [preferencesLocalesProvider.overrideWithValue(preferences)],
+      child: const PharmaSuite(),
+    ),
+  );
 }

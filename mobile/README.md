@@ -11,11 +11,13 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   formulaire à droite ; bandeau au-dessus sur portable). La session (jeton et
   profil) est gardée sur l'appareil ; sans session, toute adresse renvoie vers
   `/connexion`. Déconnexion dans le menu et dans les préférences.
-- **Stock** : valeur du stock et heure des données EASYPHARM, recherche (nom,
-  DCI, code-barres), filtre par famille, par état (actifs, en stock, sous le
-  seuil, rupture), tri, liste paginée ; fiche produit avec stock, seuil, ventes
-  sur 12 mois, couverture, prix, marge et lots (péremption, fournisseur, BL).
-  Sur PC, la fiche s'ouvre à côté de la liste ; sur portable, en plein écran.
+- **Stock**, présentation « à traiter d'abord » : trois tuiles (ruptures, sous
+  le seuil, valeur à risque de péremption) qui filtrent la liste ; les groupes
+  « À commander », « Péremption à risque » et « Surstock » avec leur action ;
+  puis tout le stock (recherche, familles, tri), chaque ligne avec une jauge
+  du stock par rapport au maximum et un repère au stock de sécurité. Fiche :
+  conseil, jauge, projection du stock en FEFO, lots, réapprovisionnement,
+  prix. Les boutons qui dépendent des commandes affichent « bientôt ».
 - Accueil, Alertes, Inventaire et Commandes affichent encore « Bientôt
   disponible ».
 

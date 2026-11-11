@@ -98,4 +98,61 @@ void main() {
     final l = Lot.fromJson({'id': 1, 'stock': 4, 'bloque': 1, 'peremption_date': '2027-03-01'});
     expect((l.bloque, l.peremptionDate), (true, DateTime(2027, 3, 1)));
   });
+
+  group('projection du stock (FEFO)', () {
+    test('lots vendus dans l\'ordre, perte à la péremption', () {
+      // CMJ 2 : lot A 30 u (DVR 19) vendu en 15 j ; lot C 100 u (DVR 81) :
+      // vendu de j15 à j81 → 132 u possibles ≥ 100 → épuisé à j65.
+      final p = projectionStock([(stock: 100, dvr: 81), (stock: 30, dvr: 19)], 2);
+      expect(p, [(jour: 0.0, stock: 130.0), (jour: 15.0, stock: 100.0), (jour: 65.0, stock: 0.0)]);
+    });
+
+    test('lot qui ne sera pas vendu à temps : chute à sa péremption', () {
+      // CMJ 0,05, 9 u, DVR 81 → 4,05 vendues, 4,95 perdues à j81
+      final p = projectionStock([(stock: 9, dvr: 81)], 0.05);
+      expect(p.length, 3);
+      expect(p[1].jour, 81);
+      expect(p[1].stock, closeTo(4.95, 1e-9));
+      expect(p[2], (jour: 81.0, stock: 0.0));
+    });
+
+    test('sans vente : rien ne baisse avant la péremption', () {
+      expect(projectionStock([(stock: 6, dvr: 40)], 0), [
+        (jour: 0.0, stock: 6.0),
+        (jour: 40.0, stock: 6.0),
+        (jour: 40.0, stock: 0.0),
+      ]);
+      expect(projectionStock([(stock: 6, dvr: null)], 0), [(jour: 0.0, stock: 6.0)]);
+    });
+  });
+
+  group('conseil', () {
+    const i = IndicateursProduit(cmm: 30, cmj: 1, stockSecurite: 5, stockMaximum: 40, couverture: 20);
+    test('péremption d\'abord, puis rupture, stock bas, surstock, rien', () {
+      expect(
+        conseil(const Produit(id: 1, stock: 20, actif: true), i.copyWith(qteARisque: 3)).niveau,
+        NiveauConseil.risque,
+      );
+      expect(conseil(const Produit(id: 1, stock: 0, actif: true), i).niveau, NiveauConseil.urgent);
+      expect(conseil(const Produit(id: 1, stock: 3, actif: true), i).niveau, NiveauConseil.attention);
+      expect(conseil(const Produit(id: 1, stock: 90, actif: true), i).niveau, NiveauConseil.info);
+      expect(conseil(const Produit(id: 1, stock: 20, actif: true), i).niveau, NiveauConseil.bon);
+    });
+  });
+
+  test('noms lisibles', () {
+    expect(libelleProduit('DOLIPRANE 1000 MG'), 'Doliprane 1000 mg');
+    expect(libelleProduit('LA ROCHE-POSAY'), 'La Roche-Posay');
+    expect(libelleProduit('MAGNE B6'), 'Magne B6');
+    expect(libelleProduit('AMOXICILLINE 500MG'), 'Amoxicilline 500mg');
+    expect(libelleProduit('LAIT DE CROISSANCE ET CEREALES'), 'Lait de Croissance et Cereales');
+    expect(libelleProduit('Déjà lisible'), 'Déjà lisible');
+  });
+
+  test('signal : un problème de stock passe avant la péremption', () {
+    expect(const Produit(id: 1, stock: 0, actif: true, qteARisque: 2).signal, Signal.rupture);
+    expect(const Produit(id: 1, stock: 9, actif: true, qteARisque: 2).signal, Signal.risque);
+    expect(const Produit(id: 1, stock: 9, actif: true, qteSurstock: 2).signal, Signal.surstock);
+    expect(const Produit(id: 1, stock: 9, actif: true).signal, Signal.ok);
+  });
 }

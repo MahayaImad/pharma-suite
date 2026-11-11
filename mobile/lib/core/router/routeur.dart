@@ -17,11 +17,7 @@ const _descriptions = <String, String>{
 
 /// [connecte] dit si une session est ouverte ; [rafraichir] prévient le
 /// routeur quand elle change, pour qu'il réapplique la redirection.
-GoRouter construireRouteur({
-  String depart = '/stock',
-  bool Function()? connecte,
-  Listenable? rafraichir,
-}) =>
+GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte, Listenable? rafraichir}) =>
     GoRouter(
       initialLocation: depart,
       refreshListenable: rafraichir,
@@ -38,8 +34,7 @@ GoRouter construireRouteur({
           pageBuilder: (context, etat) => const NoTransitionPage(child: EcranConnexion()),
         ),
         ShellRoute(
-          builder: (context, etat, child) =>
-              Coquille(emplacement: etat.matchedLocation, child: child),
+          builder: (context, etat, child) => Coquille(emplacement: etat.matchedLocation, child: child),
           routes: [
             GoRoute(
               path: '/stock',
@@ -57,8 +52,7 @@ GoRouter construireRouteur({
               GoRoute(
                 path: d.chemin,
                 pageBuilder: (context, etat) => NoTransitionPage(
-                  child: EcranAVenir(
-                      titre: d.libelle, icone: d.icone, description: _descriptions[d.chemin]!),
+                  child: EcranAVenir(titre: d.libelle, icone: d.icone, description: _descriptions[d.chemin]!),
                 ),
               ),
           ],

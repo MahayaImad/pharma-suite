@@ -543,6 +543,7 @@ async def indicateurs_produit(
         [ind.LotFefo(id=l.id, stock=int(l.stock), peremption=l.peremption_date,
                      prix_achat=Decimal(l.prix_achat or 0), bloque=bool(l.bloque)) for l in lots],
         cmj, jour)
+    stocks_lots = {l.id: int(l.stock) for l in lots}
     qte_risque = sum(r.a_risque or 0 for r in risques)
     valeur_risque = sum((r.valeur_a_risque or Decimal(0) for r in risques), Decimal(0))
     dvr_connues = [r.dvr for r in risques if r.dvr is not None]
@@ -576,7 +577,8 @@ async def indicateurs_produit(
         "qte_a_risque": qte_risque,
         "valeur_a_risque": _f(valeur_risque),
         "lots": [
-            {"id": r.id, "dvr": r.dvr, "ecoulable": r.ecoulable, "a_risque": r.a_risque,
+            {"id": r.id, "stock": stocks_lots.get(r.id, 0), "dvr": r.dvr,
+             "ecoulable": r.ecoulable, "a_risque": r.a_risque,
              "valeur_a_risque": None if r.valeur_a_risque is None else _f(r.valeur_a_risque)}
             for r in risques
         ],

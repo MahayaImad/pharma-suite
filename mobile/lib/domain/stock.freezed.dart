@@ -588,7 +588,7 @@ as List<FamilleStock>,
 /// @nodoc
 mixin _$Produit {
 
- int get id; String get nom; String? get dci; String? get dosage; String? get forme;@JsonKey(name: 'forme_abr') String? get formeAbr;@JsonKey(name: 'id_famille') int? get idFamille; String? get famille; String? get labo;@JsonKey(name: 'code_barre_original') String? get codeBarre; String? get conditionnement; double get stock;@JsonKey(name: 'qte_alerte') int? get seuil;@JsonKey(name: 'prix_vente') double get prixVente;@JsonKey(name: 'prix_achat_moyen') double get prixAchat;@JsonKey(name: 'valeur_achat') double get valeurAchat;@JsonKey(name: 'valeur_vente') double get valeurVente;@JsonKey(name: 'qte_vendue_12m') int? get vendu12Mois;@JsonKey(name: 'derniere_vente') DateTime? get derniereVente; bool get actif;@JsonKey(name: 'segment_abc') String? get classeAbc;@JsonKey(name: 'segment_xyz') String? get classeXyz; String? get categorie; String? get disponibilite; int? get psychotrope;@JsonKey(name: 'remb_cvm') int? get remboursable;
+ int get id; String get nom; String? get dci; String? get dosage; String? get forme;@JsonKey(name: 'forme_abr') String? get formeAbr;@JsonKey(name: 'id_famille') int? get idFamille; String? get famille; String? get labo;@JsonKey(name: 'code_barre_original') String? get codeBarre; String? get conditionnement; double get stock;@JsonKey(name: 'qte_alerte') int? get seuil;@JsonKey(name: 'prix_vente') double get prixVente;@JsonKey(name: 'prix_achat_moyen') double get prixAchat;@JsonKey(name: 'valeur_achat') double get valeurAchat;@JsonKey(name: 'valeur_vente') double get valeurVente;@JsonKey(name: 'qte_vendue_12m') int? get vendu12Mois;@JsonKey(name: 'derniere_vente') DateTime? get derniereVente; bool get actif;@JsonKey(name: 'segment_abc') String? get classeAbc;@JsonKey(name: 'segment_xyz') String? get classeXyz; String? get categorie; String? get disponibilite; int? get psychotrope;@JsonKey(name: 'remb_cvm') int? get remboursable; double get cmm;@JsonKey(name: 'stock_securite') int get stockSecurite;@JsonKey(name: 'stock_maximum') int get stockMaximum;@JsonKey(name: 'couverture_jours') int? get couverture;@JsonKey(name: 'qte_a_risque') int get qteARisque;@JsonKey(name: 'valeur_a_risque') double get valeurARisque;@JsonKey(name: 'qte_surstock') int get qteSurstock;@JsonKey(name: 'valeur_surstock') double get valeurSurstock;
 /// Create a copy of Produit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -602,20 +602,20 @@ $ProduitCopyWith<Produit> get copyWith => _$ProduitCopyWithImpl<Produit>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as Produit;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Produit&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.dci, _this.dci) || other.dci == _this.dci)&&(identical(other.dosage, _this.dosage) || other.dosage == _this.dosage)&&(identical(other.forme, _this.forme) || other.forme == _this.forme)&&(identical(other.formeAbr, _this.formeAbr) || other.formeAbr == _this.formeAbr)&&(identical(other.idFamille, _this.idFamille) || other.idFamille == _this.idFamille)&&(identical(other.famille, _this.famille) || other.famille == _this.famille)&&(identical(other.labo, _this.labo) || other.labo == _this.labo)&&(identical(other.codeBarre, _this.codeBarre) || other.codeBarre == _this.codeBarre)&&(identical(other.conditionnement, _this.conditionnement) || other.conditionnement == _this.conditionnement)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.seuil, _this.seuil) || other.seuil == _this.seuil)&&(identical(other.prixVente, _this.prixVente) || other.prixVente == _this.prixVente)&&(identical(other.prixAchat, _this.prixAchat) || other.prixAchat == _this.prixAchat)&&(identical(other.valeurAchat, _this.valeurAchat) || other.valeurAchat == _this.valeurAchat)&&(identical(other.valeurVente, _this.valeurVente) || other.valeurVente == _this.valeurVente)&&(identical(other.vendu12Mois, _this.vendu12Mois) || other.vendu12Mois == _this.vendu12Mois)&&(identical(other.derniereVente, _this.derniereVente) || other.derniereVente == _this.derniereVente)&&(identical(other.actif, _this.actif) || other.actif == _this.actif)&&(identical(other.classeAbc, _this.classeAbc) || other.classeAbc == _this.classeAbc)&&(identical(other.classeXyz, _this.classeXyz) || other.classeXyz == _this.classeXyz)&&(identical(other.categorie, _this.categorie) || other.categorie == _this.categorie)&&(identical(other.disponibilite, _this.disponibilite) || other.disponibilite == _this.disponibilite)&&(identical(other.psychotrope, _this.psychotrope) || other.psychotrope == _this.psychotrope)&&(identical(other.remboursable, _this.remboursable) || other.remboursable == _this.remboursable));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Produit&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.dci, _this.dci) || other.dci == _this.dci)&&(identical(other.dosage, _this.dosage) || other.dosage == _this.dosage)&&(identical(other.forme, _this.forme) || other.forme == _this.forme)&&(identical(other.formeAbr, _this.formeAbr) || other.formeAbr == _this.formeAbr)&&(identical(other.idFamille, _this.idFamille) || other.idFamille == _this.idFamille)&&(identical(other.famille, _this.famille) || other.famille == _this.famille)&&(identical(other.labo, _this.labo) || other.labo == _this.labo)&&(identical(other.codeBarre, _this.codeBarre) || other.codeBarre == _this.codeBarre)&&(identical(other.conditionnement, _this.conditionnement) || other.conditionnement == _this.conditionnement)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.seuil, _this.seuil) || other.seuil == _this.seuil)&&(identical(other.prixVente, _this.prixVente) || other.prixVente == _this.prixVente)&&(identical(other.prixAchat, _this.prixAchat) || other.prixAchat == _this.prixAchat)&&(identical(other.valeurAchat, _this.valeurAchat) || other.valeurAchat == _this.valeurAchat)&&(identical(other.valeurVente, _this.valeurVente) || other.valeurVente == _this.valeurVente)&&(identical(other.vendu12Mois, _this.vendu12Mois) || other.vendu12Mois == _this.vendu12Mois)&&(identical(other.derniereVente, _this.derniereVente) || other.derniereVente == _this.derniereVente)&&(identical(other.actif, _this.actif) || other.actif == _this.actif)&&(identical(other.classeAbc, _this.classeAbc) || other.classeAbc == _this.classeAbc)&&(identical(other.classeXyz, _this.classeXyz) || other.classeXyz == _this.classeXyz)&&(identical(other.categorie, _this.categorie) || other.categorie == _this.categorie)&&(identical(other.disponibilite, _this.disponibilite) || other.disponibilite == _this.disponibilite)&&(identical(other.psychotrope, _this.psychotrope) || other.psychotrope == _this.psychotrope)&&(identical(other.remboursable, _this.remboursable) || other.remboursable == _this.remboursable)&&(identical(other.cmm, _this.cmm) || other.cmm == _this.cmm)&&(identical(other.stockSecurite, _this.stockSecurite) || other.stockSecurite == _this.stockSecurite)&&(identical(other.stockMaximum, _this.stockMaximum) || other.stockMaximum == _this.stockMaximum)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.qteARisque, _this.qteARisque) || other.qteARisque == _this.qteARisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque)&&(identical(other.qteSurstock, _this.qteSurstock) || other.qteSurstock == _this.qteSurstock)&&(identical(other.valeurSurstock, _this.valeurSurstock) || other.valeurSurstock == _this.valeurSurstock));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Produit;
-  return Object.hashAll([runtimeType,_this.id,_this.nom,_this.dci,_this.dosage,_this.forme,_this.formeAbr,_this.idFamille,_this.famille,_this.labo,_this.codeBarre,_this.conditionnement,_this.stock,_this.seuil,_this.prixVente,_this.prixAchat,_this.valeurAchat,_this.valeurVente,_this.vendu12Mois,_this.derniereVente,_this.actif,_this.classeAbc,_this.classeXyz,_this.categorie,_this.disponibilite,_this.psychotrope,_this.remboursable]);
+  return Object.hashAll([runtimeType,_this.id,_this.nom,_this.dci,_this.dosage,_this.forme,_this.formeAbr,_this.idFamille,_this.famille,_this.labo,_this.codeBarre,_this.conditionnement,_this.stock,_this.seuil,_this.prixVente,_this.prixAchat,_this.valeurAchat,_this.valeurVente,_this.vendu12Mois,_this.derniereVente,_this.actif,_this.classeAbc,_this.classeXyz,_this.categorie,_this.disponibilite,_this.psychotrope,_this.remboursable,_this.cmm,_this.stockSecurite,_this.stockMaximum,_this.couverture,_this.qteARisque,_this.valeurARisque,_this.qteSurstock,_this.valeurSurstock]);
 }
 
 @override
 String toString() {
   final _this = this as Produit;
-  return 'Produit(id: ${_this.id}, nom: ${_this.nom}, dci: ${_this.dci}, dosage: ${_this.dosage}, forme: ${_this.forme}, formeAbr: ${_this.formeAbr}, idFamille: ${_this.idFamille}, famille: ${_this.famille}, labo: ${_this.labo}, codeBarre: ${_this.codeBarre}, conditionnement: ${_this.conditionnement}, stock: ${_this.stock}, seuil: ${_this.seuil}, prixVente: ${_this.prixVente}, prixAchat: ${_this.prixAchat}, valeurAchat: ${_this.valeurAchat}, valeurVente: ${_this.valeurVente}, vendu12Mois: ${_this.vendu12Mois}, derniereVente: ${_this.derniereVente}, actif: ${_this.actif}, classeAbc: ${_this.classeAbc}, classeXyz: ${_this.classeXyz}, categorie: ${_this.categorie}, disponibilite: ${_this.disponibilite}, psychotrope: ${_this.psychotrope}, remboursable: ${_this.remboursable})';
+  return 'Produit(id: ${_this.id}, nom: ${_this.nom}, dci: ${_this.dci}, dosage: ${_this.dosage}, forme: ${_this.forme}, formeAbr: ${_this.formeAbr}, idFamille: ${_this.idFamille}, famille: ${_this.famille}, labo: ${_this.labo}, codeBarre: ${_this.codeBarre}, conditionnement: ${_this.conditionnement}, stock: ${_this.stock}, seuil: ${_this.seuil}, prixVente: ${_this.prixVente}, prixAchat: ${_this.prixAchat}, valeurAchat: ${_this.valeurAchat}, valeurVente: ${_this.valeurVente}, vendu12Mois: ${_this.vendu12Mois}, derniereVente: ${_this.derniereVente}, actif: ${_this.actif}, classeAbc: ${_this.classeAbc}, classeXyz: ${_this.classeXyz}, categorie: ${_this.categorie}, disponibilite: ${_this.disponibilite}, psychotrope: ${_this.psychotrope}, remboursable: ${_this.remboursable}, cmm: ${_this.cmm}, stockSecurite: ${_this.stockSecurite}, stockMaximum: ${_this.stockMaximum}, couverture: ${_this.couverture}, qteARisque: ${_this.qteARisque}, valeurARisque: ${_this.valeurARisque}, qteSurstock: ${_this.qteSurstock}, valeurSurstock: ${_this.valeurSurstock})';
 }
 
 
@@ -626,7 +626,7 @@ abstract mixin class $ProduitCopyWith<$Res>  {
   factory $ProduitCopyWith(Produit value, $Res Function(Produit) _then) = _$ProduitCopyWithImpl;
 @useResult
 $Res call({
- int id, String nom, String? dci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable
+ int id, String nom, String? dci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable, double cmm,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque,@JsonKey(name: 'qte_surstock') int qteSurstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock
 });
 
 
@@ -643,7 +643,7 @@ class _$ProduitCopyWithImpl<$Res>
 
 /// Create a copy of Produit
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,Object? cmm = null,Object? stockSecurite = null,Object? stockMaximum = null,Object? couverture = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? qteSurstock = null,Object? valeurSurstock = null,}) {
   return _then(Produit(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -671,7 +671,15 @@ as String?,categorie: freezed == categorie ? _self.categorie : categorie // igno
 as String?,disponibilite: freezed == disponibilite ? _self.disponibilite : disponibilite // ignore: cast_nullable_to_non_nullable
 as String?,psychotrope: freezed == psychotrope ? _self.psychotrope : psychotrope // ignore: cast_nullable_to_non_nullable
 as int?,remboursable: freezed == remboursable ? _self.remboursable : remboursable // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
+as double,stockSecurite: null == stockSecurite ? _self.stockSecurite : stockSecurite // ignore: cast_nullable_to_non_nullable
+as int,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
+as int,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
+as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
+as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double,qteSurstock: null == qteSurstock ? _self.qteSurstock : qteSurstock // ignore: cast_nullable_to_non_nullable
+as int,valeurSurstock: null == valeurSurstock ? _self.valeurSurstock : valeurSurstock // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 
@@ -756,10 +764,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Produit() when $default != null:
-return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable);case _:
+return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock);case _:
   return orElse();
 
 }
@@ -777,10 +785,10 @@ return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.form
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock)  $default,) {final _that = this;
 switch (_that) {
 case _Produit():
-return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable);case _:
+return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -797,10 +805,10 @@ return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.form
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nom,  String? dci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nom,  String? dci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock)?  $default,) {final _that = this;
 switch (_that) {
 case _Produit() when $default != null:
-return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable);case _:
+return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock);case _:
   return null;
 
 }
@@ -812,7 +820,7 @@ return $default(_that.id,_that.nom,_that.dci,_that.dosage,_that.forme,_that.form
 @JsonSerializable()
 
 class _Produit extends Produit {
-  const _Produit({required this.id, this.nom = '', this.dci, this.dosage, this.forme, @JsonKey(name: 'forme_abr') this.formeAbr, @JsonKey(name: 'id_famille') this.idFamille, this.famille, this.labo, @JsonKey(name: 'code_barre_original') this.codeBarre, this.conditionnement, this.stock = 0, @JsonKey(name: 'qte_alerte') this.seuil, @JsonKey(name: 'prix_vente') this.prixVente = 0, @JsonKey(name: 'prix_achat_moyen') this.prixAchat = 0, @JsonKey(name: 'valeur_achat') this.valeurAchat = 0, @JsonKey(name: 'valeur_vente') this.valeurVente = 0, @JsonKey(name: 'qte_vendue_12m') this.vendu12Mois, @JsonKey(name: 'derniere_vente') this.derniereVente, this.actif = false, @JsonKey(name: 'segment_abc') this.classeAbc, @JsonKey(name: 'segment_xyz') this.classeXyz, this.categorie, this.disponibilite, this.psychotrope, @JsonKey(name: 'remb_cvm') this.remboursable}): super._();
+  const _Produit({required this.id, this.nom = '', this.dci, this.dosage, this.forme, @JsonKey(name: 'forme_abr') this.formeAbr, @JsonKey(name: 'id_famille') this.idFamille, this.famille, this.labo, @JsonKey(name: 'code_barre_original') this.codeBarre, this.conditionnement, this.stock = 0, @JsonKey(name: 'qte_alerte') this.seuil, @JsonKey(name: 'prix_vente') this.prixVente = 0, @JsonKey(name: 'prix_achat_moyen') this.prixAchat = 0, @JsonKey(name: 'valeur_achat') this.valeurAchat = 0, @JsonKey(name: 'valeur_vente') this.valeurVente = 0, @JsonKey(name: 'qte_vendue_12m') this.vendu12Mois, @JsonKey(name: 'derniere_vente') this.derniereVente, this.actif = false, @JsonKey(name: 'segment_abc') this.classeAbc, @JsonKey(name: 'segment_xyz') this.classeXyz, this.categorie, this.disponibilite, this.psychotrope, @JsonKey(name: 'remb_cvm') this.remboursable, this.cmm = 0, @JsonKey(name: 'stock_securite') this.stockSecurite = 0, @JsonKey(name: 'stock_maximum') this.stockMaximum = 0, @JsonKey(name: 'couverture_jours') this.couverture, @JsonKey(name: 'qte_a_risque') this.qteARisque = 0, @JsonKey(name: 'valeur_a_risque') this.valeurARisque = 0, @JsonKey(name: 'qte_surstock') this.qteSurstock = 0, @JsonKey(name: 'valeur_surstock') this.valeurSurstock = 0}): super._();
   factory _Produit.fromJson(Map<String, dynamic> json) => _$ProduitFromJson(json);
 
 @override final  int id;
@@ -841,6 +849,14 @@ class _Produit extends Produit {
 @override final  String? disponibilite;
 @override final  int? psychotrope;
 @override@JsonKey(name: 'remb_cvm') final  int? remboursable;
+@override@JsonKey() final  double cmm;
+@override@JsonKey(name: 'stock_securite') final  int stockSecurite;
+@override@JsonKey(name: 'stock_maximum') final  int stockMaximum;
+@override@JsonKey(name: 'couverture_jours') final  int? couverture;
+@override@JsonKey(name: 'qte_a_risque') final  int qteARisque;
+@override@JsonKey(name: 'valeur_a_risque') final  double valeurARisque;
+@override@JsonKey(name: 'qte_surstock') final  int qteSurstock;
+@override@JsonKey(name: 'valeur_surstock') final  double valeurSurstock;
 
 /// Create a copy of Produit
 /// with the given fields replaced by the non-null parameter values.
@@ -855,18 +871,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Produit&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.dci, dci) || other.dci == dci)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.forme, forme) || other.forme == forme)&&(identical(other.formeAbr, formeAbr) || other.formeAbr == formeAbr)&&(identical(other.idFamille, idFamille) || other.idFamille == idFamille)&&(identical(other.famille, famille) || other.famille == famille)&&(identical(other.labo, labo) || other.labo == labo)&&(identical(other.codeBarre, codeBarre) || other.codeBarre == codeBarre)&&(identical(other.conditionnement, conditionnement) || other.conditionnement == conditionnement)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.seuil, seuil) || other.seuil == seuil)&&(identical(other.prixVente, prixVente) || other.prixVente == prixVente)&&(identical(other.prixAchat, prixAchat) || other.prixAchat == prixAchat)&&(identical(other.valeurAchat, valeurAchat) || other.valeurAchat == valeurAchat)&&(identical(other.valeurVente, valeurVente) || other.valeurVente == valeurVente)&&(identical(other.vendu12Mois, vendu12Mois) || other.vendu12Mois == vendu12Mois)&&(identical(other.derniereVente, derniereVente) || other.derniereVente == derniereVente)&&(identical(other.actif, actif) || other.actif == actif)&&(identical(other.classeAbc, classeAbc) || other.classeAbc == classeAbc)&&(identical(other.classeXyz, classeXyz) || other.classeXyz == classeXyz)&&(identical(other.categorie, categorie) || other.categorie == categorie)&&(identical(other.disponibilite, disponibilite) || other.disponibilite == disponibilite)&&(identical(other.psychotrope, psychotrope) || other.psychotrope == psychotrope)&&(identical(other.remboursable, remboursable) || other.remboursable == remboursable));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Produit&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.dci, dci) || other.dci == dci)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.forme, forme) || other.forme == forme)&&(identical(other.formeAbr, formeAbr) || other.formeAbr == formeAbr)&&(identical(other.idFamille, idFamille) || other.idFamille == idFamille)&&(identical(other.famille, famille) || other.famille == famille)&&(identical(other.labo, labo) || other.labo == labo)&&(identical(other.codeBarre, codeBarre) || other.codeBarre == codeBarre)&&(identical(other.conditionnement, conditionnement) || other.conditionnement == conditionnement)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.seuil, seuil) || other.seuil == seuil)&&(identical(other.prixVente, prixVente) || other.prixVente == prixVente)&&(identical(other.prixAchat, prixAchat) || other.prixAchat == prixAchat)&&(identical(other.valeurAchat, valeurAchat) || other.valeurAchat == valeurAchat)&&(identical(other.valeurVente, valeurVente) || other.valeurVente == valeurVente)&&(identical(other.vendu12Mois, vendu12Mois) || other.vendu12Mois == vendu12Mois)&&(identical(other.derniereVente, derniereVente) || other.derniereVente == derniereVente)&&(identical(other.actif, actif) || other.actif == actif)&&(identical(other.classeAbc, classeAbc) || other.classeAbc == classeAbc)&&(identical(other.classeXyz, classeXyz) || other.classeXyz == classeXyz)&&(identical(other.categorie, categorie) || other.categorie == categorie)&&(identical(other.disponibilite, disponibilite) || other.disponibilite == disponibilite)&&(identical(other.psychotrope, psychotrope) || other.psychotrope == psychotrope)&&(identical(other.remboursable, remboursable) || other.remboursable == remboursable)&&(identical(other.cmm, cmm) || other.cmm == cmm)&&(identical(other.stockSecurite, stockSecurite) || other.stockSecurite == stockSecurite)&&(identical(other.stockMaximum, stockMaximum) || other.stockMaximum == stockMaximum)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.qteARisque, qteARisque) || other.qteARisque == qteARisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque)&&(identical(other.qteSurstock, qteSurstock) || other.qteSurstock == qteSurstock)&&(identical(other.valeurSurstock, valeurSurstock) || other.valeurSurstock == valeurSurstock));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,id,nom,dci,dosage,forme,formeAbr,idFamille,famille,labo,codeBarre,conditionnement,stock,seuil,prixVente,prixAchat,valeurAchat,valeurVente,vendu12Mois,derniereVente,actif,classeAbc,classeXyz,categorie,disponibilite,psychotrope,remboursable]);
+    return Object.hashAll([runtimeType,id,nom,dci,dosage,forme,formeAbr,idFamille,famille,labo,codeBarre,conditionnement,stock,seuil,prixVente,prixAchat,valeurAchat,valeurVente,vendu12Mois,derniereVente,actif,classeAbc,classeXyz,categorie,disponibilite,psychotrope,remboursable,cmm,stockSecurite,stockMaximum,couverture,qteARisque,valeurARisque,qteSurstock,valeurSurstock]);
 }
 
 @override
 String toString() {
-    return 'Produit(id: $id, nom: $nom, dci: $dci, dosage: $dosage, forme: $forme, formeAbr: $formeAbr, idFamille: $idFamille, famille: $famille, labo: $labo, codeBarre: $codeBarre, conditionnement: $conditionnement, stock: $stock, seuil: $seuil, prixVente: $prixVente, prixAchat: $prixAchat, valeurAchat: $valeurAchat, valeurVente: $valeurVente, vendu12Mois: $vendu12Mois, derniereVente: $derniereVente, actif: $actif, classeAbc: $classeAbc, classeXyz: $classeXyz, categorie: $categorie, disponibilite: $disponibilite, psychotrope: $psychotrope, remboursable: $remboursable)';
+    return 'Produit(id: $id, nom: $nom, dci: $dci, dosage: $dosage, forme: $forme, formeAbr: $formeAbr, idFamille: $idFamille, famille: $famille, labo: $labo, codeBarre: $codeBarre, conditionnement: $conditionnement, stock: $stock, seuil: $seuil, prixVente: $prixVente, prixAchat: $prixAchat, valeurAchat: $valeurAchat, valeurVente: $valeurVente, vendu12Mois: $vendu12Mois, derniereVente: $derniereVente, actif: $actif, classeAbc: $classeAbc, classeXyz: $classeXyz, categorie: $categorie, disponibilite: $disponibilite, psychotrope: $psychotrope, remboursable: $remboursable, cmm: $cmm, stockSecurite: $stockSecurite, stockMaximum: $stockMaximum, couverture: $couverture, qteARisque: $qteARisque, valeurARisque: $valeurARisque, qteSurstock: $qteSurstock, valeurSurstock: $valeurSurstock)';
 }
 
 
@@ -877,7 +893,7 @@ abstract mixin class _$ProduitCopyWith<$Res> implements $ProduitCopyWith<$Res> {
   factory _$ProduitCopyWith(_Produit value, $Res Function(_Produit) _then) = __$ProduitCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String nom, String? dci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable
+ int id, String nom, String? dci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable, double cmm,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque,@JsonKey(name: 'qte_surstock') int qteSurstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock
 });
 
 
@@ -894,7 +910,7 @@ class __$ProduitCopyWithImpl<$Res>
 
 /// Create a copy of Produit
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,Object? cmm = null,Object? stockSecurite = null,Object? stockMaximum = null,Object? couverture = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? qteSurstock = null,Object? valeurSurstock = null,}) {
   return _then(_Produit(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -922,7 +938,15 @@ as String?,categorie: freezed == categorie ? _self.categorie : categorie // igno
 as String?,disponibilite: freezed == disponibilite ? _self.disponibilite : disponibilite // ignore: cast_nullable_to_non_nullable
 as String?,psychotrope: freezed == psychotrope ? _self.psychotrope : psychotrope // ignore: cast_nullable_to_non_nullable
 as int?,remboursable: freezed == remboursable ? _self.remboursable : remboursable // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
+as double,stockSecurite: null == stockSecurite ? _self.stockSecurite : stockSecurite // ignore: cast_nullable_to_non_nullable
+as int,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
+as int,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
+as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
+as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double,qteSurstock: null == qteSurstock ? _self.qteSurstock : qteSurstock // ignore: cast_nullable_to_non_nullable
+as int,valeurSurstock: null == valeurSurstock ? _self.valeurSurstock : valeurSurstock // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 
@@ -1241,7 +1265,7 @@ mixin _$RisqueLot {
  int get id;/// Durée de vie restante en jours ; null si la date est inconnue.
  int? get dvr;/// Ce que le lot vendra avant sa péremption ; null s'il est hors calcul
 /// (bloqué, sans date).
- int? get ecoulable;@JsonKey(name: 'a_risque') int? get aRisque;@JsonKey(name: 'valeur_a_risque') double? get valeurARisque;
+ int? get ecoulable; int get stock;@JsonKey(name: 'a_risque') int? get aRisque;@JsonKey(name: 'valeur_a_risque') double? get valeurARisque;
 /// Create a copy of RisqueLot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1255,20 +1279,20 @@ $RisqueLotCopyWith<RisqueLot> get copyWith => _$RisqueLotCopyWithImpl<RisqueLot>
 @override
 bool operator ==(Object other) {
   final _this = this as RisqueLot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RisqueLot&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.dvr, _this.dvr) || other.dvr == _this.dvr)&&(identical(other.ecoulable, _this.ecoulable) || other.ecoulable == _this.ecoulable)&&(identical(other.aRisque, _this.aRisque) || other.aRisque == _this.aRisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RisqueLot&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.dvr, _this.dvr) || other.dvr == _this.dvr)&&(identical(other.ecoulable, _this.ecoulable) || other.ecoulable == _this.ecoulable)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.aRisque, _this.aRisque) || other.aRisque == _this.aRisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as RisqueLot;
-  return Object.hash(runtimeType,_this.id,_this.dvr,_this.ecoulable,_this.aRisque,_this.valeurARisque);
+  return Object.hash(runtimeType,_this.id,_this.dvr,_this.ecoulable,_this.stock,_this.aRisque,_this.valeurARisque);
 }
 
 @override
 String toString() {
   final _this = this as RisqueLot;
-  return 'RisqueLot(id: ${_this.id}, dvr: ${_this.dvr}, ecoulable: ${_this.ecoulable}, aRisque: ${_this.aRisque}, valeurARisque: ${_this.valeurARisque})';
+  return 'RisqueLot(id: ${_this.id}, dvr: ${_this.dvr}, ecoulable: ${_this.ecoulable}, stock: ${_this.stock}, aRisque: ${_this.aRisque}, valeurARisque: ${_this.valeurARisque})';
 }
 
 
@@ -1279,7 +1303,7 @@ abstract mixin class $RisqueLotCopyWith<$Res>  {
   factory $RisqueLotCopyWith(RisqueLot value, $Res Function(RisqueLot) _then) = _$RisqueLotCopyWithImpl;
 @useResult
 $Res call({
- int id, int? dvr, int? ecoulable,@JsonKey(name: 'a_risque') int? aRisque,@JsonKey(name: 'valeur_a_risque') double? valeurARisque
+ int id, int? dvr, int? ecoulable, int stock,@JsonKey(name: 'a_risque') int? aRisque,@JsonKey(name: 'valeur_a_risque') double? valeurARisque
 });
 
 
@@ -1296,12 +1320,13 @@ class _$RisqueLotCopyWithImpl<$Res>
 
 /// Create a copy of RisqueLot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? dvr = freezed,Object? ecoulable = freezed,Object? aRisque = freezed,Object? valeurARisque = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? dvr = freezed,Object? ecoulable = freezed,Object? stock = null,Object? aRisque = freezed,Object? valeurARisque = freezed,}) {
   return _then(RisqueLot(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,dvr: freezed == dvr ? _self.dvr : dvr // ignore: cast_nullable_to_non_nullable
 as int?,ecoulable: freezed == ecoulable ? _self.ecoulable : ecoulable // ignore: cast_nullable_to_non_nullable
-as int?,aRisque: freezed == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as int?,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,aRisque: freezed == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
 as int?,valeurARisque: freezed == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
@@ -1388,10 +1413,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int? dvr,  int? ecoulable, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int? dvr,  int? ecoulable,  int stock, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RisqueLot() when $default != null:
-return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARisque);case _:
+return $default(_that.id,_that.dvr,_that.ecoulable,_that.stock,_that.aRisque,_that.valeurARisque);case _:
   return orElse();
 
 }
@@ -1409,10 +1434,10 @@ return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int? dvr,  int? ecoulable, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int? dvr,  int? ecoulable,  int stock, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)  $default,) {final _that = this;
 switch (_that) {
 case _RisqueLot():
-return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARisque);case _:
+return $default(_that.id,_that.dvr,_that.ecoulable,_that.stock,_that.aRisque,_that.valeurARisque);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1429,10 +1454,10 @@ return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int? dvr,  int? ecoulable, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int? dvr,  int? ecoulable,  int stock, @JsonKey(name: 'a_risque')  int? aRisque, @JsonKey(name: 'valeur_a_risque')  double? valeurARisque)?  $default,) {final _that = this;
 switch (_that) {
 case _RisqueLot() when $default != null:
-return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARisque);case _:
+return $default(_that.id,_that.dvr,_that.ecoulable,_that.stock,_that.aRisque,_that.valeurARisque);case _:
   return null;
 
 }
@@ -1444,7 +1469,7 @@ return $default(_that.id,_that.dvr,_that.ecoulable,_that.aRisque,_that.valeurARi
 @JsonSerializable()
 
 class _RisqueLot implements RisqueLot {
-  const _RisqueLot({required this.id, this.dvr, this.ecoulable, @JsonKey(name: 'a_risque') this.aRisque, @JsonKey(name: 'valeur_a_risque') this.valeurARisque});
+  const _RisqueLot({required this.id, this.dvr, this.ecoulable, this.stock = 0, @JsonKey(name: 'a_risque') this.aRisque, @JsonKey(name: 'valeur_a_risque') this.valeurARisque});
   factory _RisqueLot.fromJson(Map<String, dynamic> json) => _$RisqueLotFromJson(json);
 
 @override final  int id;
@@ -1453,6 +1478,7 @@ class _RisqueLot implements RisqueLot {
 /// Ce que le lot vendra avant sa péremption ; null s'il est hors calcul
 /// (bloqué, sans date).
 @override final  int? ecoulable;
+@override@JsonKey() final  int stock;
 @override@JsonKey(name: 'a_risque') final  int? aRisque;
 @override@JsonKey(name: 'valeur_a_risque') final  double? valeurARisque;
 
@@ -1469,18 +1495,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RisqueLot&&(identical(other.id, id) || other.id == id)&&(identical(other.dvr, dvr) || other.dvr == dvr)&&(identical(other.ecoulable, ecoulable) || other.ecoulable == ecoulable)&&(identical(other.aRisque, aRisque) || other.aRisque == aRisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RisqueLot&&(identical(other.id, id) || other.id == id)&&(identical(other.dvr, dvr) || other.dvr == dvr)&&(identical(other.ecoulable, ecoulable) || other.ecoulable == ecoulable)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.aRisque, aRisque) || other.aRisque == aRisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,dvr,ecoulable,aRisque,valeurARisque);
+    return Object.hash(runtimeType,id,dvr,ecoulable,stock,aRisque,valeurARisque);
 }
 
 @override
 String toString() {
-    return 'RisqueLot(id: $id, dvr: $dvr, ecoulable: $ecoulable, aRisque: $aRisque, valeurARisque: $valeurARisque)';
+    return 'RisqueLot(id: $id, dvr: $dvr, ecoulable: $ecoulable, stock: $stock, aRisque: $aRisque, valeurARisque: $valeurARisque)';
 }
 
 
@@ -1491,7 +1517,7 @@ abstract mixin class _$RisqueLotCopyWith<$Res> implements $RisqueLotCopyWith<$Re
   factory _$RisqueLotCopyWith(_RisqueLot value, $Res Function(_RisqueLot) _then) = __$RisqueLotCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int? dvr, int? ecoulable,@JsonKey(name: 'a_risque') int? aRisque,@JsonKey(name: 'valeur_a_risque') double? valeurARisque
+ int id, int? dvr, int? ecoulable, int stock,@JsonKey(name: 'a_risque') int? aRisque,@JsonKey(name: 'valeur_a_risque') double? valeurARisque
 });
 
 
@@ -1508,12 +1534,13 @@ class __$RisqueLotCopyWithImpl<$Res>
 
 /// Create a copy of RisqueLot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? dvr = freezed,Object? ecoulable = freezed,Object? aRisque = freezed,Object? valeurARisque = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? dvr = freezed,Object? ecoulable = freezed,Object? stock = null,Object? aRisque = freezed,Object? valeurARisque = freezed,}) {
   return _then(_RisqueLot(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,dvr: freezed == dvr ? _self.dvr : dvr // ignore: cast_nullable_to_non_nullable
 as int?,ecoulable: freezed == ecoulable ? _self.ecoulable : ecoulable // ignore: cast_nullable_to_non_nullable
-as int?,aRisque: freezed == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as int?,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,aRisque: freezed == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
 as int?,valeurARisque: freezed == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
 as double?,
   ));
@@ -2428,6 +2455,609 @@ as List<Produit>,
 }
 
 
+}
+
+
+/// @nodoc
+mixin _$Compteurs {
+
+ int get ruptures;@JsonKey(name: 'sous_seuil') int get sousSeuil;@JsonKey(name: 'a_commander') int get aCommander;@JsonKey(name: 'a_risque') int get aRisque;@JsonKey(name: 'valeur_a_risque') double get valeurARisque; int get surstock;@JsonKey(name: 'valeur_surstock') double get valeurSurstock;
+/// Create a copy of Compteurs
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CompteursCopyWith<Compteurs> get copyWith => _$CompteursCopyWithImpl<Compteurs>(this as Compteurs, _$identity);
+
+  /// Serializes this Compteurs to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Compteurs;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Compteurs&&(identical(other.ruptures, _this.ruptures) || other.ruptures == _this.ruptures)&&(identical(other.sousSeuil, _this.sousSeuil) || other.sousSeuil == _this.sousSeuil)&&(identical(other.aCommander, _this.aCommander) || other.aCommander == _this.aCommander)&&(identical(other.aRisque, _this.aRisque) || other.aRisque == _this.aRisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque)&&(identical(other.surstock, _this.surstock) || other.surstock == _this.surstock)&&(identical(other.valeurSurstock, _this.valeurSurstock) || other.valeurSurstock == _this.valeurSurstock));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Compteurs;
+  return Object.hash(runtimeType,_this.ruptures,_this.sousSeuil,_this.aCommander,_this.aRisque,_this.valeurARisque,_this.surstock,_this.valeurSurstock);
+}
+
+@override
+String toString() {
+  final _this = this as Compteurs;
+  return 'Compteurs(ruptures: ${_this.ruptures}, sousSeuil: ${_this.sousSeuil}, aCommander: ${_this.aCommander}, aRisque: ${_this.aRisque}, valeurARisque: ${_this.valeurARisque}, surstock: ${_this.surstock}, valeurSurstock: ${_this.valeurSurstock})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CompteursCopyWith<$Res>  {
+  factory $CompteursCopyWith(Compteurs value, $Res Function(Compteurs) _then) = _$CompteursCopyWithImpl;
+@useResult
+$Res call({
+ int ruptures,@JsonKey(name: 'sous_seuil') int sousSeuil,@JsonKey(name: 'a_commander') int aCommander,@JsonKey(name: 'a_risque') int aRisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, int surstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock
+});
+
+
+
+
+}
+/// @nodoc
+class _$CompteursCopyWithImpl<$Res>
+    implements $CompteursCopyWith<$Res> {
+  _$CompteursCopyWithImpl(this._self, this._then);
+
+  final Compteurs _self;
+  final $Res Function(Compteurs) _then;
+
+/// Create a copy of Compteurs
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? ruptures = null,Object? sousSeuil = null,Object? aCommander = null,Object? aRisque = null,Object? valeurARisque = null,Object? surstock = null,Object? valeurSurstock = null,}) {
+  return _then(Compteurs(
+ruptures: null == ruptures ? _self.ruptures : ruptures // ignore: cast_nullable_to_non_nullable
+as int,sousSeuil: null == sousSeuil ? _self.sousSeuil : sousSeuil // ignore: cast_nullable_to_non_nullable
+as int,aCommander: null == aCommander ? _self.aCommander : aCommander // ignore: cast_nullable_to_non_nullable
+as int,aRisque: null == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double,surstock: null == surstock ? _self.surstock : surstock // ignore: cast_nullable_to_non_nullable
+as int,valeurSurstock: null == valeurSurstock ? _self.valeurSurstock : valeurSurstock // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Compteurs].
+extension CompteursPatterns on Compteurs {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Compteurs value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Compteurs() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Compteurs value)  $default,){
+final _that = this;
+switch (_that) {
+case _Compteurs():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Compteurs value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Compteurs() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int ruptures, @JsonKey(name: 'sous_seuil')  int sousSeuil, @JsonKey(name: 'a_commander')  int aCommander, @JsonKey(name: 'a_risque')  int aRisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  int surstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Compteurs() when $default != null:
+return $default(_that.ruptures,_that.sousSeuil,_that.aCommander,_that.aRisque,_that.valeurARisque,_that.surstock,_that.valeurSurstock);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int ruptures, @JsonKey(name: 'sous_seuil')  int sousSeuil, @JsonKey(name: 'a_commander')  int aCommander, @JsonKey(name: 'a_risque')  int aRisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  int surstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock)  $default,) {final _that = this;
+switch (_that) {
+case _Compteurs():
+return $default(_that.ruptures,_that.sousSeuil,_that.aCommander,_that.aRisque,_that.valeurARisque,_that.surstock,_that.valeurSurstock);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int ruptures, @JsonKey(name: 'sous_seuil')  int sousSeuil, @JsonKey(name: 'a_commander')  int aCommander, @JsonKey(name: 'a_risque')  int aRisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  int surstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock)?  $default,) {final _that = this;
+switch (_that) {
+case _Compteurs() when $default != null:
+return $default(_that.ruptures,_that.sousSeuil,_that.aCommander,_that.aRisque,_that.valeurARisque,_that.surstock,_that.valeurSurstock);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Compteurs implements Compteurs {
+  const _Compteurs({this.ruptures = 0, @JsonKey(name: 'sous_seuil') this.sousSeuil = 0, @JsonKey(name: 'a_commander') this.aCommander = 0, @JsonKey(name: 'a_risque') this.aRisque = 0, @JsonKey(name: 'valeur_a_risque') this.valeurARisque = 0, this.surstock = 0, @JsonKey(name: 'valeur_surstock') this.valeurSurstock = 0});
+  factory _Compteurs.fromJson(Map<String, dynamic> json) => _$CompteursFromJson(json);
+
+@override@JsonKey() final  int ruptures;
+@override@JsonKey(name: 'sous_seuil') final  int sousSeuil;
+@override@JsonKey(name: 'a_commander') final  int aCommander;
+@override@JsonKey(name: 'a_risque') final  int aRisque;
+@override@JsonKey(name: 'valeur_a_risque') final  double valeurARisque;
+@override@JsonKey() final  int surstock;
+@override@JsonKey(name: 'valeur_surstock') final  double valeurSurstock;
+
+/// Create a copy of Compteurs
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CompteursCopyWith<_Compteurs> get copyWith => __$CompteursCopyWithImpl<_Compteurs>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CompteursToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Compteurs&&(identical(other.ruptures, ruptures) || other.ruptures == ruptures)&&(identical(other.sousSeuil, sousSeuil) || other.sousSeuil == sousSeuil)&&(identical(other.aCommander, aCommander) || other.aCommander == aCommander)&&(identical(other.aRisque, aRisque) || other.aRisque == aRisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque)&&(identical(other.surstock, surstock) || other.surstock == surstock)&&(identical(other.valeurSurstock, valeurSurstock) || other.valeurSurstock == valeurSurstock));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,ruptures,sousSeuil,aCommander,aRisque,valeurARisque,surstock,valeurSurstock);
+}
+
+@override
+String toString() {
+    return 'Compteurs(ruptures: $ruptures, sousSeuil: $sousSeuil, aCommander: $aCommander, aRisque: $aRisque, valeurARisque: $valeurARisque, surstock: $surstock, valeurSurstock: $valeurSurstock)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CompteursCopyWith<$Res> implements $CompteursCopyWith<$Res> {
+  factory _$CompteursCopyWith(_Compteurs value, $Res Function(_Compteurs) _then) = __$CompteursCopyWithImpl;
+@override @useResult
+$Res call({
+ int ruptures,@JsonKey(name: 'sous_seuil') int sousSeuil,@JsonKey(name: 'a_commander') int aCommander,@JsonKey(name: 'a_risque') int aRisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, int surstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock
+});
+
+
+
+
+}
+/// @nodoc
+class __$CompteursCopyWithImpl<$Res>
+    implements _$CompteursCopyWith<$Res> {
+  __$CompteursCopyWithImpl(this._self, this._then);
+
+  final _Compteurs _self;
+  final $Res Function(_Compteurs) _then;
+
+/// Create a copy of Compteurs
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? ruptures = null,Object? sousSeuil = null,Object? aCommander = null,Object? aRisque = null,Object? valeurARisque = null,Object? surstock = null,Object? valeurSurstock = null,}) {
+  return _then(_Compteurs(
+ruptures: null == ruptures ? _self.ruptures : ruptures // ignore: cast_nullable_to_non_nullable
+as int,sousSeuil: null == sousSeuil ? _self.sousSeuil : sousSeuil // ignore: cast_nullable_to_non_nullable
+as int,aCommander: null == aCommander ? _self.aCommander : aCommander // ignore: cast_nullable_to_non_nullable
+as int,aRisque: null == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
+as double,surstock: null == surstock ? _self.surstock : surstock // ignore: cast_nullable_to_non_nullable
+as int,valeurSurstock: null == valeurSurstock ? _self.valeurSurstock : valeurSurstock // ignore: cast_nullable_to_non_nullable
+as double,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ATraiter {
+
+ Compteurs get compteurs;@JsonKey(name: 'a_commander') List<Produit> get aCommander;@JsonKey(name: 'a_risque') List<Produit> get aRisque; List<Produit> get surstock;
+/// Create a copy of ATraiter
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ATraiterCopyWith<ATraiter> get copyWith => _$ATraiterCopyWithImpl<ATraiter>(this as ATraiter, _$identity);
+
+  /// Serializes this ATraiter to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ATraiter;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ATraiter&&(identical(other.compteurs, _this.compteurs) || other.compteurs == _this.compteurs)&&const DeepCollectionEquality().equals(other.aCommander, _this.aCommander)&&const DeepCollectionEquality().equals(other.aRisque, _this.aRisque)&&const DeepCollectionEquality().equals(other.surstock, _this.surstock));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ATraiter;
+  return Object.hash(runtimeType,_this.compteurs,const DeepCollectionEquality().hash(_this.aCommander),const DeepCollectionEquality().hash(_this.aRisque),const DeepCollectionEquality().hash(_this.surstock));
+}
+
+@override
+String toString() {
+  final _this = this as ATraiter;
+  return 'ATraiter(compteurs: ${_this.compteurs}, aCommander: ${_this.aCommander}, aRisque: ${_this.aRisque}, surstock: ${_this.surstock})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ATraiterCopyWith<$Res>  {
+  factory $ATraiterCopyWith(ATraiter value, $Res Function(ATraiter) _then) = _$ATraiterCopyWithImpl;
+@useResult
+$Res call({
+ Compteurs compteurs,@JsonKey(name: 'a_commander') List<Produit> aCommander,@JsonKey(name: 'a_risque') List<Produit> aRisque, List<Produit> surstock
+});
+
+
+$CompteursCopyWith<$Res> get compteurs;
+
+}
+/// @nodoc
+class _$ATraiterCopyWithImpl<$Res>
+    implements $ATraiterCopyWith<$Res> {
+  _$ATraiterCopyWithImpl(this._self, this._then);
+
+  final ATraiter _self;
+  final $Res Function(ATraiter) _then;
+
+/// Create a copy of ATraiter
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? compteurs = null,Object? aCommander = null,Object? aRisque = null,Object? surstock = null,}) {
+  return _then(ATraiter(
+compteurs: null == compteurs ? _self.compteurs : compteurs // ignore: cast_nullable_to_non_nullable
+as Compteurs,aCommander: null == aCommander ? _self.aCommander : aCommander // ignore: cast_nullable_to_non_nullable
+as List<Produit>,aRisque: null == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as List<Produit>,surstock: null == surstock ? _self.surstock : surstock // ignore: cast_nullable_to_non_nullable
+as List<Produit>,
+  ));
+}
+/// Create a copy of ATraiter
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CompteursCopyWith<$Res> get compteurs {
+  
+  return $CompteursCopyWith<$Res>(_self.compteurs, (value) {
+    return _then(_self.copyWith(compteurs: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [ATraiter].
+extension ATraiterPatterns on ATraiter {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ATraiter value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ATraiter() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ATraiter value)  $default,){
+final _that = this;
+switch (_that) {
+case _ATraiter():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ATraiter value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ATraiter() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ATraiter() when $default != null:
+return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)  $default,) {final _that = this;
+switch (_that) {
+case _ATraiter():
+return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)?  $default,) {final _that = this;
+switch (_that) {
+case _ATraiter() when $default != null:
+return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ATraiter implements ATraiter {
+  const _ATraiter({this.compteurs = const Compteurs(), @JsonKey(name: 'a_commander')  List<Produit> aCommander = const <Produit>[], @JsonKey(name: 'a_risque')  List<Produit> aRisque = const <Produit>[],  List<Produit> surstock = const <Produit>[]}): _aCommander = aCommander,_aRisque = aRisque,_surstock = surstock;
+  factory _ATraiter.fromJson(Map<String, dynamic> json) => _$ATraiterFromJson(json);
+
+@override@JsonKey() final  Compteurs compteurs;
+ final  List<Produit> _aCommander;
+@override@JsonKey(name: 'a_commander') List<Produit> get aCommander {
+  if (_aCommander is EqualUnmodifiableListView) return _aCommander;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_aCommander);
+}
+
+ final  List<Produit> _aRisque;
+@override@JsonKey(name: 'a_risque') List<Produit> get aRisque {
+  if (_aRisque is EqualUnmodifiableListView) return _aRisque;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_aRisque);
+}
+
+ final  List<Produit> _surstock;
+@override@JsonKey() List<Produit> get surstock {
+  if (_surstock is EqualUnmodifiableListView) return _surstock;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_surstock);
+}
+
+
+/// Create a copy of ATraiter
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ATraiterCopyWith<_ATraiter> get copyWith => __$ATraiterCopyWithImpl<_ATraiter>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ATraiterToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ATraiter&&(identical(other.compteurs, compteurs) || other.compteurs == compteurs)&&const DeepCollectionEquality().equals(other.aCommander, _aCommander)&&const DeepCollectionEquality().equals(other.aRisque, _aRisque)&&const DeepCollectionEquality().equals(other.surstock, _surstock));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,compteurs,const DeepCollectionEquality().hash(_aCommander),const DeepCollectionEquality().hash(_aRisque),const DeepCollectionEquality().hash(_surstock));
+}
+
+@override
+String toString() {
+    return 'ATraiter(compteurs: $compteurs, aCommander: $aCommander, aRisque: $aRisque, surstock: $surstock)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ATraiterCopyWith<$Res> implements $ATraiterCopyWith<$Res> {
+  factory _$ATraiterCopyWith(_ATraiter value, $Res Function(_ATraiter) _then) = __$ATraiterCopyWithImpl;
+@override @useResult
+$Res call({
+ Compteurs compteurs,@JsonKey(name: 'a_commander') List<Produit> aCommander,@JsonKey(name: 'a_risque') List<Produit> aRisque, List<Produit> surstock
+});
+
+
+@override $CompteursCopyWith<$Res> get compteurs;
+
+}
+/// @nodoc
+class __$ATraiterCopyWithImpl<$Res>
+    implements _$ATraiterCopyWith<$Res> {
+  __$ATraiterCopyWithImpl(this._self, this._then);
+
+  final _ATraiter _self;
+  final $Res Function(_ATraiter) _then;
+
+/// Create a copy of ATraiter
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? compteurs = null,Object? aCommander = null,Object? aRisque = null,Object? surstock = null,}) {
+  return _then(_ATraiter(
+compteurs: null == compteurs ? _self.compteurs : compteurs // ignore: cast_nullable_to_non_nullable
+as Compteurs,aCommander: null == aCommander ? _self._aCommander : aCommander // ignore: cast_nullable_to_non_nullable
+as List<Produit>,aRisque: null == aRisque ? _self._aRisque : aRisque // ignore: cast_nullable_to_non_nullable
+as List<Produit>,surstock: null == surstock ? _self._surstock : surstock // ignore: cast_nullable_to_non_nullable
+as List<Produit>,
+  ));
+}
+
+/// Create a copy of ATraiter
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CompteursCopyWith<$Res> get compteurs {
+  
+  return $CompteursCopyWith<$Res>(_self.compteurs, (value) {
+    return _then(_self.copyWith(compteurs: value));
+  });
+}
 }
 
 /// @nodoc

@@ -15,6 +15,9 @@ abstract interface class StockApi {
   /// `GET /stock/products/{id}`.
   Future<Produit> fiche(int id);
 
+  /// `GET /stock/a-traiter` : compteurs et premiers produits de chaque groupe.
+  Future<ATraiter> aTraiter();
+
   /// `GET /stock/products/{id}/indicateurs`.
   Future<IndicateursProduit> indicateurs(int id);
 
@@ -26,8 +29,7 @@ class StockApiDio implements StockApi {
   StockApiDio(this._dio);
   final Dio _dio;
 
-  Future<T> _lire<T>(String chemin, T Function(Object? json) lire,
-      {Map<String, dynamic>? parametres}) async {
+  Future<T> _lire<T>(String chemin, T Function(Object? json) lire, {Map<String, dynamic>? parametres}) async {
     try {
       final r = await _dio.get<Object?>(chemin, queryParameters: parametres);
       return lire(r.data);
@@ -63,15 +65,19 @@ class StockApiDio implements StockApi {
       _lire('/stock/products/$id', (j) => Produit.fromJson(j as Map<String, dynamic>));
 
   @override
-  Future<IndicateursProduit> indicateurs(int id) => _lire('/stock/products/$id/indicateurs',
-      (j) => IndicateursProduit.fromJson(j as Map<String, dynamic>));
+  Future<ATraiter> aTraiter() =>
+      _lire('/stock/a-traiter', (j) => ATraiter.fromJson(j as Map<String, dynamic>));
+
+  @override
+  Future<IndicateursProduit> indicateurs(int id) =>
+      _lire('/stock/products/$id/indicateurs', (j) => IndicateursProduit.fromJson(j as Map<String, dynamic>));
 
   @override
   Future<List<Lot>> lots(int id, {bool epuises = false}) => _lire(
-        '/stock/products/$id/lots',
-        (j) => [for (final l in j as List) Lot.fromJson(l as Map<String, dynamic>)],
-        parametres: {'in_stock_only': !epuises},
-      );
+    '/stock/products/$id/lots',
+    (j) => [for (final l in j as List) Lot.fromJson(l as Map<String, dynamic>)],
+    parametres: {'in_stock_only': !epuises},
+  );
 }
 
 final stockApiProvider = Provider<StockApi>((ref) => StockApiDio(ref.watch(dioProvider)));

@@ -97,3 +97,50 @@ const _jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'di
 
 /// « dimanche 15/11 ».
 String jourEtDate(DateTime d) => '${_jours[d.weekday - 1]} ${_deux(d.day)}/${_deux(d.month)}';
+
+const _unites = {'mg', 'g', 'kg', 'ml', 'l', 'ui', 'mcg', 'µg', 'cl', 'mmol'};
+const _petitsMots = {
+  'et',
+  'de',
+  'du',
+  'des',
+  'à',
+  'au',
+  'aux',
+  'en',
+  'pour',
+  'avec',
+  'sans',
+  'la',
+  'le',
+  'les',
+};
+
+/// Nom saisi en capitales dans EASYPHARM → lisible :
+/// « DOLIPRANE 1000 MG » → « Doliprane 1000 mg »,
+/// « LA ROCHE-POSAY » → « La Roche-Posay ». Un nom déjà en casse mixte est
+/// laissé tel quel ; un mot avec des chiffres garde sa forme (« B6 »), sauf
+/// l'unité collée (« 500MG » → « 500mg »).
+String libelleProduit(String brut) {
+  final t = brut.trim();
+  if (t.isEmpty || t != t.toUpperCase()) return t;
+  final mots = t.split(RegExp(r'\s+'));
+  return [
+    for (final (i, mot) in mots.indexed)
+      if (_unites.contains(mot.toLowerCase()))
+        mot.toLowerCase()
+      else if (mot.contains(RegExp(r'\d')))
+        mot.replaceAllMapped(
+          RegExp(r'(\d)(MG|G|ML|UI|MCG|CL|L|KG)\b'),
+          (m) => '${m[1]}${m[2]!.toLowerCase()}',
+        )
+      else if (i > 0 && _petitsMots.contains(mot.toLowerCase()))
+        mot.toLowerCase()
+      else
+        mot
+            .toLowerCase()
+            .split('-')
+            .map((p) => p.isEmpty ? p : p[0].toUpperCase() + p.substring(1))
+            .join('-'),
+  ].join(' ');
+}

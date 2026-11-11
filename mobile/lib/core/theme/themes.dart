@@ -17,8 +17,7 @@ enum ThemeId {
 
   static const defaut = ThemeId.bleu;
 
-  static ThemeId depuisNom(String? nom) =>
-      ThemeId.values.where((t) => t.name == nom).firstOrNull ?? defaut;
+  static ThemeId depuisNom(String? nom) => ThemeId.values.where((t) => t.name == nom).firstOrNull ?? defaut;
 }
 
 /// Couleurs d'état : rupture, seuil ou péremption proche, bon.
@@ -194,10 +193,7 @@ ThemeData construireTheme(ThemeId id) {
   final p = _palettes[id]!;
   final sombre = p.luminosite == Brightness.dark;
 
-  final schema = ColorScheme.fromSeed(
-    seedColor: p.primaire,
-    brightness: p.luminosite,
-  ).copyWith(
+  final schema = ColorScheme.fromSeed(seedColor: p.primaire, brightness: p.luminosite).copyWith(
     primary: p.primaire,
     onPrimary: p.surPrimaire,
     primaryContainer: p.primaireDoux,
@@ -228,7 +224,11 @@ ThemeData construireTheme(ThemeId id) {
       scrolledUnderElevation: 0,
       centerTitle: false,
       titleTextStyle: TextStyle(
-        color: p.encre, fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.3),
+        color: p.encre,
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+      ),
     ),
     cardTheme: CardThemeData(
       color: p.surface,
@@ -255,8 +255,9 @@ ThemeData construireTheme(ThemeId id) {
       backgroundColor: p.surface,
       indicatorColor: p.primaireDoux,
       surfaceTintColor: Colors.transparent,
-      iconTheme: WidgetStateProperty.resolveWith((etats) => IconThemeData(
-            color: etats.contains(WidgetState.selected) ? p.primaireFonce : p.encre3)),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (etats) => IconThemeData(color: etats.contains(WidgetState.selected) ? p.primaireFonce : p.encre3),
+      ),
       labelTextStyle: WidgetStateProperty.resolveWith((etats) {
         final choisi = etats.contains(WidgetState.selected);
         return TextStyle(

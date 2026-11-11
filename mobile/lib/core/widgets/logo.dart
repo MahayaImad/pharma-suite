@@ -12,9 +12,9 @@ class LogoPharmaSuite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox.square(
-        dimension: taille,
-        child: CustomPaint(painter: _PeintreLogo(blanc)),
-      );
+    dimension: taille,
+    child: CustomPaint(painter: _PeintreLogo(blanc)),
+  );
 }
 
 class _PeintreLogo extends CustomPainter {

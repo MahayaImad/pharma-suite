@@ -15,8 +15,7 @@ const cleTheme = 'theme';
 /// Thème choisi par l'utilisateur, conservé sur l'appareil.
 class ThemeController extends Notifier<ThemeId> {
   @override
-  ThemeId build() =>
-      ThemeId.depuisNom(ref.watch(preferencesLocalesProvider).getString(cleTheme));
+  ThemeId build() => ThemeId.depuisNom(ref.watch(preferencesLocalesProvider).getString(cleTheme));
 
   Future<void> choisir(ThemeId theme) async {
     // L'affichage change tout de suite ; l'écriture suit, sans bloquer l'écran.

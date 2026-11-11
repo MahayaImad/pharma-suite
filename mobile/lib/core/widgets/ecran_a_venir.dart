@@ -18,23 +18,31 @@ class EcranAVenir extends StatelessWidget {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(color: context.schema.primaryContainer, shape: BoxShape.circle),
-              child: Icon(icone, size: 34, color: context.schema.onPrimaryContainer),
-            ),
-            const SizedBox(height: 16),
-            Text('Bientôt disponible',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: Text(description,
-                  textAlign: TextAlign.center, style: TextStyle(color: context.couleurs.encre2)),
-            ),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: context.schema.primaryContainer, shape: BoxShape.circle),
+                child: Icon(icone, size: 34, color: context.schema.onPrimaryContainer),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Bientôt disponible',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Text(
+                  description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: context.couleurs.encre2),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

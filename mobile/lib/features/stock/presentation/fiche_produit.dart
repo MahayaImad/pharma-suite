@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,9 +9,11 @@ import '../../../core/widgets/pastille_etat.dart';
 import '../../../domain/format.dart';
 import '../../../domain/stock.dart';
 import '../application/stock_providers.dart';
+import 'ecran_stock.dart' show bientotCommandes, nomLisible;
 import 'elements_stock.dart';
 
-/// Fiche d'un produit : chiffres clés, prix et lots.
+/// Fiche d'un produit : ce qu'il faut faire, la projection du stock, les
+/// lots, le réapprovisionnement et les prix.
 ///
 /// [enPanneau] : affichée à côté de la liste (grand écran), avec un bouton
 /// « fermer » au lieu du retour.
@@ -29,10 +33,11 @@ class FicheProduit extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: enPanneau ? context.schema.surface : null,
         automaticallyImplyLeading: false,
+        toolbarHeight: 52,
         leading: enPanneau
             ? null
             : IconButton(tooltip: 'Retour', icon: const Icon(Icons.arrow_back_rounded), onPressed: fermer),
-        title: Text(enPanneau ? 'Fiche produit' : '', style: const TextStyle(fontSize: 16)),
+        title: Text(enPanneau ? 'Fiche produit' : '', style: const TextStyle(fontSize: 15)),
         actions: [
           if (enPanneau)
             IconButton(tooltip: 'Fermer', icon: const Icon(Icons.close_rounded), onPressed: fermer),
@@ -50,59 +55,100 @@ class FicheProduit extends ConsumerWidget {
   }
 }
 
-class _Contenu extends StatelessWidget {
+class _Contenu extends ConsumerWidget {
   const _Contenu({required this.produit});
   final Produit produit;
 
   @override
-  Widget build(BuildContext context) {
-    final p = produit;
-    final sousTitre = [p.dci, p.labo].where((t) => t != null && t.trim().isNotEmpty).join(' · ');
+  Widget build(BuildContext context, WidgetRef ref) {
+    final p0 = produit;
+    final i = ref.watch(indicateursProduitProvider(p0.id)).value;
+    // La fiche donne le produit ; les indicateurs complètent la jauge.
+    final p = i == null
+        ? p0
+        : p0.copyWith(
+            cmm: i.cmm,
+            stockSecurite: i.stockSecurite,
+            stockMaximum: i.stockMaximum,
+            couverture: i.couverture,
+            qteARisque: i.qteARisque,
+            valeurARisque: i.valeurARisque,
+            qteSurstock: math.max(0, p0.stock.round() - i.stockMaximum),
+          );
+    final enTete = [
+      if (p.famille != null && p.famille!.isNotEmpty) libelle(p.famille!),
+      if (p.labo != null && p.labo!.isNotEmpty) libelleProduit(p.labo!),
+    ].join(' · ');
+    final forme = [
+      if (p.dci != null && p.dci!.isNotEmpty) libelleProduit(p.dci!),
+      if (p.formeAbr != null && p.formeAbr!.isNotEmpty) p.formeAbr!.toLowerCase(),
+      if (p.conditionnement != null && p.conditionnement!.isNotEmpty) p.conditionnement!,
+    ].join(' · ');
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
       children: [
-        if (p.famille != null && p.famille!.isNotEmpty)
-          Text(
-            libelle(p.famille!).toUpperCase(),
-            style: TextStyle(
-              color: context.schema.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: .6,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconeFamille(p.idFamille, taille: 50),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (enTete.isNotEmpty)
+                    Text(enTete, style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
+                  const SizedBox(height: 2),
+                  Text(
+                    nomLisible(p),
+                    style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                  ),
+                  if (forme.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(forme, style: TextStyle(fontSize: 13, color: context.couleurs.encre2)),
+                  ],
+                ],
+              ),
             ),
-          ),
-        const SizedBox(height: 4),
-        Text(
-          p.designation,
-          style: const TextStyle(fontFamily: 'Sora', fontSize: 22, fontWeight: FontWeight.w700, height: 1.25),
+          ],
         ),
-        if (sousTitre.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(sousTitre, style: TextStyle(color: context.couleurs.encre2, fontSize: 14)),
-        ],
         const SizedBox(height: 12),
         Wrap(
           spacing: 6,
           runSpacing: 6,
-          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            PastilleStock(produit: p, avecQuantite: false),
+            PastilleSignal(p.signal),
             EtiquetteClasse(p),
             if (p.psychotrope == 1) const Etiquette('Psychotrope', icone: Icons.gpp_maybe_outlined),
             if (p.remboursable == 1) const Etiquette('Remboursable', icone: Icons.verified_outlined),
             if (p.categorie != null && p.categorie!.isNotEmpty) Etiquette(libelle(p.categorie!)),
           ],
         ),
-        const SizedBox(height: 20),
-        _Chiffres(produit: p),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
+        _Bande(produit: p, indicateurs: i),
+        const SizedBox(height: 16),
+        _JaugeFiche(produit: p, pret: i != null),
+        const SizedBox(height: 16),
+        if (i != null) _Conseil(produit: p, indicateurs: i),
+        const SizedBox(height: 22),
+        const _Titre('Projection du stock'),
+        if (i == null)
+          const SizedBox(height: 150, child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)))
+        else
+          _Projection(produit: p, indicateurs: i),
+        const SizedBox(height: 22),
+        _Lots(id: p.id),
+        const SizedBox(height: 22),
         const _Titre('Réapprovisionnement'),
         _Reappro(produit: p),
-        const SizedBox(height: 24),
+        const SizedBox(height: 22),
         const _Titre('Prix'),
         _Prix(produit: p),
-        const SizedBox(height: 24),
-        _Lots(id: p.id),
         if (p.codeBarre != null && p.codeBarre!.isNotEmpty) ...[
           const SizedBox(height: 20),
           Row(
@@ -125,11 +171,14 @@ class _Titre extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.only(bottom: 8),
     child: Row(
       children: [
         Expanded(
-          child: Text(texte, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          child: Text(
+            texte,
+            style: const TextStyle(fontFamily: 'Sora', fontSize: 15, fontWeight: FontWeight.w600),
+          ),
         ),
         ?fin,
       ],
@@ -137,90 +186,431 @@ class _Titre extends StatelessWidget {
   );
 }
 
-/// Quatre chiffres clés : stock, CMM, couverture, stock maximum.
-class _Chiffres extends ConsumerWidget {
-  const _Chiffres({required this.produit});
+/// En stock, vendu par mois, couverture, prix : une bande de quatre cases.
+class _Bande extends StatelessWidget {
+  const _Bande({required this.produit, required this.indicateurs});
   final Produit produit;
+  final IndicateursProduit? indicateurs;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final i = ref.watch(indicateursProduitProvider(produit.id)).value;
-    final attente = i == null;
-    final couverture = i?.couverture;
-    final tuiles = <_Tuile>[
-      _Tuile('Stock', entier(produit.stock), 'unités'),
-      _Tuile('CMM', attente ? '…' : decimal(i.cmm), 'unités par mois'),
-      _Tuile(
+  Widget build(BuildContext context) {
+    final i = indicateurs;
+    final c = i?.couverture;
+    final cases = [
+      ('En stock', entier(produit.stock), null),
+      ('Vendu / mois', i == null ? '…' : decimal(i.cmm), null),
+      (
         'Couverture',
-        attente ? '…' : (couverture == null ? '—' : duree(couverture)),
-        attente
-            ? ''
-            : couverture == null
-            ? 'aucune vente'
-            : i.couvertureTropLongue
-            ? 'au-delà de la péremption'
-            : 'stock ÷ CMJ',
-        alerte: i?.couvertureTropLongue ?? false,
+        i == null ? '…' : (c == null ? '—' : duree(c)),
+        i != null && i.couvertureTropLongue ? couleursSignal(context, Signal.risque).texte : null,
       ),
-      _Tuile('Stock maximum', attente ? '…' : entier(i.stockMaximum), 'unités'),
+      ('Prix', produit.prixVente > 0 ? entier(produit.prixVente) : '—', null),
     ];
-    return LayoutBuilder(
-      builder: (context, c) {
-        final parLigne = c.maxWidth >= 520 ? 4 : 2;
-        final largeur = (c.maxWidth - 8 * (parLigne - 1)) / parLigne;
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
+    return Container(
+      decoration: BoxDecoration(
+        color: context.schema.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.couleurs.bord),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
           children: [
-            for (final t in tuiles)
-              Container(
-                key: ValueKey('tuile-${t.titre}'),
-                width: largeur,
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                decoration: BoxDecoration(
-                  color: t.alerte ? context.etats.critiqueDoux : context.schema.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: t.alerte ? context.etats.critique : context.couleurs.bord),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(t.titre, style: TextStyle(fontSize: 12, color: context.couleurs.encre2)),
-                    const SizedBox(height: 4),
-                    Text(
-                      t.valeur,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Sora',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: t.alerte ? context.etats.critique : null,
+            for (final (n, (titre, valeur, couleur)) in cases.indexed) ...[
+              if (n > 0) VerticalDivider(width: 1, color: context.couleurs.bord),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        titre,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11, color: context.couleurs.encre3),
                       ),
-                    ),
-                    Text(
-                      t.detail,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: t.alerte ? context.etats.critique : context.couleurs.encre3,
+                      const SizedBox(height: 2),
+                      Text(
+                        valeur,
+                        key: ValueKey('bande-$titre'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: couleur,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+            ],
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 }
 
-class _Tuile {
-  const _Tuile(this.titre, this.valeur, this.detail, {this.alerte = false});
-  final String titre, valeur, detail;
-  final bool alerte;
+/// Règle du stock : zone sous le stock de sécurité, zone normale jusqu'au
+/// maximum, zone de surstock ; un curseur marque le stock actuel.
+class _JaugeFiche extends StatelessWidget {
+  const _JaugeFiche({required this.produit, required this.pret});
+  final Produit produit;
+  final bool pret;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = produit;
+    if (!pret) return const SizedBox(height: 40);
+    final ss = p.stockSecurite.toDouble();
+    final max = math.max(p.stockMaximum.toDouble(), ss + 1);
+    final fin = math.max(max * 1.25, p.stock * 1.08);
+    final e = context.etats;
+    return Column(
+      key: const ValueKey('jauge-fiche'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 22,
+          child: LayoutBuilder(
+            builder: (context, c) {
+              double x(double v) => c.maxWidth * (v / fin).clamp(0.0, 1.0);
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 6,
+                    height: 10,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(
+                            width: x(ss),
+                            child: ColoredBox(color: e.critiqueDoux),
+                          ),
+                          SizedBox(
+                            width: x(max) - x(ss),
+                            child: ColoredBox(color: e.bonDoux),
+                          ),
+                          Expanded(child: ColoredBox(color: e.alerteDoux)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: (x(p.stock) - 2).clamp(0, c.maxWidth - 4),
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: context.schema.onSurface,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: context.schema.surface, width: 1),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 4),
+        LayoutBuilder(
+          builder: (context, c) {
+            final style = TextStyle(fontSize: 11, color: context.couleurs.encre3);
+            double x(double v) => c.maxWidth * (v / fin).clamp(0.0, 1.0);
+            return SizedBox(
+              height: 14,
+              child: Stack(
+                children: [
+                  Positioned(left: 0, child: Text('0', style: style)),
+                  if (ss > 0)
+                    Positioned(
+                      left: (x(ss) - 30).clamp(14, c.maxWidth - 120),
+                      child: Text('sécurité ${entier(ss)}', style: style),
+                    ),
+                  Positioned(
+                    left: (x(max) - 24).clamp(90, c.maxWidth - 60),
+                    child: Text('max ${entier(p.stockMaximum)}', style: style),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// Que faire, en une phrase, avec l'action qui va avec.
+class _Conseil extends StatelessWidget {
+  const _Conseil({required this.produit, required this.indicateurs});
+  final Produit produit;
+  final IndicateursProduit indicateurs;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = conseil(produit, indicateurs);
+    final e = context.etats;
+    final violet = couleursSignal(context, Signal.risque);
+    final (couleur, fond, icone) = switch (c.niveau) {
+      NiveauConseil.urgent => (e.critique, e.critiqueDoux, Icons.remove_circle_outline),
+      NiveauConseil.attention => (e.alerte, e.alerteDoux, Icons.trending_down),
+      NiveauConseil.risque => (violet.texte, violet.fond, Icons.hourglass_bottom_rounded),
+      NiveauConseil.info => (context.couleurs.encre2, context.couleurs.neutreDoux, Icons.info_outline),
+      NiveauConseil.bon => (e.bon, e.bonDoux, Icons.check_circle_outline),
+    };
+    final actions = switch (c.niveau) {
+      NiveauConseil.risque => ['Retour fournisseur', 'Échange', 'Mise en avant'],
+      NiveauConseil.urgent || NiveauConseil.attention => ['Commander'],
+      _ => <String>[],
+    };
+    final risque = c.niveau == NiveauConseil.risque;
+    return Container(
+      key: const ValueKey('conseil'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: fond, borderRadius: BorderRadius.circular(14)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, color: couleur),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (risque)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '${entier(indicateurs.qteARisque)} unité${indicateurs.qteARisque > 1 ? 's' : ''} à risque · '
+                      '${dinars(indicateurs.valeurARisque)}',
+                      style: TextStyle(color: couleur, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                Text(c.texte, style: TextStyle(color: context.schema.onSurface, fontSize: 13, height: 1.4)),
+                if (actions.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final a in actions)
+                        ActionChip(
+                          label: Text(a),
+                          labelStyle: TextStyle(color: couleur, fontWeight: FontWeight.w700, fontSize: 12),
+                          backgroundColor: context.schema.surface,
+                          side: BorderSide.none,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => bientotCommandes(context),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+const _moisCourts = [
+  'janv.',
+  'févr.',
+  'mars',
+  'avr.',
+  'mai',
+  'juin',
+  'juil.',
+  'août',
+  'sept.',
+  'oct.',
+  'nov.',
+  'déc.',
+];
+
+/// Courbe du stock dans le temps, sans nouvelle commande, en FEFO.
+class _Projection extends StatelessWidget {
+  const _Projection({required this.produit, required this.indicateurs});
+  final Produit produit;
+  final IndicateursProduit indicateurs;
+
+  @override
+  Widget build(BuildContext context) {
+    final i = indicateurs;
+    // Lots bloqués (dans le calcul : ni écoulable ni date manquante) exclus.
+    final lots = [
+      for (final l in i.lots)
+        if (l.ecoulable != null || l.dvr == null) (stock: l.stock, dvr: l.dvr),
+    ];
+    final points = projectionStock(lots, i.cmj);
+    final legende = i.cmj > 0
+        ? 'Au rythme de ${decimal(i.cmj, chiffres: 2)} par jour, sans nouvelle commande, '
+              'en vendant d\'abord le lot qui périme le plus tôt.'
+        : 'Aucune vente sur 12 mois : le stock ne baisse qu\'à la péremption des lots.';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(legende, style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
+        const SizedBox(height: 8),
+        SizedBox(
+          key: const ValueKey('projection'),
+          height: 170,
+          child: CustomPaint(
+            painter: _PeintreProjection(
+              points: points,
+              stockSecurite: i.stockSecurite.toDouble(),
+              aujourdhui: DateTime.now(),
+              couleur: context.schema.primary,
+              couleurPerte: couleursSignal(context, Signal.risque).texte,
+              couleurSecurite: context.etats.alerteIcone,
+              couleurAxe: context.couleurs.bord,
+              couleurTexte: context.couleurs.encre3,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PeintreProjection extends CustomPainter {
+  _PeintreProjection({
+    required this.points,
+    required this.stockSecurite,
+    required this.aujourdhui,
+    required this.couleur,
+    required this.couleurPerte,
+    required this.couleurSecurite,
+    required this.couleurAxe,
+    required this.couleurTexte,
+  });
+
+  final List<PointStock> points;
+  final double stockSecurite;
+  final DateTime aujourdhui;
+  final Color couleur, couleurPerte, couleurSecurite, couleurAxe, couleurTexte;
+
+  void _texte(Canvas c, String t, Offset o, {Color? couleur, bool gras = false, bool droite = false}) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: t,
+        style: TextStyle(
+          fontSize: 10.5,
+          color: couleur ?? couleurTexte,
+          fontWeight: gras ? FontWeight.w700 : FontWeight.w400,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(c, droite ? o.translate(-tp.width, 0) : o);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+    const bas = 20.0, haut = 16.0, gauche = 4.0;
+    final dernier = points.last.jour;
+    final horizon = (dernier * 1.15).clamp(60.0, 400.0);
+    final maxStock = math.max(points.first.stock, stockSecurite) * 1.15 + 1;
+    final largeur = size.width - gauche - 4;
+    double x(double j) => gauche + largeur * (j / horizon).clamp(0.0, 1.0);
+    double y(double s) => haut + (size.height - bas - haut) * (1 - s / maxStock);
+
+    // Axe et mois
+    final axe = Paint()..color = couleurAxe;
+    canvas.drawLine(Offset(gauche, y(0)), Offset(size.width, y(0)), axe);
+    for (var m = 1; m * 30 < horizon; m++) {
+      final date = DateTime(aujourdhui.year, aujourdhui.month + m, 1);
+      final j = date
+          .difference(DateTime(aujourdhui.year, aujourdhui.month, aujourdhui.day))
+          .inDays
+          .toDouble();
+      if (j >= horizon) break;
+      if (largeur / horizon * 30 < 34 && m.isOdd) continue; // pas de chevauchement
+      canvas.drawLine(Offset(x(j), y(0)), Offset(x(j), y(0) + 4), axe);
+      _texte(canvas, _moisCourts[date.month - 1], Offset(x(j) - 8, y(0) + 5));
+    }
+
+    // Stock de sécurité
+    if (stockSecurite > 0) {
+      final p = Paint()
+        ..color = couleurSecurite
+        ..strokeWidth = 1.2;
+      for (var d = gauche; d < size.width; d += 8) {
+        canvas.drawLine(
+          Offset(d, y(stockSecurite)),
+          Offset(math.min(d + 4, size.width), y(stockSecurite)),
+          p,
+        );
+      }
+      _texte(
+        canvas,
+        'stock de sécurité',
+        Offset(size.width - 2, y(stockSecurite) - 14),
+        couleur: couleurSecurite,
+        droite: true,
+      );
+    }
+
+    // Courbe, prolongée à plat jusqu'à l'horizon
+    final chemin = Path()..moveTo(x(points.first.jour), y(points.first.stock));
+    for (final p in points.skip(1)) {
+      chemin.lineTo(x(p.jour), y(p.stock));
+    }
+    chemin.lineTo(x(horizon), y(points.last.stock));
+    final aire = Path.from(chemin)
+      ..lineTo(x(horizon), y(0))
+      ..lineTo(x(0), y(0))
+      ..close();
+    canvas.drawPath(aire, Paint()..color = couleur.withValues(alpha: .08));
+    canvas.drawPath(
+      chemin,
+      Paint()
+        ..color = couleur
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.6
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    // Pertes à la péremption : deux points au même jour, le second plus bas.
+    for (var n = 1; n < points.length; n++) {
+      final a = points[n - 1], b = points[n];
+      if (a.jour == b.jour && b.stock < a.stock) {
+        canvas.drawCircle(Offset(x(a.jour), y(a.stock)), 4.5, Paint()..color = couleurPerte);
+        _texte(
+          canvas,
+          '−${entier(a.stock - b.stock)} périmées',
+          Offset(x(a.jour) + 7, y(a.stock) - 6),
+          couleur: couleurPerte,
+          gras: true,
+        );
+      }
+    }
+    canvas.drawCircle(Offset(x(0), y(points.first.stock)), 4.5, Paint()..color = couleur);
+    _texte(
+      canvas,
+      '${entier(points.first.stock)} aujourd\'hui',
+      Offset(x(0) + 7, y(points.first.stock) - 15),
+      couleur: couleur,
+      gras: true,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PeintreProjection ancien) =>
+      ancien.points != points || ancien.stockSecurite != stockSecurite || ancien.couleur != couleur;
 }
 
 /// Une ligne « libellé · valeur », avec une explication discrète.
@@ -404,7 +794,6 @@ class _LotsState extends ConsumerState<_Lots> {
             ],
           ),
         ),
-        if (indicateurs != null && indicateurs.qteARisque > 0) _BandeauRisque(indicateurs),
         lots.when(
           data: (liste) => liste.isEmpty
               ? Padding(
@@ -431,53 +820,6 @@ class _LotsState extends ConsumerState<_Lots> {
               MessageErreur(erreur: e, reessayer: () => ref.invalidate(lotsProduitProvider(cle))),
         ),
       ],
-    );
-  }
-}
-
-/// Quantité qui périmera avant d'être vendue, et ce qu'il faut faire.
-class _BandeauRisque extends StatelessWidget {
-  const _BandeauRisque(this.indicateurs);
-  final IndicateursProduit indicateurs;
-
-  @override
-  Widget build(BuildContext context) {
-    final e = context.etats;
-    final q = indicateurs.qteARisque;
-    return Container(
-      key: const ValueKey('bandeau-risque'),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: e.critiqueDoux,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: e.critique.withValues(alpha: .5)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.hourglass_bottom_rounded, color: e.critique),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${entier(q)} unité${q > 1 ? 's' : ''} risque${q > 1 ? 'nt' : ''} de périmer avant d\'être '
-                  'vendue${q > 1 ? 's' : ''} · ${dinars(indicateurs.valeurARisque)}',
-                  style: TextStyle(color: e.critique, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'À traiter maintenant : retour fournisseur, échange avec une autre pharmacie '
-                  'ou mise en avant.',
-                  style: TextStyle(color: e.critique, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

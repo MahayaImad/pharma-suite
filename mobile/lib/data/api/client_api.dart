@@ -18,34 +18,42 @@ String adresseApi() {
 }
 
 /// Client HTTP sans jeton, pour la connexion elle-même.
-final dioPublicProvider = Provider<Dio>((ref) => Dio(BaseOptions(
+final dioPublicProvider = Provider<Dio>(
+  (ref) => Dio(
+    BaseOptions(
       baseUrl: adresseApi(),
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 20),
-    )));
+    ),
+  ),
+);
 
 /// Client HTTP des appels authentifiés : ajoute le jeton de la session et,
 /// si l'API répond 401 (jeton expiré ou révoqué), ferme la session — le
 /// routeur ramène alors à l'écran de connexion.
 final dioProvider = Provider<Dio>((ref) {
-  final dio = Dio(BaseOptions(
-    baseUrl: adresseApi(),
-    connectTimeout: const Duration(seconds: 8),
-    receiveTimeout: const Duration(seconds: 30),
-  ));
-  dio.interceptors.add(InterceptorsWrapper(
-    onRequest: (options, handler) {
-      final jeton = ref.read(sessionProvider)?.jeton;
-      if (jeton != null) options.headers['Authorization'] = 'Bearer $jeton';
-      handler.next(options);
-    },
-    onError: (erreur, handler) {
-      if (erreur.response?.statusCode == 401 && ref.read(sessionProvider) != null) {
-        ref.read(sessionProvider.notifier).fermer();
-      }
-      handler.next(erreur);
-    },
-  ));
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: adresseApi(),
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 30),
+    ),
+  );
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final jeton = ref.read(sessionProvider)?.jeton;
+        if (jeton != null) options.headers['Authorization'] = 'Bearer $jeton';
+        handler.next(options);
+      },
+      onError: (erreur, handler) {
+        if (erreur.response?.statusCode == 401 && ref.read(sessionProvider) != null) {
+          ref.read(sessionProvider.notifier).fermer();
+        }
+        handler.next(erreur);
+      },
+    ),
+  );
   return dio;
 });
 
@@ -65,8 +73,9 @@ class ErreurApi implements Exception {
       }
       if (code == null) {
         return const ErreurApi(
-            "Le serveur de l'officine ne répond pas. Vérifiez la connexion au réseau.",
-            reseau: true);
+          "Le serveur de l'officine ne répond pas. Vérifiez la connexion au réseau.",
+          reseau: true,
+        );
       }
     }
     return const ErreurApi('Une erreur inattendue est survenue.');

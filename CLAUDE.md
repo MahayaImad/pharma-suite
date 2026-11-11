@@ -70,11 +70,12 @@ du bas sur portable), sections en état « Bientôt disponible ». **Connexion
 réelle** : écran `/connexion` (deux volets), `POST /auth/login` puis
 `GET /auth/me`, session (jeton + profil) gardée dans shared_preferences,
 redirection go_router tant qu'on n'est pas connecté, déconnexion dans le menu
-et les préférences. **Écran Stock réel** (`/stock`, `/stock/:id`) : valeur du
-stock et heure des données, recherche, familles, filtre d'état, tri, liste
-paginée, fiche produit (CMM, CMJ, délai de livraison, stock de sécurité,
-stock maximum, couverture, prix, marge, lots avec quantité à risque de
-péremption en FEFO) ; liste et fiche côte à
+et les préférences. **Écran Stock réel** (`/stock`, `/stock/:id`), présentation
+« à traiter d'abord » : tuiles ruptures / sous le seuil / valeur à risque,
+groupes à commander, péremption à risque, surstock (`GET /stock/a-traiter`),
+puis tout le stock (familles, tri, liste paginée avec jauge stock / maximum /
+sécurité) ; fiche produit avec conseil, jauge, projection du stock en FEFO,
+lots à risque, réapprovisionnement (CMM, CMJ, délai, SS, max) et prix ; liste et fiche côte à
 côte sur PC. Riverpod, go_router, shared_preferences, Dio (client authentifié :
 jeton ajouté, déconnexion sur 401) et freezed (+ json_serializable, fichiers
 générés committés) sont en place ; **Drift et le hors-ligne n'existent pas

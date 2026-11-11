@@ -15,9 +15,9 @@ import 'fiche_produit.dart';
 /// Largeur à partir de laquelle la fiche s'ouvre à côté de la liste.
 const _largeurDeuxVolets = 980.0;
 
-/// Écran Stock : la liste, et la fiche du produit [selection] s'il y en a un.
-/// Sur grand écran les deux sont côte à côte ; sur portable la fiche prend
-/// tout l'écran, avec un retour vers la liste.
+/// Écran Stock : ce qui est à traiter d'abord, puis tout le stock ; et la
+/// fiche du produit [selection] s'il y en a un. Sur grand écran la fiche est
+/// à côté de la liste ; sur portable elle prend tout l'écran.
 class EcranStock extends StatelessWidget {
   const EcranStock({super.key, this.selection});
 
@@ -72,6 +72,11 @@ class _AucuneSelection extends StatelessWidget {
   );
 }
 
+/// Message des actions qui dépendent du module Commandes, pas encore là.
+void bientotCommandes(BuildContext context) => ScaffoldMessenger.of(context)
+  ..hideCurrentSnackBar()
+  ..showSnackBar(const SnackBar(content: Text('Le module Commandes arrive bientôt.')));
+
 class _Liste extends ConsumerStatefulWidget {
   const _Liste({this.selection});
   final int? selection;
@@ -117,17 +122,25 @@ class _ListeState extends ConsumerState<_Liste> {
   void _effacerTout() {
     _recherche.clear();
     ref.read(filtreProduitsProvider.notifier).effacer();
+    setState(() {});
+  }
+
+  void _rafraichir() {
+    ref.invalidate(resumeStockProvider);
+    ref.invalidate(aTraiterProvider);
+    ref.invalidate(listeProduitsProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final liste = ref.watch(listeProduitsProvider);
     final filtre = ref.watch(filtreProduitsProvider);
+    // Sans recherche ni filtre d'état : d'abord ce qui est à traiter.
+    final accueil = filtre.etat == null && filtre.recherche.trim().isEmpty;
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(resumeStockProvider);
-        ref.invalidate(listeProduitsProvider);
+        _rafraichir();
         await ref.read(listeProduitsProvider.future).catchError((_) => const ListeProduits());
       },
       child: NotificationListener<ScrollNotification>(
@@ -140,7 +153,7 @@ class _ListeState extends ConsumerState<_Liste> {
             const SliverToBoxAdapter(child: _EnTete()),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: _ChampRecherche(
                   controleur: _recherche,
                   surSaisie: _chercher,
@@ -148,10 +161,12 @@ class _ListeState extends ConsumerState<_Liste> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: _Familles()),
+            SliverToBoxAdapter(child: _Tuiles(choisi: filtre.etat)),
+            if (accueil) const SliverToBoxAdapter(child: _Groupes()),
             SliverToBoxAdapter(
-              child: _EtatsEtTri(filtre: filtre, liste: liste.value),
+              child: _TitreListe(filtre: filtre, total: liste.value?.total, surEffacer: _effacerTout),
             ),
+            if (accueil) const SliverToBoxAdapter(child: _Familles()),
             ...liste.when(
               skipLoadingOnReload: false,
               data: (l) => [
@@ -170,7 +185,7 @@ class _ListeState extends ConsumerState<_Liste> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     sliver: SliverList.separated(
                       itemCount: l.produits.length + (l.complete ? 0 : 1),
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -198,13 +213,7 @@ class _ListeState extends ConsumerState<_Liste> {
               ],
               error: (e, _) => [
                 SliverToBoxAdapter(
-                  child: MessageErreur(
-                    erreur: e,
-                    reessayer: () {
-                      ref.invalidate(resumeStockProvider);
-                      ref.invalidate(listeProduitsProvider);
-                    },
-                  ),
+                  child: MessageErreur(erreur: e, reessayer: _rafraichir),
                 ),
               ],
             ),
@@ -215,111 +224,52 @@ class _ListeState extends ConsumerState<_Liste> {
   }
 }
 
-/// Titre, heure des données et valeur du stock.
+/// Titre et heure des données.
 class _EnTete extends ConsumerWidget {
   const _EnTete();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final resume = ref.watch(resumeStockProvider).value;
-    final donnees = resume?.donneesDu;
+    final donnees = ref.watch(resumeStockProvider).value?.donneesDu;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Stock',
-                  style: TextStyle(fontFamily: 'Sora', fontSize: 26, fontWeight: FontWeight.w700),
-                ),
-              ),
-              const BoutonPreferences(),
-            ],
-          ),
-          if (resume != null) ...[
-            Row(
-              children: [
-                Icon(Icons.sync_rounded, size: 15, color: context.couleurs.encre3),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    donnees == null
-                        ? 'Stock pas encore calculé par la synchronisation'
-                        : 'Données EASYPHARM ${horodatage(donnees, DateTime.now().toUtc())}',
-                    key: const ValueKey('horodatage'),
-                    style: TextStyle(fontSize: 13, color: context.couleurs.encre2),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Padding(padding: const EdgeInsets.only(right: 8), child: _TuileValeur(resume)),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _TuileValeur extends StatelessWidget {
-  const _TuileValeur(this.resume);
-  final ResumeStock resume;
-
-  @override
-  Widget build(BuildContext context) {
-    final fond = context.couleurs.tuilePrincipale;
-    final sur = context.couleurs.surTuilePrincipale;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [fond, Color.lerp(fond, Colors.black, .22)!],
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 12),
       child: Row(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Valeur du stock, prix d'achat",
-                  style: TextStyle(color: sur.withValues(alpha: .8), fontSize: 13),
+          const Text(
+            'Stock',
+            style: TextStyle(fontFamily: 'Sora', fontSize: 26, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 12),
+          const Spacer(),
+          if (donnees != null)
+            Flexible(
+              flex: 4,
+              child: Tooltip(
+                message: 'Heure du dernier calcul du stock EASYPHARM',
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(color: context.etats.bon, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Données ${horodatage(donnees, DateTime.now().toUtc())}',
+                        key: const ValueKey('horodatage'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  dinarsCourt(resume.valeurAchat),
-                  style: TextStyle(color: sur, fontFamily: 'Sora', fontSize: 26, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${dinarsCourt(resume.valeurVente)} au prix de vente',
-                  style: TextStyle(color: sur.withValues(alpha: .8), fontSize: 13),
-                ),
-              ],
+              ),
             ),
-          ),
-          Container(width: 1, height: 56, color: sur.withValues(alpha: .25)),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                entier(resume.produitsEnStock),
-                style: TextStyle(color: sur, fontFamily: 'Sora', fontSize: 22, fontWeight: FontWeight.w700),
-              ),
-              Text(
-                'produits\nen stock',
-                style: TextStyle(color: sur.withValues(alpha: .8), fontSize: 12, height: 1.25),
-              ),
-            ],
-          ),
+          const SizedBox(width: 4),
+          const BoutonPreferences(),
         ],
       ),
     );
@@ -345,7 +295,7 @@ class _ChampRecherche extends StatelessWidget {
       onChanged: surSaisie,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: 'Nom, DCI ou code-barres',
+        hintText: 'Chercher un produit, une DCI, un code-barres',
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: controleur.text.isEmpty
             ? null
@@ -361,7 +311,452 @@ class _ChampRecherche extends StatelessWidget {
   }
 }
 
-/// Une pastille par famille : le premier axe de navigation du stock.
+/// Trois tuiles : ruptures, sous le seuil, valeur à risque de péremption.
+/// Chacune filtre la liste.
+class _Tuiles extends ConsumerWidget {
+  const _Tuiles({required this.choisi});
+  final FiltreEtat? choisi;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = ref.watch(aTraiterProvider).value?.compteurs;
+    final notif = ref.read(filtreProduitsProvider.notifier);
+    void basculer(FiltreEtat e) => notif.etat(choisi == e ? null : e);
+    final tuiles = [
+      (
+        FiltreEtat.rupture,
+        c == null ? '…' : entier(c.ruptures),
+        'ruptures à commander',
+        const [Color(0xFFC62F2F), Color(0xFFE0574F)],
+        Icons.remove_circle_outline,
+      ),
+      (
+        FiltreEtat.sousSeuil,
+        c == null ? '…' : entier(c.sousSeuil),
+        'sous le seuil',
+        const [Color(0xFFB26A00), Color(0xFFE79A00)],
+        Icons.trending_down,
+      ),
+      (
+        FiltreEtat.aRisque,
+        c == null ? '…' : dinarsCourt(c.valeurARisque).replaceAll(' DA', ''),
+        'DA à risque de péremption',
+        const [Color(0xFF5B33B0), Color(0xFF7A4DD1)],
+        Icons.hourglass_bottom_rounded,
+      ),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      child: Row(
+        children: [
+          for (final (i, (etat, valeur, texte, couleurs, icone)) in tuiles.indexed) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(
+              child: _Tuile(
+                cle: 'tuile-${etat.api}',
+                valeur: valeur,
+                texte: texte,
+                couleurs: couleurs,
+                icone: icone,
+                choisie: choisi == etat,
+                surChoix: () => basculer(etat),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Tuile extends StatelessWidget {
+  const _Tuile({
+    required this.cle,
+    required this.valeur,
+    required this.texte,
+    required this.couleurs,
+    required this.icone,
+    required this.choisie,
+    required this.surChoix,
+  });
+
+  final String cle, valeur, texte;
+  final List<Color> couleurs;
+  final IconData icone;
+  final bool choisie;
+  final VoidCallback surChoix;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      key: ValueKey(cle),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: couleurs),
+          border: choisie ? Border.all(color: context.schema.onSurface, width: 2.5) : null,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: InkWell(
+          onTap: surChoix,
+          child: Stack(
+            children: [
+              Positioned(
+                right: -10,
+                bottom: -12,
+                child: Icon(icone, size: 64, color: Colors.white.withValues(alpha: .13)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      valeur,
+                      maxLines: 1,
+                      style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      texte,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: .92),
+                        fontSize: 12,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// À commander, péremption à risque, surstock : les premiers de chaque
+/// groupe, avec l'action proposée.
+class _Groupes extends ConsumerWidget {
+  const _Groupes();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final aTraiter = ref.watch(aTraiterProvider);
+    final notif = ref.read(filtreProduitsProvider.notifier);
+    return aTraiter.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+      ),
+      error: (e, _) => MessageErreur(erreur: e, reessayer: () => ref.invalidate(aTraiterProvider)),
+      data: (a) {
+        final c = a.compteurs;
+        if (c.aCommander == 0 && c.aRisque == 0 && c.surstock == 0) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (a.aCommander.isNotEmpty)
+                _Groupe(
+                  titre: 'À commander',
+                  nombre: c.aCommander,
+                  signal: Signal.rupture,
+                  produits: a.aCommander,
+                  toutVoir: () => notif.etat(FiltreEtat.aCommander),
+                  raison: (p) => p.etat == EtatStock.rupture
+                      ? 'Rupture · ${decimal(p.cmm)} vendus par mois'
+                      : '${entier(p.stock)} en stock, seuil ${entier(p.seuil ?? 0)}'
+                            '${p.couverture == null ? '' : ' · ${p.couverture} j de couverture'}',
+                  action: (p) =>
+                      _BoutonAction('Commander', plein: true, surAppui: () => bientotCommandes(context)),
+                ),
+              if (a.aRisque.isNotEmpty)
+                _Groupe(
+                  titre: 'Péremption à risque',
+                  nombre: c.aRisque,
+                  signal: Signal.risque,
+                  produits: a.aRisque,
+                  toutVoir: () => notif.etat(FiltreEtat.aRisque),
+                  raison: (p) =>
+                      '${entier(p.qteARisque)} unité${p.qteARisque > 1 ? 's' : ''} périmer${p.qteARisque > 1 ? 'ont' : 'a'} '
+                      'avant d\'être vendue${p.qteARisque > 1 ? 's' : ''} · ${dinars(p.valeurARisque)}',
+                  action: (p) => _BoutonAction(
+                    'Que faire ?',
+                    plein: true,
+                    couleur: couleursSignal(context, Signal.risque).texte,
+                    surAppui: () => context.go('/stock/${p.id}'),
+                  ),
+                ),
+              if (a.surstock.isNotEmpty)
+                _Groupe(
+                  titre: 'Surstock',
+                  nombre: c.surstock,
+                  signal: Signal.surstock,
+                  produits: a.surstock,
+                  toutVoir: () => notif.etat(FiltreEtat.surstock),
+                  raison: (p) =>
+                      '${entier(p.qteSurstock)} au-delà du maximum · ${dinars(p.valeurSurstock)} immobilisés',
+                  action: (p) => _BoutonAction('Voir', surAppui: () => context.go('/stock/${p.id}')),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Groupe extends StatelessWidget {
+  const _Groupe({
+    required this.titre,
+    required this.nombre,
+    required this.signal,
+    required this.produits,
+    required this.toutVoir,
+    required this.raison,
+    required this.action,
+  });
+
+  final String titre;
+  final int nombre;
+  final Signal signal;
+  final List<Produit> produits;
+  final VoidCallback toutVoir;
+  final String Function(Produit) raison;
+  final Widget Function(Produit) action;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = couleursSignal(context, signal);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        titre,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontFamily: 'Sora', fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: c.fond, borderRadius: BorderRadius.circular(999)),
+                      child: Text(
+                        entier(nombre),
+                        style: TextStyle(color: c.texte, fontWeight: FontWeight.w700, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(onPressed: toutVoir, child: const Text('Tout voir')),
+            ],
+          ),
+          const SizedBox(height: 4),
+          for (final p in produits)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _CarteAction(produit: p, raison: raison(p), couleur: c.texte, action: action(p)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CarteAction extends StatelessWidget {
+  const _CarteAction({
+    required this.produit,
+    required this.raison,
+    required this.couleur,
+    required this.action,
+  });
+
+  final Produit produit;
+  final String raison;
+  final Color couleur;
+  final Widget action;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = produit;
+    return Material(
+      color: context.schema.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: context.couleurs.bord),
+      ),
+      child: InkWell(
+        key: ValueKey('action-${p.id}'),
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => context.go('/stock/${p.id}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          child: Row(
+            children: [
+              IconeFamille(p.idFamille),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      nomLisible(p),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      raison,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: couleur, fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              action,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BoutonAction extends StatelessWidget {
+  const _BoutonAction(this.texte, {required this.surAppui, this.plein = false, this.couleur});
+
+  final String texte;
+  final VoidCallback surAppui;
+  final bool plein;
+  final Color? couleur;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ButtonStyle(
+      visualDensity: VisualDensity.compact,
+      padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 14)),
+      backgroundColor: couleur == null ? null : WidgetStatePropertyAll(couleur),
+    );
+    return plein
+        ? FilledButton(onPressed: surAppui, style: style, child: Text(texte))
+        : FilledButton.tonal(onPressed: surAppui, style: style, child: Text(texte));
+  }
+}
+
+/// « Tout le stock » ou le filtre en cours, et l'ordre de la liste.
+class _TitreListe extends ConsumerWidget {
+  const _TitreListe({required this.filtre, required this.total, required this.surEffacer});
+
+  final FiltreProduits filtre;
+  final int? total;
+  final VoidCallback surEffacer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notif = ref.read(filtreProduitsProvider.notifier);
+    final recherche = filtre.recherche.trim();
+    final titre = filtre.etat?.libelle ?? (recherche.isNotEmpty ? 'Résultats' : 'Tout le stock');
+    final filtreActif = filtre.etat != null || recherche.isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    titre,
+                    key: const ValueKey('titre-liste'),
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontFamily: 'Sora', fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (total != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: context.couleurs.neutreDoux,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      entier(total!),
+                      key: const ValueKey('nombre-produits'),
+                      style: TextStyle(
+                        color: context.couleurs.encre2,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                if (filtreActif)
+                  IconButton(
+                    tooltip: 'Retirer le filtre',
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    onPressed: surEffacer,
+                  ),
+              ],
+            ),
+          ),
+          PopupMenuButton<TriProduits>(
+            tooltip: 'Trier',
+            initialValue: filtre.tri,
+            onSelected: notif.trier,
+            itemBuilder: (_) => [
+              for (final t in TriProduits.values)
+                PopupMenuItem(value: t, child: Text('Trier par ${t.libelle.toLowerCase()}')),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Trier par ${filtre.tri.libelle.toLowerCase()}',
+                    style: TextStyle(
+                      color: context.schema.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down_rounded, color: context.schema.primary),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Une pastille par famille, au-dessus de « Tout le stock ».
 class _Familles extends ConsumerWidget {
   const _Familles();
 
@@ -369,44 +764,49 @@ class _Familles extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final familles = ref.watch(resumeStockProvider).value?.familles ?? const [];
     final choisie = ref.watch(filtreProduitsProvider.select((f) => f.idFamille));
-    final visibles = familles.where((f) => f.produitsActifs > 0 || f.id == choisie).toList();
-    if (visibles.isEmpty) return const SizedBox(height: 12);
+    final visibles = familles
+        .where((f) => f.id != null && (f.produitsActifs > 0 || f.id == choisie))
+        .toList();
+    if (visibles.isEmpty) return const SizedBox(height: 8);
 
     void choisir(int? id) => ref.read(filtreProduitsProvider.notifier).famille(id);
     return SizedBox(
-      height: 56,
+      height: 52,
       child: ListView(
         key: const ValueKey('familles'),
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
         children: [
-          _Pastille(texte: 'Toutes', choisie: choisie == null, surChoix: () => choisir(null)),
+          _PastilleFamille(texte: 'Toutes', choisie: choisie == null, surChoix: () => choisir(null)),
           for (final f in visibles)
-            if (f.id != null)
-              _Pastille(
-                texte: libelle(f.famille),
-                compte: f.produitsEnStock,
-                choisie: choisie == f.id,
-                surChoix: () => choisir(choisie == f.id ? null : f.id),
-              ),
+            _PastilleFamille(
+              texte: libelle(f.famille),
+              idFamille: f.id,
+              choisie: choisie == f.id,
+              surChoix: () => choisir(choisie == f.id ? null : f.id),
+            ),
         ],
       ),
     );
   }
 }
 
-class _Pastille extends StatelessWidget {
-  const _Pastille({required this.texte, required this.choisie, required this.surChoix, this.compte});
+class _PastilleFamille extends StatelessWidget {
+  const _PastilleFamille({
+    required this.texte,
+    required this.choisie,
+    required this.surChoix,
+    this.idFamille,
+  });
 
   final String texte;
-  final int? compte;
+  final int? idFamille;
   final bool choisie;
   final VoidCallback surChoix;
 
   @override
   Widget build(BuildContext context) {
     final s = context.schema;
-    final texteCouleur = choisie ? s.onPrimary : context.couleurs.encre2;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Material(
@@ -416,21 +816,26 @@ class _Pastille extends StatelessWidget {
           customBorder: const StadiumBorder(),
           onTap: surChoix,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: EdgeInsets.fromLTRB(idFamille == null ? 14 : 10, 0, 14, 0),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (idFamille != null) ...[
+                  Icon(
+                    visuelFamille(idFamille).icone,
+                    size: 16,
+                    color: choisie ? s.onPrimary : visuelFamille(idFamille).couleur,
+                  ),
+                  const SizedBox(width: 6),
+                ],
                 Text(
                   texte,
-                  style: TextStyle(color: texteCouleur, fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-                if (compte != null) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    entier(compte!),
-                    style: TextStyle(color: texteCouleur.withValues(alpha: .7), fontSize: 12),
+                  style: TextStyle(
+                    color: choisie ? s.onPrimary : context.couleurs.encre2,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
-                ],
+                ),
               ],
             ),
           ),
@@ -440,122 +845,16 @@ class _Pastille extends StatelessWidget {
   }
 }
 
-/// Filtre d'état (segments) et ordre de la liste.
-class _EtatsEtTri extends ConsumerWidget {
-  const _EtatsEtTri({required this.filtre, required this.liste});
-
-  final FiltreProduits filtre;
-  final ListeProduits? liste;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notif = ref.read(filtreProduitsProvider.notifier);
-    final total = liste?.total;
-    final filtres = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final e in <FiltreEtat?>[null, ...FiltreEtat.values])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4),
-                      child: _Segment(
-                        texte: e?.libelle ?? 'Actifs',
-                        choisi: filtre.etat == e,
-                        surChoix: () => notif.etat(e),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        filtres,
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 0, 8, 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  total == null ? ' ' : '${entier(total)} produit${total > 1 ? 's' : ''}',
-                  key: const ValueKey('nombre-produits'),
-                  style: TextStyle(fontSize: 12, color: context.couleurs.encre3, fontWeight: FontWeight.w600),
-                ),
-              ),
-              PopupMenuButton<TriProduits>(
-                tooltip: 'Trier',
-                initialValue: filtre.tri,
-                onSelected: notif.trier,
-                itemBuilder: (_) => [
-                  for (final t in TriProduits.values)
-                    PopupMenuItem(value: t, child: Text('Trier par ${t.libelle.toLowerCase()}')),
-                ],
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.swap_vert_rounded, size: 18, color: context.couleurs.encre2),
-                      const SizedBox(width: 4),
-                      Text(
-                        filtre.tri.libelle,
-                        style: TextStyle(
-                          color: context.couleurs.encre2,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+/// Nom lisible : « DOLIPRANE » → « Doliprane », dosage compris.
+String nomLisible(Produit p) {
+  final brut = [
+    p.nom,
+    if (p.dosage != null && p.dosage!.isNotEmpty && !p.nom.contains(p.dosage!)) p.dosage!,
+  ].join(' ');
+  return libelleProduit(brut);
 }
 
-class _Segment extends StatelessWidget {
-  const _Segment({required this.texte, required this.choisi, required this.surChoix});
-
-  final String texte;
-  final bool choisi;
-  final VoidCallback surChoix;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-    borderRadius: BorderRadius.circular(8),
-    onTap: surChoix,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: choisi ? context.schema.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        texte,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: choisi ? context.schema.onPrimaryContainer : context.couleurs.encre2,
-        ),
-      ),
-    ),
-  );
-}
-
-/// Un produit dans la liste.
+/// Un produit dans la liste, avec la jauge de son stock.
 class LigneProduit extends StatelessWidget {
   const LigneProduit({super.key, required this.produit, this.choisi = false});
 
@@ -565,10 +864,34 @@ class LigneProduit extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = produit;
-    final sousTitre = [p.dci, p.labo].where((t) => t != null && t.trim().isNotEmpty).join(' · ');
-    final derniere = p.derniereVente;
+    final sousTitre = [
+      if (p.dci != null && p.dci!.trim().isNotEmpty) libelleProduit(p.dci!),
+      if (p.labo != null && p.labo!.trim().isNotEmpty) libelleProduit(p.labo!),
+    ].join(' · ');
+    final nom = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          nomLisible(p),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+        if (sousTitre.isNotEmpty)
+          Text(
+            sousTitre,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+          ),
+      ],
+    );
+    final prix = Text(
+      p.prixVente > 0 ? dinars(p.prixVente) : '—',
+      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+    );
     return Material(
-      color: context.schema.surface,
+      color: choisi ? context.schema.primaryContainer.withValues(alpha: .45) : context.schema.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
@@ -581,68 +904,61 @@ class LigneProduit extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: () => context.go('/stock/${p.id}'),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      p.designation,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, height: 1.25),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  EtiquetteClasse(p),
-                ],
-              ),
-              if (sousTitre.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  sousTitre,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: context.couleurs.encre2),
-                ),
-              ],
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, c) => Row(
-                        children: [
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: c.maxWidth),
-                            child: PastilleStock(produit: p),
-                          ),
-                          if (derniere != null) ...[
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                depuis(derniere, DateTime.now()),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
-                              ),
-                            ),
-                          ],
-                        ],
+          padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              if (c.maxWidth >= 640) {
+                return Row(
+                  children: [
+                    IconeFamille(p.idFamille, taille: 38),
+                    const SizedBox(width: 12),
+                    Expanded(flex: 5, child: nom),
+                    const SizedBox(width: 16),
+                    Expanded(flex: 3, child: JaugeStock(produit: p)),
+                    SizedBox(
+                      width: 78,
+                      child: Text(
+                        p.couverture == null ? '—' : '${p.couverture} j',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(color: context.couleurs.encre2, fontWeight: FontWeight.w600),
                       ),
                     ),
+                    SizedBox(
+                      width: 96,
+                      child: Align(alignment: Alignment.centerRight, child: prix),
+                    ),
+                    const SizedBox(width: 14),
+                    SizedBox(
+                      width: 150,
+                      child: Align(alignment: Alignment.centerRight, child: PastilleSignal(p.signal)),
+                    ),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      IconeFamille(p.idFamille, taille: 38),
+                      const SizedBox(width: 12),
+                      Expanded(child: nom),
+                      const SizedBox(width: 8),
+                      PastilleSignal(p.signal),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    p.prixVente > 0 ? dinars(p.prixVente) : '—',
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(child: JaugeStock(produit: p)),
+                      const SizedBox(width: 16),
+                      prix,
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -669,7 +985,12 @@ class _LigneSquelette extends StatelessWidget {
         SizedBox(height: 8),
         Squelette(largeur: 140),
         Spacer(),
-        Row(children: [Squelette(largeur: 90, hauteur: 20), Spacer(), Squelette(largeur: 60, hauteur: 14)]),
+        Row(
+          children: [
+            Expanded(child: Squelette(largeur: 200, hauteur: 6)),
+            SizedBox(width: 60),
+          ],
+        ),
       ],
     ),
   );

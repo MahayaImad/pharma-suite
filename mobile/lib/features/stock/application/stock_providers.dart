@@ -15,6 +15,12 @@ final resumeStockProvider = FutureProvider<ResumeStock>(
   retry: _sansNouvelEssai,
 );
 
+/// Ce qui demande une action : ruptures, péremptions à risque, surstock.
+final aTraiterProvider = FutureProvider<ATraiter>(
+  (ref) => ref.watch(stockApiProvider).aTraiter(),
+  retry: _sansNouvelEssai,
+);
+
 /// Filtres choisis au-dessus de la liste.
 class FiltreController extends Notifier<FiltreProduits> {
   @override

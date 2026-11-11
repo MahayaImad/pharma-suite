@@ -47,12 +47,17 @@ class Coquille extends StatelessWidget {
 
     if (large) {
       return Scaffold(
-        body: Row(children: [
-          _MenuLateral(index: _dansPreferences ? null : _index, surChoix: aller,
-              preferencesActives: _dansPreferences),
-          const VerticalDivider(),
-          Expanded(child: child),
-        ]),
+        body: Row(
+          children: [
+            _MenuLateral(
+              index: _dansPreferences ? null : _index,
+              surChoix: aller,
+              preferencesActives: _dansPreferences,
+            ),
+            const VerticalDivider(),
+            Expanded(child: child),
+          ],
+        ),
       );
     }
     // Sur portable, les préférences s'ouvrent en plein écran, avec un retour :
@@ -66,8 +71,7 @@ class Coquille extends StatelessWidget {
         height: 68,
         destinations: [
           for (final d in destinations)
-            NavigationDestination(
-                icon: Icon(d.icone), selectedIcon: Icon(d.iconeActive), label: d.libelle),
+            NavigationDestination(icon: Icon(d.icone), selectedIcon: Icon(d.iconeActive), label: d.libelle),
         ],
       ),
     );
@@ -87,39 +91,50 @@ class _MenuLateral extends StatelessWidget {
       width: 232,
       color: context.schema.surface,
       padding: const EdgeInsets.fromLTRB(14, 20, 14, 14),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 8, 20),
-          child: Row(children: [
-            const LogoPharmaSuite(taille: 34),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: Text('PharmaSuite',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontFamily: 'Sora', fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 20),
+            child: Row(
+              children: [
+                const LogoPharmaSuite(taille: 34),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'PharmaSuite',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ]),
-        ),
-        for (final (i, d) in destinations.indexed)
-          _Lien(
-            libelle: d.libelle,
-            icone: i == index ? d.iconeActive : d.icone,
-            actif: i == index,
-            surAppui: () => surChoix(i),
           ),
-        const Spacer(),
-        const Divider(),
-        const SizedBox(height: 8),
-        _Lien(
-          libelle: 'Préférences',
-          icone: preferencesActives ? Icons.settings : Icons.settings_outlined,
-          actif: preferencesActives,
-          surAppui: () => context.go('/preferences'),
-        ),
-        const SizedBox(height: 6),
-        const _Utilisateur(),
-      ]),
+          for (final (i, d) in destinations.indexed)
+            _Lien(
+              libelle: d.libelle,
+              icone: i == index ? d.iconeActive : d.icone,
+              actif: i == index,
+              surAppui: () => surChoix(i),
+            ),
+          const Spacer(),
+          const Divider(),
+          const SizedBox(height: 8),
+          _Lien(
+            libelle: 'Préférences',
+            icone: preferencesActives ? Icons.settings : Icons.settings_outlined,
+            actif: preferencesActives,
+            surAppui: () => context.go('/preferences'),
+          ),
+          const SizedBox(height: 6),
+          const _Utilisateur(),
+        ],
+      ),
     );
   }
 }
@@ -145,25 +160,29 @@ class _Lien extends StatelessWidget {
           onTap: surAppui,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(children: [
-              Icon(icone, size: 21, color: couleur),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(libelle,
+            child: Row(
+              children: [
+                Icon(icone, size: 21, color: couleur),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    libelle,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        color: couleur,
-                        fontSize: 15,
-                        fontWeight: actif ? FontWeight.w600 : FontWeight.w500)),
-              ),
-            ]),
+                      color: couleur,
+                      fontSize: 15,
+                      fontWeight: actif ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
 
 /// Accès aux préférences depuis la barre de titre, sur portable seulement :
 /// sur PC elles sont dans le menu latéral.
@@ -181,7 +200,6 @@ class BoutonPreferences extends StatelessWidget {
   }
 }
 
-
 /// Qui est connecté, et le bouton pour se déconnecter (menu latéral).
 class _Utilisateur extends ConsumerWidget {
   const _Utilisateur();
@@ -192,29 +210,44 @@ class _Utilisateur extends ConsumerWidget {
     if (profil == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 4, 0, 0),
-      child: Row(children: [
-        CircleAvatar(
-          radius: 17,
-          backgroundColor: context.schema.primaryContainer,
-          child: Text(profil.initiales,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 17,
+            backgroundColor: context.schema.primaryContainer,
+            child: Text(
+              profil.initiales,
               style: TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w700, color: context.schema.onPrimaryContainer)),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(profil.nomAffiche,
-                overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
-            Text(profil.role == 'admin' ? 'Administrateur' : 'Équipe',
-                style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
-          ]),
-        ),
-        IconButton(
-          tooltip: 'Se déconnecter',
-          icon: Icon(Icons.logout, size: 20, color: context.couleurs.encre2),
-          onPressed: () => ref.read(sessionProvider.notifier).fermer(),
-        ),
-      ]),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: context.schema.onPrimaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  profil.nomAffiche,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  profil.role == 'admin' ? 'Administrateur' : 'Équipe',
+                  style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Se déconnecter',
+            icon: Icon(Icons.logout, size: 20, color: context.couleurs.encre2),
+            onPressed: () => ref.read(sessionProvider.notifier).fermer(),
+          ),
+        ],
+      ),
     );
   }
 }

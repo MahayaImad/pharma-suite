@@ -56,7 +56,9 @@ abstract class Session with _$Session {
 enum EchecConnexion {
   identifiants('Utilisateur ou mot de passe incorrect.'),
   compteDesactive('Ce compte est désactivé. Voyez avec le titulaire.'),
-  serveurInjoignable("Le serveur de l'officine ne répond pas. Vérifiez que le poste est sur le réseau de l'officine."),
+  serveurInjoignable(
+    "Le serveur de l'officine ne répond pas. Vérifiez que le poste est sur le réseau de l'officine.",
+  ),
   inattendu('La connexion a échoué. Réessayez dans un instant.');
 
   const EchecConnexion(this.message);

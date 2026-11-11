@@ -66,6 +66,15 @@ abstract class Produit with _$Produit {
     String? disponibilite,
     int? psychotrope,
     @JsonKey(name: 'remb_cvm') int? remboursable,
+    // Indicateurs de gestion (liste) : jauge et groupes « à traiter ».
+    @Default(0) double cmm,
+    @JsonKey(name: 'stock_securite') @Default(0) int stockSecurite,
+    @JsonKey(name: 'stock_maximum') @Default(0) int stockMaximum,
+    @JsonKey(name: 'couverture_jours') int? couverture,
+    @JsonKey(name: 'qte_a_risque') @Default(0) int qteARisque,
+    @JsonKey(name: 'valeur_a_risque') @Default(0) double valeurARisque,
+    @JsonKey(name: 'qte_surstock') @Default(0) int qteSurstock,
+    @JsonKey(name: 'valeur_surstock') @Default(0) double valeurSurstock,
   }) = _Produit;
 
   factory Produit.fromJson(Map<String, dynamic> json) => _$ProduitFromJson(json);
@@ -78,8 +87,19 @@ abstract class Produit with _$Produit {
     return morceaux.join(' ');
   }
 
-  EtatStock get etat => etatStock(
-      stock: stock, seuil: seuil, actif: actif, quota: disponibilite == 'quota');
+  EtatStock get etat => etatStock(stock: stock, seuil: seuil, actif: actif, quota: disponibilite == 'quota');
+
+  /// Ce qui ressort en premier sur la ligne : un problème de stock, sinon
+  /// une péremption à risque, sinon un surstock.
+  Signal get signal {
+    final e = etat;
+    if (e == EtatStock.rupture) return Signal.rupture;
+    if (e == EtatStock.sousSeuil || e == EtatStock.quota) return Signal.sousSeuil;
+    if (qteARisque > 0) return Signal.risque;
+    if (qteSurstock > 0) return Signal.surstock;
+    if (e == EtatStock.inactif) return Signal.inactif;
+    return Signal.ok;
+  }
 }
 
 /// Un lot (ligne de `entrees_produits`).
@@ -88,6 +108,7 @@ abstract class Lot with _$Lot {
   const factory Lot({
     required int id,
     String? lot,
+
     /// Texte EASYPHARM, format MM/YY.
     String? peremption,
     @JsonKey(name: 'peremption_date') DateTime? peremptionDate,
@@ -112,11 +133,14 @@ bool _versBool(Object? v) => v == true || v == 1 || v == '1';
 abstract class RisqueLot with _$RisqueLot {
   const factory RisqueLot({
     required int id,
+
     /// Durée de vie restante en jours ; null si la date est inconnue.
     int? dvr,
+
     /// Ce que le lot vendra avant sa péremption ; null s'il est hors calcul
     /// (bloqué, sans date).
     int? ecoulable,
+    @Default(0) int stock,
     @JsonKey(name: 'a_risque') int? aRisque,
     @JsonKey(name: 'valeur_a_risque') double? valeurARisque,
   }) = _RisqueLot;
@@ -131,12 +155,12 @@ abstract class FournisseurPrincipal with _$FournisseurPrincipal {
     int? id,
     String? nom,
     @JsonKey(name: 'delai_jours_ouvres') @Default(1) int delaiJoursOuvres,
+
     /// Faux : délai par défaut des réglages, non saisi pour ce fournisseur.
     @JsonKey(name: 'delai_saisi') @Default(false) bool delaiSaisi,
   }) = _FournisseurPrincipal;
 
-  factory FournisseurPrincipal.fromJson(Map<String, dynamic> json) =>
-      _$FournisseurPrincipalFromJson(json);
+  factory FournisseurPrincipal.fromJson(Map<String, dynamic> json) => _$FournisseurPrincipalFromJson(json);
 }
 
 /// Indicateurs de gestion d'un produit (`GET /stock/products/{id}/indicateurs`).
@@ -177,19 +201,51 @@ abstract class IndicateursProduit with _$IndicateursProduit {
 /// Une page de la liste des produits.
 @freezed
 abstract class PageProduits with _$PageProduits {
-  const factory PageProduits({
-    @Default(0) int total,
-    @Default(<Produit>[]) List<Produit> items,
-  }) = _PageProduits;
+  const factory PageProduits({@Default(0) int total, @Default(<Produit>[]) List<Produit> items}) =
+      _PageProduits;
 
   factory PageProduits.fromJson(Map<String, dynamic> json) => _$PageProduitsFromJson(json);
 }
+
+/// Compteurs et premiers produits de chaque groupe (`GET /stock/a-traiter`).
+@freezed
+abstract class Compteurs with _$Compteurs {
+  const factory Compteurs({
+    @Default(0) int ruptures,
+    @JsonKey(name: 'sous_seuil') @Default(0) int sousSeuil,
+    @JsonKey(name: 'a_commander') @Default(0) int aCommander,
+    @JsonKey(name: 'a_risque') @Default(0) int aRisque,
+    @JsonKey(name: 'valeur_a_risque') @Default(0) double valeurARisque,
+    @Default(0) int surstock,
+    @JsonKey(name: 'valeur_surstock') @Default(0) double valeurSurstock,
+  }) = _Compteurs;
+
+  factory Compteurs.fromJson(Map<String, dynamic> json) => _$CompteursFromJson(json);
+}
+
+@freezed
+abstract class ATraiter with _$ATraiter {
+  const factory ATraiter({
+    @Default(Compteurs()) Compteurs compteurs,
+    @JsonKey(name: 'a_commander') @Default(<Produit>[]) List<Produit> aCommander,
+    @JsonKey(name: 'a_risque') @Default(<Produit>[]) List<Produit> aRisque,
+    @Default(<Produit>[]) List<Produit> surstock,
+  }) = _ATraiter;
+
+  factory ATraiter.fromJson(Map<String, dynamic> json) => _$ATraiterFromJson(json);
+}
+
+/// Ce que la ligne d'un produit met en avant.
+enum Signal { rupture, sousSeuil, risque, surstock, ok, inactif }
 
 /// Filtre `etat` de `GET /stock/products`.
 enum FiltreEtat {
   enStock('en_stock', 'En stock'),
   sousSeuil('sous_seuil', 'Sous le seuil'),
-  rupture('rupture', 'Rupture');
+  rupture('rupture', 'Ruptures'),
+  aCommander('a_commander', 'À commander'),
+  aRisque('a_risque', 'Péremption à risque'),
+  surstock('surstock', 'Surstock');
 
   const FiltreEtat(this.api, this.libelle);
   final String api, libelle;
@@ -251,3 +307,99 @@ EtatPeremption etatPeremption(DateTime? peremption, DateTime aujourdhui) {
   if (finDuMois.isBefore(DateTime(jour.year, jour.month + 3, jour.day))) return EtatPeremption.proche;
   return EtatPeremption.bonne;
 }
+
+// ── Projection du stock ────────────────────────────────────────────────────
+
+/// Un point de la courbe de stock : jour (0 = aujourd'hui) et quantité.
+typedef PointStock = ({double jour, double stock});
+
+/// Stock dans le temps si l'on vend au rythme [cmj] sans recommander, en
+/// FEFO : chaque lot se vend après ceux qui périment avant lui ; à sa
+/// péremption, ce qui reste du lot est perdu (chute verticale de la courbe).
+/// Les lots sans date se vendent en dernier et ne périment pas.
+List<PointStock> projectionStock(List<({int stock, int? dvr})> lots, double cmj, {int horizon = 365}) {
+  final dates = lots.where((l) => l.stock > 0).toList()
+    ..sort((a, b) => (a.dvr ?? 1 << 30).compareTo(b.dvr ?? 1 << 30));
+  var reste = dates.fold<double>(0, (s, l) => s + l.stock);
+  final points = <PointStock>[(jour: 0, stock: reste)];
+  var t = 0.0;
+  for (final l in dates) {
+    final duree = cmj > 0 ? l.stock / cmj : double.infinity;
+    final limite = l.dvr?.toDouble();
+    if (limite == null || t + duree <= limite) {
+      if (duree.isInfinite) break;
+      t += duree;
+      reste -= l.stock;
+      points.add((jour: t, stock: reste));
+    } else {
+      final vendu = limite > t ? cmj * (limite - t) : 0.0;
+      if (limite > t) {
+        reste -= vendu;
+        points.add((jour: limite, stock: reste));
+      }
+      reste -= l.stock - vendu;
+      points.add((jour: _plusGrand(t, limite), stock: reste < 0 ? 0 : reste));
+      t = _plusGrand(t, limite);
+    }
+    if (t >= horizon) break;
+  }
+  return points;
+}
+
+double _plusGrand(double a, double b) => a > b ? a : b;
+
+// ── Conseil ────────────────────────────────────────────────────────────────
+
+enum NiveauConseil { urgent, attention, risque, info, bon }
+
+/// Que faire de ce produit, en une phrase.
+({NiveauConseil niveau, String texte}) conseil(Produit p, IndicateursProduit i) {
+  final livraison = i.fournisseur?.nom == null ? '' : ' chez ${i.fournisseur!.nom}';
+  if (i.qteARisque > 0) {
+    return (
+      niveau: NiveauConseil.risque,
+      texte:
+          '${i.qteARisque} unité${i.qteARisque > 1 ? 's' : ''} ne ser${i.qteARisque > 1 ? 'ont' : 'a'} pas '
+          'vendue${i.qteARisque > 1 ? 's' : ''} avant leur péremption. Proposez un retour au fournisseur, '
+          'un échange avec une pharmacie voisine ou une mise en avant au comptoir. '
+          'Ne pas recommander pour l\'instant.',
+    );
+  }
+  if (p.etat == EtatStock.rupture) {
+    return (
+      niveau: NiveauConseil.urgent,
+      texte:
+          'En rupture alors qu\'il se vend ${_un(i.cmm)} unité${i.cmm >= 2 ? 's' : ''} par mois. '
+          'À commander en priorité$livraison, jusqu\'au stock maximum (${i.stockMaximum}).',
+    );
+  }
+  if (p.stock < i.stockSecurite || p.etat == EtatStock.sousSeuil) {
+    return (
+      niveau: NiveauConseil.attention,
+      texte:
+          'Stock bas : ${_un(p.stock)} en stock pour un stock de sécurité de ${i.stockSecurite}. '
+          'À commander$livraison, jusqu\'au stock maximum (${i.stockMaximum}).',
+    );
+  }
+  if (i.stockMaximum > 0 && p.stock > i.stockMaximum && i.couverture != null) {
+    return (
+      niveau: NiveauConseil.info,
+      texte:
+          'Au-dessus du stock maximum (${i.stockMaximum}) : ${i.couverture} jours de couverture. '
+          'Ne pas recommander avant que le stock repasse sous le maximum.',
+    );
+  }
+  if (i.cmm <= 0) {
+    return (
+      niveau: NiveauConseil.info,
+      texte: 'Aucune vente sur 12 mois : stock dormant, à écouler ou retourner.',
+    );
+  }
+  return (
+    niveau: NiveauConseil.bon,
+    texte: 'Rien à faire : ${i.couverture ?? 0} jours de couverture, au-dessus du stock de sécurité.',
+  );
+}
+
+String _un(double v) =>
+    v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');

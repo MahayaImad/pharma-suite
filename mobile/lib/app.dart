@@ -15,10 +15,7 @@ final routeurProvider = Provider<GoRouter>((ref) {
   final changements = ValueNotifier<int>(0);
   ref.listen(sessionProvider, (_, _) => changements.value++);
   ref.onDispose(changements.dispose);
-  return construireRouteur(
-    connecte: () => ref.read(sessionProvider) != null,
-    rafraichir: changements,
-  );
+  return construireRouteur(connecte: () => ref.read(sessionProvider) != null, rafraichir: changements);
 });
 
 class PharmaSuite extends ConsumerWidget {

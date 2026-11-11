@@ -32,6 +32,12 @@ class FausseStockApi implements StockApi {
       classeXyz: 'X',
       derniereVente: DateTime.now().subtract(const Duration(days: 1)),
       remboursable: 1,
+      cmm: 51,
+      stockSecurite: 7,
+      stockMaximum: 19,
+      couverture: 28,
+      qteARisque: 5,
+      valeurARisque: 650,
     ),
     Produit(
       id: 2,
@@ -49,6 +55,10 @@ class FausseStockApi implements StockApi {
       actif: true,
       classeAbc: 'B',
       vendu12Mois: 90,
+      cmm: 7.5,
+      stockSecurite: 4,
+      stockMaximum: 12,
+      couverture: 12,
     ),
     const Produit(
       id: 3,
@@ -60,6 +70,7 @@ class FausseStockApi implements StockApi {
       stock: 0,
       actif: true,
       prixVente: 1450,
+      cmm: 3,
     ),
   ];
 
@@ -95,6 +106,9 @@ class FausseStockApi implements StockApi {
         FiltreEtat.enStock => p.stock > 0,
         FiltreEtat.sousSeuil => p.etat == EtatStock.sousSeuil,
         FiltreEtat.rupture => p.etat == EtatStock.rupture,
+        FiltreEtat.aCommander => p.etat == EtatStock.rupture || p.etat == EtatStock.sousSeuil,
+        FiltreEtat.aRisque => p.qteARisque > 0,
+        FiltreEtat.surstock => p.qteSurstock > 0,
       };
     }).toList();
     return PageProduits(total: retenus.length, items: retenus.skip(offset).take(limite).toList());
@@ -104,6 +118,16 @@ class FausseStockApi implements StockApi {
   Future<Produit> fiche(int id) async {
     if (panne) throw const ErreurApi('Le serveur ne répond pas.', reseau: true);
     return _produits.firstWhere((p) => p.id == id);
+  }
+
+  @override
+  Future<ATraiter> aTraiter() async {
+    if (panne) throw const ErreurApi('Le serveur ne répond pas.', reseau: true);
+    return ATraiter(
+      compteurs: const Compteurs(ruptures: 1, sousSeuil: 1, aCommander: 2, aRisque: 1, valeurARisque: 650),
+      aCommander: [exemples[2], exemples[1]],
+      aRisque: [exemples[0]],
+    );
   }
 
   @override
@@ -126,8 +150,8 @@ class FausseStockApi implements StockApi {
       qteARisque: 5,
       valeurARisque: 650,
       lots: const [
-        RisqueLot(id: 10, dvr: 0, ecoulable: 0, aRisque: 5),
-        RisqueLot(id: 11, dvr: 750, ecoulable: 43, aRisque: 0),
+        RisqueLot(id: 10, stock: 5, dvr: 0, ecoulable: 0, aRisque: 5),
+        RisqueLot(id: 11, stock: 43, dvr: 750, ecoulable: 43, aRisque: 0),
       ],
     );
   }
