@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,6 +27,9 @@ class PharmaSuite extends ConsumerWidget {
     return MaterialApp.router(
       title: 'PharmaSuite',
       debugShowCheckedModeBanner: false,
+      locale: const Locale('fr'),
+      supportedLocales: const [Locale('fr')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: construireTheme(ref.watch(themeProvider)),
       routerConfig: ref.watch(routeurProvider),
     );

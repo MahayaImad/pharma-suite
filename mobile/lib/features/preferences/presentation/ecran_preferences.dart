@@ -6,9 +6,10 @@ import '../../../core/theme/themes.dart';
 import '../../../core/widgets/coquille.dart';
 import '../../../core/widgets/pastille_etat.dart';
 import '../../connexion/application/session_controller.dart';
+import '../../reglages/presentation/ecran_reglages.dart';
 import '../application/theme_controller.dart';
 
-/// Préférences de l'utilisateur. Pour l'instant : le choix du thème.
+/// Préférences : le thème, l'accès au calendrier et aux réglages, le compte.
 class EcranPreferences extends ConsumerWidget {
   const EcranPreferences({super.key});
 
@@ -60,6 +61,8 @@ class EcranPreferences extends ConsumerWidget {
                         ),
                     ],
                   ),
+                  const SizedBox(height: 28),
+                  const EntreeReglages(),
                   const SizedBox(height: 28),
                   const _Compte(),
                   const SizedBox(height: 28),

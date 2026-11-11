@@ -18,6 +18,11 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   du stock par rapport au maximum et un repère au stock de sécurité. Fiche :
   conseil, jauge, projection du stock en FEFO, lots, réapprovisionnement,
   prix. Les boutons qui dépendent des commandes affichent « bientôt ».
+- **Calendrier et réglages** (Préférences) : gardes à venir et passées (les
+  gardes retrouvées dans les ventes se confirment d'un geste), Ramadan et
+  Aïd par année (« à vérifier » jusqu'à validation), jours fériés, et les
+  trois constantes du calcul des commandes. Lecture pour tous, modification
+  par le titulaire.
 - Accueil, Alertes, Inventaire et Commandes affichent encore « Bientôt
   disponible ».
 

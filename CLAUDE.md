@@ -76,7 +76,10 @@ groupes à commander, péremption à risque, surstock (`GET /stock/a-traiter`),
 puis tout le stock (familles, tri, liste paginée avec jauge stock / maximum /
 sécurité) ; fiche produit avec conseil, jauge, projection du stock en FEFO,
 lots à risque, réapprovisionnement (CMM, CMJ, délai, SS, max) et prix ; liste et fiche côte à
-côte sur PC. Riverpod, go_router, shared_preferences, Dio (client authentifié :
+côte sur PC. **Calendrier et réglages** (`/preferences/reglages`) : gardes
+(saisie, confirmation des gardes détectées), Ramadan et Aïd, jours fériés,
+constantes du calcul des commandes ; modification réservée au titulaire
+(rôle `admin`). Interface en français (`flutter_localizations`). Riverpod, go_router, shared_preferences, Dio (client authentifié :
 jeton ajouté, déconnexion sur 401) et freezed (+ json_serializable, fichiers
 générés committés) sont en place ; **Drift et le hors-ligne n'existent pas
 encore**. La version web route par `#/` (ex. `/#/stock/5`). La photo de l'écran de connexion
@@ -180,6 +183,7 @@ router au passage.
 | `tasks` | tâches assignées aux employés |
 | `sms` | passerelle SMS avec file d'attente |
 | `chatbot` | question en français → SQL → réponse formatée |
+| `modules/calendrier` | gardes, Ramadan et Aïd, jours fériés — **premier module au format cible** (`app/modules/calendrier/` : router, service, repository, schemas ; réponses `{data, error}`) |
 
 ## Pièges connus (ne pas se faire avoir)
 

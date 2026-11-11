@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/connexion/presentation/ecran_connexion.dart';
 
 import '../../features/preferences/presentation/ecran_preferences.dart';
+import '../../features/reglages/presentation/ecran_reglages.dart';
 import '../../features/stock/presentation/ecran_stock.dart';
 import '../widgets/coquille.dart';
 import '../widgets/ecran_a_venir.dart';
@@ -65,6 +66,14 @@ GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte,
           pageBuilder: (context, etat) => const NoTransitionPage(
             child: Coquille(emplacement: '/preferences', child: EcranPreferences()),
           ),
+          routes: [
+            GoRoute(
+              path: 'reglages',
+              pageBuilder: (context, etat) => const NoTransitionPage(
+                child: Coquille(emplacement: '/preferences', child: EcranReglages()),
+              ),
+            ),
+          ],
         ),
       ],
     );
