@@ -91,7 +91,9 @@ pytest                             # tests, sans postgres
 ```
 
 `docker/docker-compose.yml` est le seul fichier compose : l'API (port 8000)
-y tourne à côté de postgres (5439 sur l'hôte), redis et pgadmin (8085). Les
+y tourne à côté de l'application web (service `web`, port 8090 : Flutter
+compilé dans l'image puis servi par nginx, qui relaie `/api/` vers l'API),
+de postgres (5439 sur l'hôte), redis et pgadmin (8085). Les
 secrets viennent de `docker/.env`, jamais committé. `API_DB_NAME` donne à
 l'API sa propre base dans ce postgres. Les migrations ne se lancent pas au
 démarrage du conteneur : c'est une étape volontaire.

@@ -25,6 +25,21 @@ flutter build web --release --no-web-resources-cdn      # version web
 flutter build apk --release                             # Android
 ```
 
+### Sans installer Flutter : par Docker
+
+Sur le serveur, Docker compile l'application et la sert :
+
+```bash
+cd docker
+docker compose build web
+docker compose up -d web
+```
+
+Puis ouvrir `http://<serveur>:8090` depuis un PC ou un téléphone du réseau
+(port réglable par `WEB_PORT` dans `docker/.env`). Les appels `/api/` sont
+relayés vers l'API : une seule adresse à connaître. Après un `git pull`,
+relancer ces deux commandes.
+
 `--no-web-resources-cdn` est obligatoire pour la version web : sans lui,
 Flutter télécharge son moteur de rendu depuis Internet à chaque ouverture.
 Avec lui et la police embarquée (`assets/fonts/`), l'application ne contacte

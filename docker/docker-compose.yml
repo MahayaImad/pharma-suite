@@ -1,4 +1,4 @@
-# PharmaSuite : API, PostgreSQL, Redis, pgAdmin.
+# PharmaSuite : API, application web, PostgreSQL, Redis, pgAdmin.
 # Les identifiants sont lus depuis docker/.env (non versionné) :
 #   cp .env.example .env   puis renseigner les mots de passe.
 # Les scripts .sql / .sh placés dans init/ ne s'exécutent qu'à la création
@@ -74,6 +74,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  # Application web : ouvrir http://<serveur>:${WEB_PORT:-8090} depuis un PC
+  # ou un téléphone du réseau de l'officine.
+  web:
+    build:
+      context: ../mobile
+      network: host
+    container_name: pharmasuite_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8090}:80"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
