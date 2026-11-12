@@ -260,10 +260,17 @@ surestime le stock pendant les quelques jours d'attente. **Écart accepté.**
 plus vendus, 12 mois) — 0,3 % de jours à stock négatif (2 produits sur 150)
 contre 9,9 % par produit (95 sur 150), qui ne sait pas affecter les
 ajustements, avoirs et échanges au bon lot. 24 % des lignes de vente n'ont
-pas de numéro de lot : leur `id_produit` désigne alors la ligne de lot
-(`entrees_produits.id`, même convention que l'inventaire, à confirmer par le
-diagnostic), retenue si elle est du même produit ; sinon elles vont aux lots
+pas de numéro de lot : leur `id_produit` désigne la ligne de lot
+(`entrees_produits.id`, même convention que l'inventaire — confirmé le
+2026-11-12 : quand la vente porte un numéro de lot, c'est celui de la ligne
+désignée dans 100 % des cas ; 98,1 % des ventes sans numéro retrouvent ainsi
+leur lot), retenue si elle est du même produit ; sinon elles vont aux lots
 sans numéro du produit.
+
+**Historique écrit le 2026-11-12** : 3 612 produits du 2024-01-01 au
+2026-11-12 (3,78 millions de jours, 172 s) ; 0,04 % de jours à stock négatif
+ramenés à 0 (24 produits) ; 36,6 % de jours-produits en rupture, surtout des
+produits à rotation lente.
 
 **Consommables donnés probables** (diagnostic du 2026-11-12) : 44 produits
 jamais vendus mais ajustés à la baisse, 1 764 unités sur 12 mois.
