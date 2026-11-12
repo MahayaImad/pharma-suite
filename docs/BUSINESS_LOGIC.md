@@ -279,6 +279,10 @@ la prévision des commandes en tient compte.
   chaque type est recalculée sur les gardes connues ; on part de la dernière
   garde passée ; un jour déjà pris n'est jamais reproposé ; une soirée qui
   tombe un vendredi (jour de fermeture) est signalée « à vérifier ».
+- **Annuler** une garde détectée ou proposée (non confirmée) la marque
+  `annulee` (migration 010) au lieu de la supprimer : elle disparaît de la
+  liste, ne fixe plus la rotation, et ni la détection ni la rotation ne la
+  reproposent. La saisir ou la confirmer à nouveau la rétablit.
 - **Ramadan, Aïd el-Fitr, Aïd el-Adha** : table `evenements_calendrier`,
   dates 2022–2027 pré-remplies d'après le calendrier lunaire, marquées
   `a_verifier` (l'annonce officielle peut décaler d'un jour), modifiables.

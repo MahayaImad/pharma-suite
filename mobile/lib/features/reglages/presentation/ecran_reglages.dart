@@ -372,14 +372,26 @@ class _SectionGardes extends ConsumerWidget {
           ],
           surAppui: modifiable ? () => _dialogueGarde(context, ref, garde: g) : null,
           fin: modifiable && g.aConfirmer
-              ? TextButton(
-                  onPressed: () => _executer(
-                    context,
-                    ref,
-                    (api) => api.enregistrerGarde(g.date, g.type, note: g.note),
-                    gardesProvider,
-                  ),
-                  child: const Text('Confirmer'),
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton(
+                      key: ValueKey('annuler-${jourApi(g.date)}'),
+                      style: TextButton.styleFrom(foregroundColor: context.couleurs.encre2),
+                      onPressed: () => _annulerGarde(context, ref, g),
+                      child: const Text('Annuler'),
+                    ),
+                    TextButton(
+                      key: ValueKey('confirmer-${jourApi(g.date)}'),
+                      onPressed: () => _executer(
+                        context,
+                        ref,
+                        (api) => api.enregistrerGarde(g.date, g.type, note: g.note),
+                        gardesProvider,
+                      ),
+                      child: const Text('Confirmer'),
+                    ),
+                  ],
                 )
               : null,
         );
@@ -389,7 +401,9 @@ class _SectionGardes extends ConsumerWidget {
             _SousTitre(
               'À venir',
               compte: aVenir.length,
-              detail: proposees > 0 ? '$proposees proposée${proposees > 1 ? 's' : ''} d\'après la rotation, à confirmer' : null,
+              detail: proposees > 0
+                  ? '$proposees proposée${proposees > 1 ? 's' : ''} d\'après la rotation, à confirmer'
+                  : null,
             ),
             if (aVenir.isEmpty) const _Vide('Aucune garde à venir saisie.') else ...aVenir.map(ligne),
             if (modifiable)
@@ -464,6 +478,35 @@ class _SousTitre extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Écarte une garde détectée ou proposée qui n'a pas eu lieu (elle ne sera
+/// plus reproposée), avec un retour en arrière possible.
+Future<void> _annulerGarde(BuildContext context, WidgetRef ref, Garde g) async {
+  final messager = ScaffoldMessenger.of(context);
+  final api = ref.read(calendrierApiProvider);
+  try {
+    await api.annulerGarde(g.date);
+    ref.invalidate(gardesProvider);
+    messager
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Garde du ${_dateCourte(g.date)} annulée.'),
+          action: SnackBarAction(
+            label: 'Rétablir',
+            onPressed: () async {
+              await api.enregistrerGarde(g.date, g.type, note: g.note);
+              ref.invalidate(gardesProvider);
+            },
+          ),
+        ),
+      );
+  } catch (e) {
+    messager
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(ErreurApi.depuis(e).message)));
+  }
 }
 
 /// Propose les gardes à venir d'après la rotation et dit combien sont venues.

@@ -11,6 +11,9 @@ abstract interface class CalendrierApi {
   Future<Garde> enregistrerGarde(DateTime jour, TypeGarde type, {String? note});
   Future<void> supprimerGarde(DateTime jour);
 
+  /// Écarte une garde détectée ou proposée : elle ne sera plus reproposée.
+  Future<void> annulerGarde(DateTime jour);
+
   /// Ajoute les gardes des [mois] prochains mois d'après la rotation (à
   /// confirmer) ; renvoie celles qui ont été ajoutées.
   Future<List<Garde>> proposerGardes({int mois = 3});
@@ -66,6 +69,10 @@ class CalendrierApiDio implements CalendrierApi {
     () => _dio.post('/calendrier/gardes/proposer', queryParameters: {'mois': mois}),
     (d) => _liste(d, Garde.fromJson),
   );
+
+  @override
+  Future<void> annulerGarde(DateTime jour) =>
+      _appel(() => _dio.post('/calendrier/gardes/${jourApi(jour)}/annuler'), (_) {});
 
   @override
   Future<void> supprimerGarde(DateTime jour) =>

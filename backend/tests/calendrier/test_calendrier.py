@@ -170,3 +170,31 @@ async def test_route_proposer(api):
     assert (g["source"], g["confirme"]) == ("prevision", True)
     utilisateur.update(role="user")
     assert (await api.post("/calendrier/gardes/proposer")).status_code == 403
+
+
+async def test_annuler_une_garde_detectee(api):
+    await api.db.execute(text(
+        "INSERT INTO gardes (date, type, source, confirme) VALUES ('2026-10-28', 'soiree', 'detection', false)"))
+    await api.db.commit()
+    r = await api.post("/calendrier/gardes/2026-10-28/annuler")
+    assert r.status_code == 200
+    assert (await api.get("/calendrier/gardes", params={"annee": 2026})).json()["data"] == []   # masquée
+    # Elle reste en base : la détection ne la recrée pas (ON CONFLICT DO NOTHING).
+    assert (await api.db.execute(text("SELECT annulee FROM gardes WHERE date = '2026-10-28'"))).scalar() is True
+    # Une garde confirmée ne s'annule pas ; on la supprime ou on la corrige.
+    await api.put("/calendrier/gardes/2026-11-07", json={"type": "soiree"})
+    r = await api.post("/calendrier/gardes/2026-11-07/annuler")
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "non_annulable")
+    # La saisir à nouveau la rétablit.
+    g = (await api.put("/calendrier/gardes/2026-10-28", json={"type": "soiree"})).json()["data"]
+    assert g["confirme"] is True
+    assert len((await api.get("/calendrier/gardes", params={"annee": 2026})).json()["data"]) == 2
+
+
+def test_une_garde_annulee_ne_fixe_pas_la_rotation_et_n_est_pas_reproposee():
+    gardes = [GardeConnue(date(2026, 11, 7), "soiree", "saisie"),
+              GardeConnue(date(2026, 11, 9), "soiree", "detection", annulee=True),
+              GardeConnue(date(2026, 11, 17), "soiree", "prevision", annulee=True)]
+    p = proposer(gardes, aujourdhui=date(2026, 11, 12), horizon_jours=20)
+    # départ le 07/11 (pas le 09/11 annulé) ; le 17/11 annulé n'est pas reproposé
+    assert [x.date for x in p] == [date(2026, 11, 27)]

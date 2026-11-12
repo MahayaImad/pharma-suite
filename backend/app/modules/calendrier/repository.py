@@ -16,7 +16,7 @@ class CalendrierRepository:
     async def gardes(self, debut: date, fin: date) -> list[dict]:
         r = await self.db.execute(text("""
             SELECT date, type, source, confirme, note, modifie_le, modifie_par
-            FROM gardes WHERE date BETWEEN :debut AND :fin ORDER BY date DESC
+            FROM gardes WHERE date BETWEEN :debut AND :fin AND NOT annulee ORDER BY date DESC
         """), {"debut": debut, "fin": fin})
         return [dict(x._mapping) for x in r]
 
@@ -26,7 +26,7 @@ class CalendrierRepository:
         r = await self.db.execute(text("""
             INSERT INTO gardes (date, type, source, confirme, note, modifie_le, modifie_par)
             VALUES (:d, :t, 'saisie', true, :n, now(), :qui)
-            ON CONFLICT (date) DO UPDATE SET type = :t, note = :n, confirme = true,
+            ON CONFLICT (date) DO UPDATE SET type = :t, note = :n, confirme = true, annulee = false,
                 modifie_le = now(), modifie_par = :qui
             RETURNING date, type, source, confirme, note, modifie_le, modifie_par
         """), {"d": jour, "t": type_, "n": note, "qui": qui})
@@ -35,7 +35,7 @@ class CalendrierRepository:
         return ligne
 
     async def toutes_les_gardes(self) -> list[dict]:
-        r = await self.db.execute(text("SELECT date, type, source FROM gardes ORDER BY date"))
+        r = await self.db.execute(text("SELECT date, type, source, annulee FROM gardes ORDER BY date"))
         return [dict(x._mapping) for x in r]
 
     async def ajouter_propositions(self, propositions: list, qui: str) -> list[dict]:
@@ -54,6 +54,15 @@ class CalendrierRepository:
                 lignes.append(dict(ligne._mapping))
         await self.db.commit()
         return lignes
+
+    async def annuler_garde(self, jour: date, qui: str) -> bool:
+        """Marque annulée une garde non confirmée (détectée ou proposée)."""
+        r = await self.db.execute(text("""
+            UPDATE gardes SET annulee = true, modifie_le = now(), modifie_par = :qui
+            WHERE date = :d AND NOT confirme AND NOT annulee
+        """), {"d": jour, "qui": qui})
+        await self.db.commit()
+        return r.rowcount > 0
 
     async def supprimer_garde(self, jour: date) -> bool:
         r = await self.db.execute(text("DELETE FROM gardes WHERE date = :d"), {"d": jour})

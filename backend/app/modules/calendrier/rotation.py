@@ -26,6 +26,7 @@ class GardeConnue:
     date: date
     type: str
     source: str
+    annulee: bool = False
 
 
 @dataclass(frozen=True)
@@ -52,7 +53,10 @@ def proposer(gardes: Iterable[GardeConnue], aujourdhui: date, horizon_jours: int
     fin = aujourdhui + timedelta(days=horizon_jours)
     propositions: list[Proposition] = []
     for type_ in PERIODES_PAR_DEFAUT:
-        connues = sorted(g.date for g in gardes if g.type == type_ and g.source != "prevision")
+        # Une garde annulée n'a pas eu lieu : elle ne fixe pas la rotation,
+        # mais son jour reste occupé (on ne la repropose pas).
+        connues = sorted(g.date for g in gardes
+                         if g.type == type_ and g.source != "prevision" and not g.annulee)
         if not connues:
             continue
         p = periode(connues, type_)

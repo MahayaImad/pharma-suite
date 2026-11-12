@@ -50,6 +50,12 @@ async def enregistrer_garde(jour: date, saisie: s.GardeSaisie, svc: CalendrierSe
     return await _repondre(svc.enregistrer_garde(jour, saisie))
 
 
+@router.post("/gardes/{jour}/annuler", response_model=s.Reponse[None])
+async def annuler_garde(jour: date, svc: CalendrierService = Depends(_service)):
+    """Écarte une garde détectée ou proposée : elle ne sera plus reproposée."""
+    return await _repondre(svc.annuler_garde(jour))
+
+
 @router.delete("/gardes/{jour}", response_model=s.Reponse[None])
 async def supprimer_garde(jour: date, svc: CalendrierService = Depends(_service)):
     return await _repondre(svc.supprimer_garde(jour))

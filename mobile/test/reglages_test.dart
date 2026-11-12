@@ -46,6 +46,14 @@ class FauxCalendrier implements CalendrierApi {
     return [g];
   }
 
+  final annulees = <DateTime>[];
+
+  @override
+  Future<void> annulerGarde(DateTime jour) async {
+    annulees.add(jour);
+    gardesEnBase.removeWhere((g) => g.date == jour);
+  }
+
   @override
   Future<void> supprimerGarde(DateTime jour) async => gardesEnBase.removeWhere((g) => g.date == jour);
 
@@ -147,7 +155,7 @@ void main() {
 
   testWidgets('confirmer une garde retrouvée dans les ventes', (tester) async {
     final api = await _lancer(tester);
-    await tester.tap(find.text('Confirmer'));
+    await tester.tap(find.byKey(const ValueKey('confirmer-2026-10-28')));
     await tester.pumpAndSettle();
     expect(api.enregistrees.single, (DateTime(2026, 10, 28), TypeGarde.soiree));
     expect(find.text('à confirmer'), findsNothing);
@@ -203,6 +211,10 @@ void main() {
     expect(find.text('1 garde proposée, à confirmer quand le planning est connu.'), findsOneWidget);
     expect(find.text('proposée'), findsOneWidget);
     expect(find.text('1 proposée d\'après la rotation, à confirmer'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5)); // le message s'efface
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('proposer-gardes')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('proposer-gardes')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Aucune nouvelle garde à proposer'), findsOneWidget);
@@ -211,5 +223,19 @@ void main() {
   testWidgets('employé : pas de bouton de proposition', (tester) async {
     await _lancer(tester, role: 'employee');
     expect(find.byKey(const ValueKey('proposer-gardes')), findsNothing);
+  });
+
+  testWidgets('annuler une garde détectée, puis la rétablir', (tester) async {
+    final api = await _lancer(tester);
+    expect(find.byKey(const ValueKey('annuler-2026-10-28')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('annuler-2026-10-28')));
+    await tester.pumpAndSettle();
+    expect(api.annulees.single, DateTime(2026, 10, 28));
+    expect(find.byKey(const ValueKey('garde-2026-10-28')), findsNothing);
+    expect(find.text('Garde du mer. 28/10/2026 annulée.'), findsOneWidget);
+    await tester.tap(find.text('Rétablir'));
+    await tester.pumpAndSettle();
+    expect(api.enregistrees.single, (DateTime(2026, 10, 28), TypeGarde.soiree));
+    expect(find.byKey(const ValueKey('garde-2026-10-28')), findsOneWidget);
   });
 }

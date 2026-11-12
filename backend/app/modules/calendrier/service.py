@@ -52,9 +52,17 @@ class CalendrierService:
         """Ajoute les gardes des [mois] prochains mois d'après la rotation,
         à confirmer."""
         qui = self._admin()
-        connues = [GardeConnue(g["date"], g["type"], g["source"]) for g in await self.repo.toutes_les_gardes()]
+        connues = [GardeConnue(g["date"], g["type"], g["source"], g["annulee"])
+                   for g in await self.repo.toutes_les_gardes()]
         propositions = proposer(connues, date.today(), horizon_jours=round(mois * 30.5))
         return [s.Garde(**g) for g in await self.repo.ajouter_propositions(propositions, qui)]
+
+    async def annuler_garde(self, jour: date) -> None:
+        """Écarte une garde détectée ou proposée qui n'a pas eu lieu."""
+        qui = self._admin()
+        if not await self.repo.annuler_garde(jour, qui):
+            raise ErreurCalendrier(
+                "non_annulable", "Seule une garde détectée ou proposée, pas encore confirmée, s'annule.", 409)
 
     async def supprimer_garde(self, jour: date) -> None:
         self._admin()
