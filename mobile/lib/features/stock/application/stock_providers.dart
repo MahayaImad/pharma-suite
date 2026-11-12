@@ -85,6 +85,12 @@ final listeProduitsProvider = AsyncNotifierProvider<ListeProduitsController, Lis
   retry: _sansNouvelEssai,
 );
 
+/// Consommables proposés et confirmés.
+final consommablesProvider = FutureProvider<List<Consommable>>(
+  (ref) => ref.watch(stockApiProvider).consommables(),
+  retry: _sansNouvelEssai,
+);
+
 /// Fiche d'un produit.
 final ficheProduitProvider = FutureProvider.family<Produit, int>(
   (ref, id) => ref.watch(stockApiProvider).fiche(id),

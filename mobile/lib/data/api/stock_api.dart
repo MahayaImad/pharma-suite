@@ -15,6 +15,9 @@ abstract interface class StockApi {
   /// `GET /stock/products/{id}`.
   Future<Produit> fiche(int id);
 
+  /// `GET /stock/consommables` : proposés d'abord, puis confirmés.
+  Future<List<Consommable>> consommables();
+
   /// `PUT /stock/products/{id}/consommable` (titulaire).
   Future<void> deciderConsommable(int id, bool consommable);
 
@@ -66,6 +69,12 @@ class StockApiDio implements StockApi {
   @override
   Future<Produit> fiche(int id) =>
       _lire('/stock/products/$id', (j) => Produit.fromJson(j as Map<String, dynamic>));
+
+  @override
+  Future<List<Consommable>> consommables() => _lire(
+    '/stock/consommables',
+    (j) => [for (final c in j as List) Consommable.fromJson(c as Map<String, dynamic>)],
+  );
 
   @override
   Future<void> deciderConsommable(int id, bool consommable) async {

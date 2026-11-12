@@ -708,13 +708,24 @@ async def lister_consommables(
     db: AsyncSession = Depends(get_db),
     _: dict = Depends(get_current_user),
 ):
-    """Consommables confirmés et proposés (à confirmer)."""
-    lignes = await db.execute(text("""
-        SELECT pc.id_nom, n.nom, pc.consommable, pc.confirme, pc.source
-        FROM produits_consommables pc JOIN nomenclature n ON n.id = pc.id_nom
-        WHERE pc.consommable ORDER BY pc.confirme, n.nom
+    """Consommables proposés (à confirmer) puis confirmés, avec leur stock et
+    les unités sorties par ajustement d'inventaire sur 12 mois."""
+    lignes = await db.execute(text(f"""
+        WITH sorties_ajustees AS (
+            SELECT id_nom, sum(-ecart) AS unites FROM ({_INVENTAIRE_RESOLU}) ir
+            WHERE date > CURRENT_DATE - INTERVAL '12 months' AND ecart < 0 GROUP BY id_nom
+        )
+        SELECT pc.id_nom, n.nom, n.dosage, n.forme_abr, n.id_famille, pc.confirme, pc.source,
+               COALESCE(mv.stock_actuel, 0) AS stock, COALESCE(sa.unites, 0) AS unites_ajustees
+        FROM produits_consommables pc
+        JOIN nomenclature n ON n.id = pc.id_nom
+        LEFT JOIN mv_stock_produits mv ON mv.id_nom = pc.id_nom
+        LEFT JOIN sorties_ajustees sa ON sa.id_nom = pc.id_nom
+        WHERE pc.consommable ORDER BY pc.confirme, sa.unites DESC NULLS LAST, n.nom
     """))
-    return [{"id": r.id_nom, "nom": r.nom, "confirme": r.confirme, "source": r.source} for r in lignes]
+    return [{"id": r.id_nom, "nom": r.nom, "dosage": r.dosage, "forme_abr": r.forme_abr,
+             "id_famille": r.id_famille, "confirme": r.confirme, "source": r.source,
+             "stock": int(r.stock), "unites_ajustees_12m": int(r.unites_ajustees)} for r in lignes]
 
 
 async def _consommables(db: AsyncSession) -> set[int]:

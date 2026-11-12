@@ -332,7 +332,7 @@ async def test_consommable_decide_par_le_titulaire_et_sorti_du_surstock(api, db)
     fiche = (await api.get("/stock/products/3")).json()
     assert (fiche["consommable"], fiche["consommable_propose"]) == (False, False)
     liste = (await api.get("/stock/consommables")).json()
-    assert [(p["id"], p["confirme"]) for p in liste] == [(4, True)]
+    assert [(p["id"], p["confirme"], p["stock"]) for p in liste] == [(4, True, 500)]
 
 
 async def test_seul_le_titulaire_decide_consommable(api, db, monkeypatch):

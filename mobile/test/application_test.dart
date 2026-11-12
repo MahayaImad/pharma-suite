@@ -111,7 +111,7 @@ void main() {
     expect(prefs.getString(cleTheme), 'sombre');
     // On est toujours sur les préférences : changer de thème ne renvoie pas
     // à l'écran de départ.
-    expect(find.text('Aperçu'), findsOneWidget);
+    expect(find.text('Réglages'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('theme-indigo')));
     await tester.pumpAndSettle();

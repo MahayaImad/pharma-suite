@@ -121,10 +121,29 @@ class FausseStockApi implements StockApi {
   }
 
   final decisionsConsommable = <(int, bool)>[];
+  final consommablesEnBase = <Consommable>[
+    const Consommable(id: 21, nom: 'AIGUILLES INSUPEN', unitesAjustees: 600, stock: 120),
+    const Consommable(id: 22, nom: 'SACHETS', unitesAjustees: 900, stock: 300),
+    const Consommable(id: 23, nom: 'LECTEUR GLYCEMIE', confirme: true, unitesAjustees: 40, stock: 6),
+  ];
+
+  @override
+  Future<List<Consommable>> consommables() async {
+    if (panne) throw const ErreurApi('Le serveur ne répond pas.', reseau: true);
+    return List.of(consommablesEnBase);
+  }
 
   @override
   Future<void> deciderConsommable(int id, bool consommable) async {
     decisionsConsommable.add((id, consommable));
+    final k = consommablesEnBase.indexWhere((c) => c.id == id);
+    if (k >= 0) {
+      if (consommable) {
+        consommablesEnBase[k] = consommablesEnBase[k].copyWith(confirme: true);
+      } else {
+        consommablesEnBase.removeAt(k);
+      }
+    }
     final i = _produits.indexWhere((p) => p.id == id);
     if (i >= 0) _produits[i] = _produits[i].copyWith(consommable: consommable, consommablePropose: false);
   }

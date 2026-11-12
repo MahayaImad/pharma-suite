@@ -3066,6 +3066,299 @@ $CompteursCopyWith<$Res> get compteurs {
 }
 }
 
+
+/// @nodoc
+mixin _$Consommable {
+
+ int get id; String get nom; String? get dosage;@JsonKey(name: 'forme_abr') String? get formeAbr;@JsonKey(name: 'id_famille') int? get idFamille; bool get confirme; int get stock;/// Unités sorties par ajustement d'inventaire sur 12 mois.
+@JsonKey(name: 'unites_ajustees_12m') int get unitesAjustees;
+/// Create a copy of Consommable
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ConsommableCopyWith<Consommable> get copyWith => _$ConsommableCopyWithImpl<Consommable>(this as Consommable, _$identity);
+
+  /// Serializes this Consommable to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Consommable;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Consommable&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.dosage, _this.dosage) || other.dosage == _this.dosage)&&(identical(other.formeAbr, _this.formeAbr) || other.formeAbr == _this.formeAbr)&&(identical(other.idFamille, _this.idFamille) || other.idFamille == _this.idFamille)&&(identical(other.confirme, _this.confirme) || other.confirme == _this.confirme)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.unitesAjustees, _this.unitesAjustees) || other.unitesAjustees == _this.unitesAjustees));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Consommable;
+  return Object.hash(runtimeType,_this.id,_this.nom,_this.dosage,_this.formeAbr,_this.idFamille,_this.confirme,_this.stock,_this.unitesAjustees);
+}
+
+@override
+String toString() {
+  final _this = this as Consommable;
+  return 'Consommable(id: ${_this.id}, nom: ${_this.nom}, dosage: ${_this.dosage}, formeAbr: ${_this.formeAbr}, idFamille: ${_this.idFamille}, confirme: ${_this.confirme}, stock: ${_this.stock}, unitesAjustees: ${_this.unitesAjustees})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ConsommableCopyWith<$Res>  {
+  factory $ConsommableCopyWith(Consommable value, $Res Function(Consommable) _then) = _$ConsommableCopyWithImpl;
+@useResult
+$Res call({
+ int id, String nom, String? dosage,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, bool confirme, int stock,@JsonKey(name: 'unites_ajustees_12m') int unitesAjustees
+});
+
+
+
+
+}
+/// @nodoc
+class _$ConsommableCopyWithImpl<$Res>
+    implements $ConsommableCopyWith<$Res> {
+  _$ConsommableCopyWithImpl(this._self, this._then);
+
+  final Consommable _self;
+  final $Res Function(Consommable) _then;
+
+/// Create a copy of Consommable
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = null,Object? dosage = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? confirme = null,Object? stock = null,Object? unitesAjustees = null,}) {
+  return _then(Consommable(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String,dosage: freezed == dosage ? _self.dosage : dosage // ignore: cast_nullable_to_non_nullable
+as String?,formeAbr: freezed == formeAbr ? _self.formeAbr : formeAbr // ignore: cast_nullable_to_non_nullable
+as String?,idFamille: freezed == idFamille ? _self.idFamille : idFamille // ignore: cast_nullable_to_non_nullable
+as int?,confirme: null == confirme ? _self.confirme : confirme // ignore: cast_nullable_to_non_nullable
+as bool,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,unitesAjustees: null == unitesAjustees ? _self.unitesAjustees : unitesAjustees // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Consommable].
+extension ConsommablePatterns on Consommable {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Consommable value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Consommable() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Consommable value)  $default,){
+final _that = this;
+switch (_that) {
+case _Consommable():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Consommable value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Consommable() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nom,  String? dosage, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  bool confirme,  int stock, @JsonKey(name: 'unites_ajustees_12m')  int unitesAjustees)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Consommable() when $default != null:
+return $default(_that.id,_that.nom,_that.dosage,_that.formeAbr,_that.idFamille,_that.confirme,_that.stock,_that.unitesAjustees);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nom,  String? dosage, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  bool confirme,  int stock, @JsonKey(name: 'unites_ajustees_12m')  int unitesAjustees)  $default,) {final _that = this;
+switch (_that) {
+case _Consommable():
+return $default(_that.id,_that.nom,_that.dosage,_that.formeAbr,_that.idFamille,_that.confirme,_that.stock,_that.unitesAjustees);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nom,  String? dosage, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  bool confirme,  int stock, @JsonKey(name: 'unites_ajustees_12m')  int unitesAjustees)?  $default,) {final _that = this;
+switch (_that) {
+case _Consommable() when $default != null:
+return $default(_that.id,_that.nom,_that.dosage,_that.formeAbr,_that.idFamille,_that.confirme,_that.stock,_that.unitesAjustees);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Consommable implements Consommable {
+  const _Consommable({required this.id, this.nom = '', this.dosage, @JsonKey(name: 'forme_abr') this.formeAbr, @JsonKey(name: 'id_famille') this.idFamille, this.confirme = false, this.stock = 0, @JsonKey(name: 'unites_ajustees_12m') this.unitesAjustees = 0});
+  factory _Consommable.fromJson(Map<String, dynamic> json) => _$ConsommableFromJson(json);
+
+@override final  int id;
+@override@JsonKey() final  String nom;
+@override final  String? dosage;
+@override@JsonKey(name: 'forme_abr') final  String? formeAbr;
+@override@JsonKey(name: 'id_famille') final  int? idFamille;
+@override@JsonKey() final  bool confirme;
+@override@JsonKey() final  int stock;
+/// Unités sorties par ajustement d'inventaire sur 12 mois.
+@override@JsonKey(name: 'unites_ajustees_12m') final  int unitesAjustees;
+
+/// Create a copy of Consommable
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ConsommableCopyWith<_Consommable> get copyWith => __$ConsommableCopyWithImpl<_Consommable>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ConsommableToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Consommable&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.formeAbr, formeAbr) || other.formeAbr == formeAbr)&&(identical(other.idFamille, idFamille) || other.idFamille == idFamille)&&(identical(other.confirme, confirme) || other.confirme == confirme)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.unitesAjustees, unitesAjustees) || other.unitesAjustees == unitesAjustees));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,nom,dosage,formeAbr,idFamille,confirme,stock,unitesAjustees);
+}
+
+@override
+String toString() {
+    return 'Consommable(id: $id, nom: $nom, dosage: $dosage, formeAbr: $formeAbr, idFamille: $idFamille, confirme: $confirme, stock: $stock, unitesAjustees: $unitesAjustees)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ConsommableCopyWith<$Res> implements $ConsommableCopyWith<$Res> {
+  factory _$ConsommableCopyWith(_Consommable value, $Res Function(_Consommable) _then) = __$ConsommableCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, String nom, String? dosage,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, bool confirme, int stock,@JsonKey(name: 'unites_ajustees_12m') int unitesAjustees
+});
+
+
+
+
+}
+/// @nodoc
+class __$ConsommableCopyWithImpl<$Res>
+    implements _$ConsommableCopyWith<$Res> {
+  __$ConsommableCopyWithImpl(this._self, this._then);
+
+  final _Consommable _self;
+  final $Res Function(_Consommable) _then;
+
+/// Create a copy of Consommable
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = null,Object? dosage = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? confirme = null,Object? stock = null,Object? unitesAjustees = null,}) {
+  return _then(_Consommable(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String,dosage: freezed == dosage ? _self.dosage : dosage // ignore: cast_nullable_to_non_nullable
+as String?,formeAbr: freezed == formeAbr ? _self.formeAbr : formeAbr // ignore: cast_nullable_to_non_nullable
+as String?,idFamille: freezed == idFamille ? _self.idFamille : idFamille // ignore: cast_nullable_to_non_nullable
+as int?,confirme: null == confirme ? _self.confirme : confirme // ignore: cast_nullable_to_non_nullable
+as bool,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,unitesAjustees: null == unitesAjustees ? _self.unitesAjustees : unitesAjustees // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
 /// @nodoc
 mixin _$FiltreProduits {
 

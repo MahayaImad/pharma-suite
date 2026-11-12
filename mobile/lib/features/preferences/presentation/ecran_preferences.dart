@@ -4,12 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/themes.dart';
 import '../../../core/widgets/coquille.dart';
-import '../../../core/widgets/pastille_etat.dart';
 import '../../connexion/application/session_controller.dart';
+import '../../reglages/presentation/ecran_consommables.dart';
 import '../../reglages/presentation/ecran_reglages.dart';
 import '../application/theme_controller.dart';
 
-/// Préférences : le thème, l'accès au calendrier et aux réglages, le compte.
+/// Préférences : le thème, le calendrier et les réglages, les consommables,
+/// la déconnexion.
 class EcranPreferences extends ConsumerWidget {
   const EcranPreferences({super.key});
 
@@ -62,16 +63,25 @@ class EcranPreferences extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 28),
-                  const EntreeReglages(),
-                  const SizedBox(height: 28),
-                  const _Compte(),
-                  const SizedBox(height: 28),
                   Text(
-                    'Aperçu',
+                    'Réglages',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 12),
-                  const _Apercu(),
+                  const EntreeReglages(),
+                  const SizedBox(height: 10),
+                  const EntreeConsommables(),
+                  const SizedBox(height: 28),
+                  // Seul accès à la déconnexion sur portable (le menu latéral est sur PC).
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      key: const ValueKey('bouton-deconnexion'),
+                      onPressed: () => ref.read(sessionProvider.notifier).fermer(),
+                      icon: const Icon(Icons.logout, size: 18),
+                      label: const Text('Se déconnecter'),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -187,138 +197,6 @@ class _CarteTheme extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Les éléments qui reviennent sur tous les écrans, dans le thème courant.
-class _Apercu extends StatelessWidget {
-  const _Apercu();
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.couleurs;
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        Container(
-          width: 250,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: c.tuilePrincipale, borderRadius: BorderRadius.circular(14)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Tuile principale',
-                style: TextStyle(color: c.surTuilePrincipale.withValues(alpha: 0.8), fontSize: 13),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Aa 123',
-                style: TextStyle(
-                  color: c.surTuilePrincipale,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.6,
-                ),
-              ),
-              Text(
-                'texte secondaire',
-                style: TextStyle(color: c.surTuilePrincipale.withValues(alpha: 0.8), fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          width: 250,
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Tuile', style: TextStyle(color: c.encre2, fontSize: 13)),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Aa 123',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -0.6),
-                  ),
-                  Text('texte discret', style: TextStyle(color: c.encre3, fontSize: 13)),
-                ],
-              ),
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 250,
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      PastilleEtat(niveau: NiveauEtat.critique, libelle: 'Rupture'),
-                      PastilleEtat(niveau: NiveauEtat.alerte, libelle: 'Seuil'),
-                      PastilleEtat(niveau: NiveauEtat.bon, libelle: 'Bon'),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton(onPressed: () {}, child: const Text('Action')),
-                      FilledButton.tonal(onPressed: () {}, child: const Text('Secondaire')),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Le compte connecté, et la déconnexion (seul accès sur portable).
-class _Compte extends ConsumerWidget {
-  const _Compte();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profil = ref.watch(sessionProvider)?.profil;
-    if (profil == null) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Compte', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 12),
-        Card(
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: context.schema.primaryContainer,
-              child: Text(
-                profil.initiales,
-                style: TextStyle(fontWeight: FontWeight.w700, color: context.schema.onPrimaryContainer),
-              ),
-            ),
-            title: Text(profil.nomAffiche, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text('Compte EASYPHARM « ${profil.utilisateur} »'),
-            trailing: TextButton.icon(
-              key: const ValueKey('bouton-deconnexion'),
-              onPressed: () => ref.read(sessionProvider.notifier).fermer(),
-              icon: const Icon(Icons.logout, size: 18),
-              label: const Text('Se déconnecter'),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

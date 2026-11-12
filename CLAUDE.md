@@ -79,8 +79,11 @@ lots à risque, réapprovisionnement (CMM, CMJ, délai, SS, max), prix et case
 « consommable » (titulaire) ; liste et fiche côte à
 côte sur PC. **Calendrier et réglages** (`/preferences/reglages`) : gardes
 (saisie, confirmation des gardes détectées), Ramadan et Aïd, jours fériés,
-constantes du calcul des commandes ; modification réservée au titulaire
-(rôle `admin`). Interface en français (`flutter_localizations`). Riverpod, go_router, shared_preferences, Dio (client authentifié :
+constantes du calcul des commandes ; **Consommables**
+(`/preferences/consommables`) : proposés à confirmer ou refuser, puis
+confirmés ; modification réservée au titulaire (rôle `admin`). Les
+Préférences ne gardent que le thème, ces deux entrées et « Se déconnecter »
+(seul accès à la déconnexion sur portable). Interface en français (`flutter_localizations`). Riverpod, go_router, shared_preferences, Dio (client authentifié :
 jeton ajouté, déconnexion sur 401) et freezed (+ json_serializable, fichiers
 générés committés) sont en place ; **Drift et le hors-ligne n'existent pas
 encore**. La version web route par `#/` (ex. `/#/stock/5`). La photo de l'écran de connexion

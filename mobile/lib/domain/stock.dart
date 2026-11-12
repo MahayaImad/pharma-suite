@@ -239,6 +239,25 @@ abstract class ATraiter with _$ATraiter {
   factory ATraiter.fromJson(Map<String, dynamic> json) => _$ATraiterFromJson(json);
 }
 
+/// Consommable donné, proposé par la détection ou confirmé par le titulaire.
+@freezed
+abstract class Consommable with _$Consommable {
+  const factory Consommable({
+    required int id,
+    @Default('') String nom,
+    String? dosage,
+    @JsonKey(name: 'forme_abr') String? formeAbr,
+    @JsonKey(name: 'id_famille') int? idFamille,
+    @Default(false) bool confirme,
+    @Default(0) int stock,
+
+    /// Unités sorties par ajustement d'inventaire sur 12 mois.
+    @JsonKey(name: 'unites_ajustees_12m') @Default(0) int unitesAjustees,
+  }) = _Consommable;
+
+  factory Consommable.fromJson(Map<String, dynamic> json) => _$ConsommableFromJson(json);
+}
+
 /// Ce que la ligne d'un produit met en avant.
 enum Signal { rupture, sousSeuil, risque, surstock, ok, inactif }
 

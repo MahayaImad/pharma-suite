@@ -5,11 +5,14 @@ import 'package:pharmasuite/app.dart';
 import 'package:pharmasuite/core/router/routeur.dart';
 import 'package:pharmasuite/data/api/calendrier_api.dart';
 import 'package:pharmasuite/data/api/client_api.dart';
+import 'package:pharmasuite/data/api/stock_api.dart';
 import 'package:pharmasuite/domain/calendrier.dart';
 import 'package:pharmasuite/domain/session.dart';
 import 'package:pharmasuite/features/connexion/application/session_controller.dart';
 import 'package:pharmasuite/features/preferences/application/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'fausse_stock_api.dart';
 
 class FauxCalendrier implements CalendrierApi {
   final gardesEnBase = <Garde>[
@@ -104,7 +107,10 @@ Future<FauxCalendrier> _lancer(
   WidgetTester tester, {
   String role = 'admin',
   Size taille = const Size(390, 844),
+  FausseStockApi? stockApi,
+  bool ouvrirReglages = true,
 }) async {
+  final stock = stockApi ?? FausseStockApi();
   tester.view.physicalSize = taille;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -116,6 +122,7 @@ Future<FauxCalendrier> _lancer(
       overrides: [
         preferencesLocalesProvider.overrideWithValue(prefs),
         calendrierApiProvider.overrideWithValue(api),
+        stockApiProvider.overrideWithValue(stock),
         sessionProvider.overrideWithBuild(
           (ref, _) => Session(
             jeton: 'j',
@@ -128,8 +135,12 @@ Future<FauxCalendrier> _lancer(
     ),
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const ValueKey('entree-reglages')));
-  await tester.pumpAndSettle();
+  if (ouvrirReglages) {
+    await tester.ensureVisible(find.byKey(const ValueKey('entree-reglages')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('entree-reglages')));
+    await tester.pumpAndSettle();
+  }
   return api;
 }
 
@@ -237,5 +248,45 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.enregistrees.single, (DateTime(2026, 10, 28), TypeGarde.soiree));
     expect(find.byKey(const ValueKey('garde-2026-10-28')), findsOneWidget);
+  });
+
+  testWidgets('préférences : thème, réglages, consommables, déconnexion — plus d\'aperçu ni de compte', (
+    tester,
+  ) async {
+    await _lancer(tester, ouvrirReglages: false);
+    expect(find.text('Aperçu'), findsNothing);
+    expect(find.text('Compte'), findsNothing);
+    expect(find.byKey(const ValueKey('entree-consommables')), findsOneWidget);
+    expect(find.text('2 à confirmer'), findsOneWidget);
+    expect(find.byKey(const ValueKey('bouton-deconnexion')), findsOneWidget);
+  });
+
+  testWidgets('consommables : confirmer, refuser ; employé en lecture seule', (tester) async {
+    final stock = FausseStockApi();
+    await _lancer(tester, ouvrirReglages: false, stockApi: stock);
+    await tester.ensureVisible(find.byKey(const ValueKey('entree-consommables')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('entree-consommables')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Aiguilles Insupen'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('oui-21')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('non-22')));
+    await tester.pumpAndSettle();
+    expect(stock.decisionsConsommable, [(21, true), (22, false)]);
+    expect(find.byKey(const ValueKey('oui-21')), findsNothing);
+    expect(find.text('Sachets'), findsNothing);
+    expect(find.byKey(const ValueKey('retirer-21')), findsOneWidget); // passé dans les confirmés
+  });
+
+  testWidgets('consommables : un employé ne décide pas', (tester) async {
+    await _lancer(tester, role: 'employee', ouvrirReglages: false);
+    await tester.ensureVisible(find.byKey(const ValueKey('entree-consommables')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('entree-consommables')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('oui-21')), findsNothing);
+    expect(find.byKey(const ValueKey('retirer-23')), findsNothing);
   });
 }

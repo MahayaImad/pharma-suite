@@ -285,3 +285,25 @@ Map<String, dynamic> _$ATraiterToJson(_ATraiter instance) => <String, dynamic>{
   'a_risque': instance.aRisque,
   'surstock': instance.surstock,
 };
+
+_Consommable _$ConsommableFromJson(Map<String, dynamic> json) => _Consommable(
+  id: (json['id'] as num).toInt(),
+  nom: json['nom'] as String? ?? '',
+  dosage: json['dosage'] as String?,
+  formeAbr: json['forme_abr'] as String?,
+  idFamille: (json['id_famille'] as num?)?.toInt(),
+  confirme: json['confirme'] as bool? ?? false,
+  stock: (json['stock'] as num?)?.toInt() ?? 0,
+  unitesAjustees: (json['unites_ajustees_12m'] as num?)?.toInt() ?? 0,
+);
+
+Map<String, dynamic> _$ConsommableToJson(_Consommable instance) => <String, dynamic>{
+  'id': instance.id,
+  'nom': instance.nom,
+  'dosage': instance.dosage,
+  'forme_abr': instance.formeAbr,
+  'id_famille': instance.idFamille,
+  'confirme': instance.confirme,
+  'stock': instance.stock,
+  'unites_ajustees_12m': instance.unitesAjustees,
+};
