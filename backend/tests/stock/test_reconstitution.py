@@ -14,7 +14,7 @@ def test_par_produit_remonte_les_mouvements():
 
 
 def test_par_lot_un_lot_n_existe_qu_a_partir_de_son_entree():
-    ancien = LotHistorique(entree=date(2026, 1, 1), stock_actuel=3, ventes_par_jour={J2: 4, J4: 1})
+    ancien = LotHistorique(entree=date(2026, 1, 1), stock_actuel=3, sorties_par_jour={J2: 4, J4: 1})
     nouveau = LotHistorique(entree=J3, stock_actuel=6)
     s = par_lot([ancien, nouveau], J1, J4)
     # ancien : fin J4 = 3, J3 = 4, J2 = 4, J1 = 8 ; nouveau : 6 à partir de J3
@@ -26,3 +26,17 @@ def test_qualite_et_accord():
     assert (q.jours, q.jours_negatifs, q.jours_rupture) == (4, 1, 2)
     assert q.part_negative == 0.25
     assert accord_ruptures({J1: 0, J2: 3}, {J1: -1, J2: 0}) == 0.5
+
+
+def test_par_lot_compte_les_ajustements_d_inventaire():
+    """Lot de 10 aujourd'hui (J4). J3 : inventaire, 2 boîtes cassées (écart −2).
+    J2 : vendu 3. Sans l'ajustement, on croirait 13 la veille de J2 au lieu de 15."""
+    lot = LotHistorique(entree=date(2026, 1, 1), stock_actuel=10)
+    lot.ajouter_ajustement(J3, -2)
+    lot.ajouter_sortie(J2, 3)
+    # fin J4 = 10 ; fin J3 = 10 ; fin J2 = 10 − (−2) = 12 ; fin J1 = 12 + 3 = 15
+    assert par_lot([lot], J1, J4) == {J1: 15, J2: 12, J3: 10, J4: 10}
+    # Écart positif (stock retrouvé à l'inventaire) : la veille, il y en avait moins.
+    retrouve = LotHistorique(entree=date(2026, 1, 1), stock_actuel=10)
+    retrouve.ajouter_ajustement(J4, +4)
+    assert par_lot([retrouve], J3, J4) == {J3: 6, J4: 10}

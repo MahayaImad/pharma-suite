@@ -196,12 +196,41 @@ Conséquences :
 - **Historique** (`historique_stock_jour`, colonne `source`, migration 009) :
   depuis le 2026-11-12, une **photo** du stock de chaque produit actif ou en
   stock est prise chaque soir à 23 h 50 (heure d'Alger), donc exacte ; le
-  passé antérieur ne peut être que **reconstitué** (estimation), par
-  produit ou par lot — méthode choisie d'après
-  `scripts/diagnostiquer_historique_stock.py`. Une reconstitution n'écrase
+  passé antérieur ne peut être que **reconstitué** (estimation), **par
+  lot** avec tous les mouvements du §3.4. Une reconstitution n'écrase
   jamais une photo.
 
-### 3.4 Familles de produits (confirmé le 2026-11-11)
+### 3.4 Le stock passé : tous les mouvements à compter (confirmé le 2026-11-12)
+
+Le stock d'un jour passé se reconstitue à rebours depuis le stock actuel. Il
+ne suffit pas de suivre achats et ventes : **six mouvements** modifient le
+stock d'un lot.
+
+| Mouvement | Table | Sens | Remarque |
+|---|---|---|---|
+| Achat | `entrees_produits`, `type_entree = 'A'` | entrée | crée le lot à sa `date_entree` |
+| Avoir fournisseur | `entrees_produits`, `type_entree = 'AV'` | **sortie** | retour au fournisseur ; quantité saisie **positive** (123 lignes) |
+| Vente | `sorties_produits.qte_sortie` | sortie | un retour client est une quantité négative (§2.3) |
+| Échange vers une autre pharmacie | `echanges_sorties_produits.qte` (type `ES`) | sortie | porte le lot |
+| **Ajustement d'inventaire** | `inventaires_produits.ecart` | **±** | `ecart = stock_reel − stock_theorique`, par **lot**, à la `date` de l'inventaire ; positif = stock retrouvé, négatif = perte (casse, péremption, vol). 27 876 lignes : la table est utilisée au fil de l'eau, pas seulement pour l'inventaire d'ouverture |
+| **Instance** | `instance_produits` | sortie | le produit sort du stock **à la mise en instance**, sans paiement ; la vente est enregistrée plus tard |
+
+À rebours, pour un lot : stock(veille) = stock(jour) + sorties du jour −
+ajustements du jour ; avant sa date d'entrée, le lot n'existe pas.
+
+**Instances** : leur historique exact n'existe pas depuis 2023 (la ligne est
+supprimée d'`instance_produits` une fois traitée). Elles se retrouvent
+ensuite dans les ventes : on les compte à la date de la vente, ce qui
+surestime le stock pendant les quelques jours d'attente. **Écart accepté.**
+
+**Méthode retenue : par lot** (diagnostic du 2026-11-12, 150 produits les
+plus vendus, 12 mois) — 0,3 % de jours à stock négatif (2 produits sur 150)
+contre 9,9 % par produit (95 sur 150), qui ne sait pas affecter les
+ajustements, avoirs et échanges au bon lot. 24 % des lignes de vente n'ont
+pas de numéro de lot : elles sont rattachées aux lots sans numéro du même
+produit.
+
+### 3.5 Familles de produits (confirmé le 2026-11-11)
 
 Chaque produit appartient à une **famille**. La liste vit dans la table
 `familles` (`id`, `famille`) ; aujourd'hui :
@@ -239,7 +268,7 @@ portent aussi). Règles :
   (`nomenclature.categorie` : princeps / générique / générique++), qui sert
   au calcul de l'enveloppe de prime.
 
-### 3.5 Délai de livraison des fournisseurs (confirmé le 2026-11-11)
+### 3.6 Délai de livraison des fournisseurs (confirmé le 2026-11-11)
 
 - Les grossistes livrent en général **en 24 heures, les jours ouvrés**. La
   semaine algérienne ne travaille pas le **vendredi ni le samedi** : une
@@ -252,7 +281,7 @@ portent aussi). Règles :
   hors avoir (`entrees_produits.id_fournisseur`, `type_entree <> 'AV'`).
 - Les jours fériés ne sont pas encore retirés du calcul.
 
-### 3.6 Gardes et fêtes à date mobile (confirmé le 2026-11-12)
+### 3.7 Gardes et fêtes à date mobile (confirmé le 2026-11-12)
 
 La demande change les jours de **garde** et pendant **Ramadan et les Aïd** :
 la prévision des commandes en tient compte.
@@ -288,7 +317,7 @@ la prévision des commandes en tient compte.
   `a_verifier` (l'annonce officielle peut décaler d'un jour), modifiables.
   Les fériés à date fixe restent dans `holidays`.
 
-### 3.7 Horodatage des données du stock
+### 3.8 Horodatage des données du stock
 
 Les écrans stock affichent l'heure de leurs données : c'est l'heure du
 dernier calcul de la vue `mv_stock_produits` (`POST /stock/refresh-cache`,

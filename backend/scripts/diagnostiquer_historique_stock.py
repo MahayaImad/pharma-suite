@@ -10,10 +10,11 @@ Diagnostic avant de reconstituer le stock passé (lecture seule).
 2. **Ventes** des 12 derniers mois : part des lignes dont le numéro de lot
    retrouve un lot d'entrée (condition de la méthode « par lot »).
 3. **Échanges** entre pharmacies et **inventaires** : volumes.
-4. **Les deux méthodes** sur les produits les plus vendus, sur 12 mois : part
-   des jours à stock négatif (impossible, donc erreur), produits touchés,
-   accord des deux méthodes sur les jours de rupture. Pour la méthode par
-   produit, deux variantes : avoirs ignorés, ou comptés comme sorties.
+4. **Les méthodes** sur les produits les plus vendus, sur 12 mois : part des
+   jours à stock négatif (impossible, donc erreur), produits touchés, jours
+   de rupture. Par produit (avoirs ignorés ou en sortie) ; par lot (ventes
+   seules, ou tous les mouvements du docs/BUSINESS_LOGIC.md §3.4 : avoirs,
+   échanges, ajustements d'inventaire).
 
 Le rapport ne contient que des comptages et des pourcentages : ni nom, ni
 montant, ni identifiant de produit. Écrit aussi dans
@@ -95,8 +96,16 @@ async def main() -> int:
         ecrire(f"- échanges type {r.type_e} : {r.n} lignes, quantité {int(r.q)} (12 mois)")
     for r in await sql("SELECT count(*) AS n, min(date) AS de, max(date) AS a FROM inventaires_produits"):
         ecrire(f"- lignes d'inventaire : {r.n} (du {r.de} au {r.a})")
+    for r in await sql("""
+        SELECT count(*) FILTER (WHERE ecart <> 0) AS n,
+               COALESCE(sum(ecart) FILTER (WHERE ecart > 0), 0) AS plus,
+               COALESCE(sum(ecart) FILTER (WHERE ecart < 0), 0) AS moins,
+               count(*) FILTER (WHERE ecart <> 0 AND NULLIF(trim(lot), '') IS NULL) AS sans_lot
+        FROM inventaires_produits WHERE date > :d""", d=debut):
+        ecrire(f"- ajustements sur 12 mois : {r.n} lignes, +{int(r.plus)} / {int(r.moins)} unités, "
+               f"{r.sans_lot} sans numéro de lot")
 
-    ecrire(f"\n## 4. Les deux méthodes sur les {a.produits} produits les plus vendus (12 mois)\n")
+    ecrire(f"\n## 4. Les méthodes sur les {a.produits} produits les plus vendus (12 mois)\n")
     produits = [r.id_nom for r in await sql("""
         SELECT sp.id_nom FROM sorties_produits sp JOIN mv_stock_produits mv ON mv.id_nom = sp.id_nom
         WHERE sp.date > :d GROUP BY sp.id_nom ORDER BY sum(sp.qte_sortie) DESC LIMIT :n""", d=debut, n=a.produits)]
@@ -119,17 +128,48 @@ async def main() -> int:
         s1 = par_produit(float(stock), net_sans_av, debut, aujourdhui)
         s2 = par_produit(float(stock), net_av_sortie, debut, aujourdhui)
 
-        lots = {r.lot: LotHistorique(r.entree, float(r.stock)) for r in await sql("""
-            SELECT lot, min(date_entree) AS entree, sum(stock) AS stock FROM entrees_produits
-            WHERE id_nom = :i AND COALESCE(type_entree, '') <> 'AV' AND lot IS NOT NULL AND date_entree IS NOT NULL
-            GROUP BY lot""", i=id_nom)}
-        for r in await sql("""
-            SELECT lot, date, sum(qte_sortie) AS q FROM sorties_produits
-            WHERE id_nom = :i AND date > :d GROUP BY lot, date""", i=id_nom, d=debut):
-            if r.lot in lots:
-                lots[r.lot].ventes_par_jour[r.date] = float(r.q)
-        s3 = par_lot(list(lots.values()), debut, aujourdhui)
-        for nom, s in (("par produit, avoirs ignorés", s1), ("par produit, avoirs en sortie", s2), ("par lot", s3)):
+        # Méthode par lot (docs/BUSINESS_LOGIC.md §3.4). Un numéro de lot vide
+        # regroupe les lots sans numéro du produit.
+        def lots_du_produit(lignes_lots):
+            return {r.lot: LotHistorique(r.entree, float(r.stock)) for r in lignes_lots}
+
+        requete_lots = """
+            SELECT COALESCE(trim(lot), '') AS lot, min(date_entree) AS entree, sum(stock) AS stock
+            FROM entrees_produits
+            WHERE id_nom = :i AND COALESCE(type_entree, '') <> 'AV' AND date_entree IS NOT NULL
+            GROUP BY 1"""
+        lignes_lots = await sql(requete_lots, i=id_nom)
+        ventes_lot = await sql("""
+            SELECT COALESCE(trim(lot), '') AS lot, date, sum(qte_sortie) AS q FROM sorties_produits
+            WHERE id_nom = :i AND date > :d GROUP BY 1, 2""", i=id_nom, d=debut)
+        avoirs_lot = await sql("""
+            SELECT COALESCE(trim(lot), '') AS lot, date_entree AS date, sum(abs(qte_entree)) AS q
+            FROM entrees_produits WHERE id_nom = :i AND type_entree = 'AV' AND date_entree > :d GROUP BY 1, 2""",
+            i=id_nom, d=debut)
+        echanges_lot = await sql("""
+            SELECT COALESCE(trim(lot), '') AS lot, date_echange AS date, sum(qte) AS q
+            FROM echanges_sorties_produits WHERE id_nom = :i AND date_echange > :d GROUP BY 1, 2""",
+            i=id_nom, d=debut)
+        ajustements_lot = await sql("""
+            SELECT COALESCE(trim(lot), '') AS lot, date, sum(ecart) AS q FROM inventaires_produits
+            WHERE id_nom = :i AND date > :d AND ecart <> 0 GROUP BY 1, 2""", i=id_nom, d=debut)
+
+        ventes_seules = lots_du_produit(lignes_lots)
+        complet = lots_du_produit(lignes_lots)
+        for r in ventes_lot:
+            for lots in (ventes_seules, complet):
+                if r.lot in lots:
+                    lots[r.lot].ajouter_sortie(r.date, float(r.q))
+        for r in list(avoirs_lot) + list(echanges_lot):
+            if r.lot in complet:
+                complet[r.lot].ajouter_sortie(r.date, float(r.q))
+        for r in ajustements_lot:
+            if r.lot in complet:
+                complet[r.lot].ajouter_ajustement(r.date, float(r.q))
+        s3 = par_lot(list(ventes_seules.values()), debut, aujourdhui)
+        s4 = par_lot(list(complet.values()), debut, aujourdhui)
+        for nom, s in (("par produit, avoirs ignorés", s1), ("par produit, avoirs en sortie", s2),
+                       ("par lot, ventes seules", s3), ("par lot, tous les mouvements", s4)):
             resultats[nom].append((qualite(s), s))
 
     if not produits:
@@ -143,9 +183,10 @@ async def main() -> int:
             touches = sum(1 for q, _ in liste if q.jours_negatifs)
             ecrire(f"| {nom} | {pc(negatifs / jours)} | {touches} / {len(liste)} | "
                    f"{median(q.jours_rupture for q, _ in liste):.0f} j |")
-        accord = [accord_ruptures(a_[1], b_[1]) for a_, b_ in zip(resultats["par produit, avoirs ignorés"],
-                                                                  resultats["par lot"])]
-        ecrire(f"\nAccord « par produit » / « par lot » sur les jours de rupture : {pc(sum(accord) / len(accord))}")
+        accord = [accord_ruptures(a_[1], b_[1]) for a_, b_ in zip(resultats["par lot, ventes seules"],
+                                                                  resultats["par lot, tous les mouvements"])]
+        ecrire("\nAccord « par lot, ventes seules » / « par lot, tous les mouvements » sur les jours de "
+               f"rupture : {pc(sum(accord) / len(accord))}")
 
     Path(a.sortie).parent.mkdir(parents=True, exist_ok=True)
     Path(a.sortie).write_text("\n".join(lignes), encoding="utf-8")

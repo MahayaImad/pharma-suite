@@ -26,7 +26,7 @@ VUE_STOCK = "mv_stock_produits"
 
 # La famille d'un produit se lit par id_famille dans la table familles, qui
 # fait foi. nomenclature.famille n'en est qu'une copie texte (voir
-# docs/BUSINESS_LOGIC.md §3.4) : elle ne sert que si l'id est inconnu.
+# docs/BUSINESS_LOGIC.md §3.5) : elle ne sert que si l'id est inconnu.
 _JOINTURE_FAMILLE = "LEFT JOIN familles f ON f.id = n.id_famille"
 _NOM_FAMILLE = "COALESCE(f.famille, n.famille)"
 

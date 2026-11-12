@@ -4,7 +4,7 @@ La migration 006 avait enregistré la garde 24 h donnée par l'officine au
 2026-10-01. L'officine a confirmé le 2026-11-12 qu'elle a couru du mercredi
 30/09 au matin au jeudi 01/10 au matin : les ventes de la nuit sont datées du
 01/10, la garde est celle du 30/09. Une garde se date du jour où elle
-commence (docs/BUSINESS_LOGIC.md §3.6).
+commence (docs/BUSINESS_LOGIC.md §3.7).
 
 La garde du 30/09, si la détection l'a déjà enregistrée, devient saisie et
 confirmée ; celle du 01/10 est retirée.

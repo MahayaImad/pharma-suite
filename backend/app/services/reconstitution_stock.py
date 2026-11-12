@@ -7,10 +7,10 @@ n'existe nulle part et se recalcule à rebours. Deux façons :
 - **par produit** : stock(D) = stock actuel − Σ (entrées − sorties) des jours
   après D. Simple, mais toute entrée ou sortie mal typée (avoirs, retours,
   échanges, casse) fausse tous les jours antérieurs ;
-- **par lot** : un lot n'existe qu'à partir de sa date d'entrée ; son stock
-  au jour D = son stock actuel + ce qui en a été vendu après D. Exact si les
-  lignes de vente portent le bon numéro de lot ; une vente au lot inconnu
-  est perdue.
+- **par lot** (retenue) : un lot n'existe qu'à partir de sa date d'entrée ;
+  son stock au jour D = son stock actuel + ses sorties après D (ventes,
+  avoirs, échanges) − ses ajustements d'inventaire après D. Exact si les
+  mouvements portent le bon numéro de lot.
 
 Le diagnostic (`scripts/diagnostiquer_historique_stock.py`) mesure sur la
 base réelle laquelle tient le mieux (jours à stock négatif, impossible) avant
@@ -40,12 +40,27 @@ def par_produit(stock_actuel: float, net_par_jour: dict[date, float], debut: dat
 
 @dataclass
 class LotHistorique:
+    """Un lot et ses mouvements (docs/BUSINESS_LOGIC.md §3.4).
+
+    sorties_par_jour      ventes (retours clients en négatif), avoirs
+                          fournisseur, échanges vers une autre pharmacie
+    ajustements_par_jour  écarts d'inventaire (stock réel − théorique), ±
+    """
     entree: date
     stock_actuel: float
-    ventes_par_jour: dict[date, float] = field(default_factory=dict)
+    sorties_par_jour: dict[date, float] = field(default_factory=dict)
+    ajustements_par_jour: dict[date, float] = field(default_factory=dict)
+
+    def ajouter_sortie(self, jour: date, qte: float) -> None:
+        self.sorties_par_jour[jour] = self.sorties_par_jour.get(jour, 0.0) + qte
+
+    def ajouter_ajustement(self, jour: date, ecart: float) -> None:
+        self.ajustements_par_jour[jour] = self.ajustements_par_jour.get(jour, 0.0) + ecart
 
 
 def par_lot(lots: list[LotHistorique], debut: date, fin: date) -> dict[date, float]:
+    """À rebours : stock(veille au soir) = stock(soir) + sorties du jour −
+    ajustements du jour. Avant sa date d'entrée, un lot n'existe pas."""
     serie = {j: 0.0 for j in _jours(debut, fin)}
     for lot in lots:
         stock = lot.stock_actuel
@@ -53,7 +68,7 @@ def par_lot(lots: list[LotHistorique], debut: date, fin: date) -> dict[date, flo
             if jour < lot.entree:
                 break                          # le lot n'existait pas encore
             serie[jour] += stock
-            stock += lot.ventes_par_jour.get(jour, 0.0)
+            stock += lot.sorties_par_jour.get(jour, 0.0) - lot.ajustements_par_jour.get(jour, 0.0)
     return serie
 
 
