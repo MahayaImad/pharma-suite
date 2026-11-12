@@ -74,3 +74,23 @@ async def test_essai_n_ecrit_rien(db):
     r = await reconstituer(db, j(11), T, ecrire=False)
     assert r.jours_ecrits == 12
     assert (await db.execute(text("SELECT count(*) FROM historique_stock_jour"))).scalar() == 0
+
+
+async def test_ajustement_rattache_par_code_barre(db):
+    """Dans EASYPHARM, la ligne d'inventaire a id_nom vide : elle désigne son
+    lot par le code-barres (unique par lot)."""
+    await db.execute(text("TRUNCATE inventaires_produits"))
+    await db.execute(text("INSERT INTO nomenclature (id, nom, archive) VALUES (1, 'P', false)"))
+    await db.execute(text("""
+        INSERT INTO entrees_produits (id, id_nom, lot, code_barre, date_entree, qte_entree, stock, prix_achat, prix_vente, type_entree)
+        VALUES (1, 1, 'L1', '2000000123', :e, 10, 7, 10, 15, 'A')"""), {"e": j(5)})
+    await db.execute(text("""
+        INSERT INTO inventaires_produits (id, id_nom, lot, code_barre, date, ecart, motif)
+        VALUES (1, NULL, 'L1', '2000000123', :d, -3, 'Casse')"""), {"d": j(2)})
+    await db.execute(text("REFRESH MATERIALIZED VIEW mv_stock_produits"))
+    await db.commit()
+    await reconstituer(db, j(5), T)
+    serie = {l.date: float(l.stock_eod) for l in await db.execute(text(
+        "SELECT date, stock_eod FROM historique_stock_jour WHERE id_nom = 1 ORDER BY date"))}
+    # 7 aujourd'hui ; la casse de 3 au jour j2 : 10 en fin de j3 et avant
+    assert serie == {j(0): 7, j(1): 7, j(2): 7, j(3): 10, j(4): 10, j(5): 10}

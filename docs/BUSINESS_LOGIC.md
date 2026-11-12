@@ -214,7 +214,7 @@ stock d'un lot.
 | Échange vers une autre pharmacie | `echanges_sorties_produits.qte` (type `ES`) | sortie | porte le lot |
 | **Échange reçu** d'une autre pharmacie | `entrees_produits`, **`type_achat = 'E'`** | entrée | crée un lot comme un achat (confirmé le 2026-11-12) ; 950 lignes, **toutes avec un prix d'achat** |
 | **Unités gratuites (UG)** | `entrees_produits`, `type_achat` `Facture` ou `BL`, **`prix_achat = 0`** | entrée | lignes gratuites d'une livraison (confirmé le 2026-11-12) : 1 263 lignes |
-| **Ajustement d'inventaire** | `inventaires_produits.ecart` | **±** | `ecart = stock_reel − stock_theorique`, par **lot**, à la `date` de l'inventaire ; positif = stock retrouvé, négatif = perte (casse, péremption, vol). 27 876 lignes : la table est utilisée au fil de l'eau, pas seulement pour l'inventaire d'ouverture |
+| **Ajustement d'inventaire** | `inventaires_produits.ecart` | **±** | `ecart = stock_reel − stock_theorique`, par **lot**, à la `date` de l'inventaire ; la ligne désigne son lot par le **`code_barre`** (unique par lot ; `id_nom` y est vide, le numéro de `lot` ne l'est pas d'un produit à l'autre) ; positif = stock retrouvé, négatif = perte (casse, péremption, vol). 27 876 lignes : la table est utilisée au fil de l'eau, pas seulement pour l'inventaire d'ouverture |
 | **Instance** | `instance_produits` | sortie | le produit sort du stock **à la mise en instance**, sans paiement ; la vente est enregistrée plus tard |
 
 À rebours, pour un lot : stock(veille) = stock(jour) + sorties du jour −

@@ -32,6 +32,7 @@ from statistics import median
 from sqlalchemy import text
 
 from app.core.database import AsyncSessionLocal
+from app.services.historique_stock import INVENTAIRE_RESOLU
 from app.services.reconstitution_stock import LotHistorique, accord_ruptures, par_lot, par_produit, qualite
 
 lignes: list[str] = []
@@ -113,7 +114,7 @@ async def main() -> int:
                f"{r.sans_lot} sans numéro de lot")
 
     ecrire("\n### Clé produit des lignes d'inventaire (12 mois)\n")
-    ecrire("Trois hypothèses pour `inventaires_produits.id_produit` : la ligne de lot "
+    ecrire("Hypothèses pour rattacher une ligne d'inventaire à son lot : `id_produit` = ligne de lot "
            "(`entrees_produits.id`), l'identifiant de ligne de stock partagé "
            "(`entrees_produits.id_produit`), ou le produit (`nomenclature.id`). La bonne retrouve "
            "le même nom et le même numéro de lot.\n")
@@ -125,7 +126,16 @@ async def main() -> int:
     if n:
         ecrire(f"- lignes : {n} ; id_nom vide {pc(base[0].sans_id_nom / n)} ; "
                f"id_produit vide {pc(base[0].sans_id_produit / n)}")
+        for r in await sql("""
+            SELECT count(*) AS lignes, count(DISTINCT code_barre) AS distincts
+            FROM entrees_produits WHERE NULLIF(trim(code_barre), '') IS NOT NULL"""):
+            if r.lignes:
+                ecrire(f"- code-barres des lots : {r.distincts} distincts pour {r.lignes} lignes "
+                       f"({pc(r.distincts / r.lignes)} uniques)")
         hypotheses = {
+            "code-barres (entrees_produits.code_barre)":
+                "LATERAL (SELECT * FROM entrees_produits x WHERE x.code_barre = ip.code_barre "
+                "AND NULLIF(trim(ip.code_barre), '') IS NOT NULL ORDER BY x.id DESC LIMIT 1) e ON true",
             "ligne de lot (entrees_produits.id)": "entrees_produits e ON e.id = ip.id_produit",
             "ligne de stock (entrees_produits.id_produit)":
                 "(SELECT DISTINCT ON (id_produit) * FROM entrees_produits ORDER BY id_produit, id DESC) e "
@@ -173,10 +183,10 @@ async def main() -> int:
                COALESCE(sum(ecart) FILTER (WHERE ecart < 0), 0) AS moins
         FROM inventaires_produits WHERE date > :d AND ecart <> 0 GROUP BY 1 ORDER BY 2 DESC LIMIT 15""", d=debut):
         ecrire(f"| {r.m} | {r.n} | {int(r.plus)} | {int(r.moins)} |")
-    for r in await sql("""
+    for r in await sql(f"""
         SELECT count(DISTINCT ip.id_nom) AS n, COALESCE(sum(-ip.ecart), 0) AS u
-        FROM inventaires_produits ip
-        WHERE ip.date > :d AND ip.ecart < 0
+        FROM ({INVENTAIRE_RESOLU}) ip
+        WHERE ip.date > :d AND ip.ecart < 0 AND ip.id_nom IS NOT NULL
           AND NOT EXISTS (SELECT 1 FROM sorties_produits sp WHERE sp.id_nom = ip.id_nom AND sp.qte_sortie > 0)""",
             d=debut):
         ecrire(f"\nProduits jamais vendus mais ajustés à la baisse (consommables donnés probables) : "
@@ -227,8 +237,8 @@ async def main() -> int:
             SELECT COALESCE(trim(lot), '') AS lot, date_echange AS date, sum(qte) AS q
             FROM echanges_sorties_produits WHERE id_nom = :i AND date_echange > :d GROUP BY 1, 2""",
             i=id_nom, d=debut)
-        ajustements_lot = await sql("""
-            SELECT COALESCE(trim(lot), '') AS lot, date, sum(ecart) AS q FROM inventaires_produits
+        ajustements_lot = await sql(f"""
+            SELECT COALESCE(trim(lot), '') AS lot, date, sum(ecart) AS q FROM ({INVENTAIRE_RESOLU}) ir
             WHERE id_nom = :i AND date > :d AND ecart <> 0 GROUP BY 1, 2""", i=id_nom, d=debut)
 
         ventes_seules = lots_du_produit(lignes_lots)

@@ -19,6 +19,7 @@ from app.models.performance import Employe
 from app.services.stock_segmentation import compute_abc, compute_xyz, update_disponibilite
 from app.services import indicateurs_stock as ind
 from app.services import indicateurs_stock_lot as ind_lot
+from app.services.historique_stock import INVENTAIRE_RESOLU as _INVENTAIRE_RESOLU
 
 router = APIRouter(prefix="/stock", tags=["stock"])
 
@@ -433,7 +434,8 @@ async def _reglages(db: AsyncSession) -> dict[str, Decimal]:
 
 
 # Un ajustement d'inventaire pour péremption (docs/BUSINESS_LOGIC.md §3.4) :
-# motif « Péremption » (accent et casse indifférents), écart négatif.
+# motif « Péremption » (accent et casse indifférents), écart négatif. Les
+# lignes sont rattachées à leur produit par le code-barres du lot.
 _EST_PEREMPTION = "ip.motif ILIKE 'p_remption%' AND ip.ecart < 0"
 
 
@@ -459,7 +461,7 @@ async def taux_peremption(
     valeur_perimes = f"""-ip.ecart * COALESCE(NULLIF(ip.prix_achat_ttc, 0), mv.prix_moyen_pondere, 0)"""
     totaux = (await db.execute(text(f"""
         SELECT COALESCE(sum(-ip.ecart), 0) AS unites, COALESCE(sum({valeur_perimes}), 0) AS valeur
-        FROM inventaires_produits ip LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
+        FROM ({_INVENTAIRE_RESOLU}) ip LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
         WHERE ip.date >= :debut AND {_EST_PEREMPTION}
     """), params)).one()
     achats = (await db.execute(text("""
@@ -468,13 +470,13 @@ async def taux_peremption(
     """), params)).scalar()
     par_mois = await db.execute(text(f"""
         SELECT date_trunc('month', ip.date)::date AS m, sum(-ip.ecart) AS unites, sum({valeur_perimes}) AS valeur
-        FROM inventaires_produits ip LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
+        FROM ({_INVENTAIRE_RESOLU}) ip LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
         WHERE ip.date >= :debut AND {_EST_PEREMPTION}
         GROUP BY 1 ORDER BY 1
     """), params)
     produits = await db.execute(text(f"""
         SELECT ip.id_nom, n.nom, sum(-ip.ecart) AS unites, sum({valeur_perimes}) AS valeur
-        FROM inventaires_produits ip
+        FROM ({_INVENTAIRE_RESOLU}) ip
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
         LEFT JOIN nomenclature n ON n.id = ip.id_nom
         WHERE ip.date >= :debut AND {_EST_PEREMPTION}

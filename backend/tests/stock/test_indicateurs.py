@@ -298,9 +298,12 @@ async def test_taux_de_peremption(api, db):
                (3, 1, 0, 4, 10, 15, :d, 'AV', 'R'), (4, 1, 0, 7, 10, 15, :d, 'A', 'E')"""), {"d": d})
     await db.execute(text("""
         INSERT INTO inventaires_produits (id, id_nom, date, lot, ecart, prix_achat_ttc, motif) VALUES
-        (1, 1, :d, 'L', -3, 12, 'Péremption'), (2, 1, :d, 'L', -2, 0, 'PEREMPTION'),
+        (1, 1, :d, 'L', -3, 12, 'Péremption'), (2, NULL, :d, 'L', -2, 0, 'PEREMPTION'),
         (3, 1, :d, 'L', -1, 10, 'Casse'), (4, 2, :d, 'L', -40, 5, 'Consommable'),
         (5, 1, :d, 'L', 2, 10, 'Péremption')"""), {"d": d})
+    # La ligne 2 (id_nom vide, comme dans EASYPHARM) désigne le lot 1 par son code-barres.
+    await db.execute(text("UPDATE entrees_produits SET code_barre = 'CB1' WHERE id = 1"))
+    await db.execute(text("UPDATE inventaires_produits SET code_barre = 'CB1' WHERE id = 2"))
     await db.commit()
     await api.post("/stock/refresh-cache")
     r = (await api.get("/stock/peremption", params={"mois": 1})).json()

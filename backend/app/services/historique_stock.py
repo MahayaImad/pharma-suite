@@ -30,6 +30,21 @@ from app.services.reconstitution_stock import LotHistorique, par_lot
 
 TAILLE_LOT_ECRITURE = 5000
 
+# Une ligne d'inventaire désigne sa ligne de stock par le code-barres, unique
+# par lot dans EASYPHARM (id_nom y est vide) : on en tire le produit et le
+# numéro de lot ; à défaut de code-barres, id_nom et lot de la ligne.
+INVENTAIRE_RESOLU = """
+    SELECT ip.date, ip.ecart, ip.motif, ip.prix_achat_ttc,
+           COALESCE(e.id_nom, ip.id_nom) AS id_nom,
+           COALESCE(e.lot, ip.lot) AS lot
+    FROM inventaires_produits ip
+    LEFT JOIN LATERAL (
+        SELECT id_nom, lot FROM entrees_produits
+        WHERE code_barre = ip.code_barre AND NULLIF(trim(ip.code_barre), '') IS NOT NULL
+        ORDER BY id DESC LIMIT 1
+    ) e ON true
+"""
+
 
 @dataclass
 class Rapport:
@@ -101,8 +116,8 @@ async def reconstituer(
         SELECT id_nom::bigint AS id_nom, lot, date_echange AS date, sum(qte) AS q FROM echanges_sorties_produits
         WHERE id_nom::bigint = ANY(:ids) AND date_echange > :debut GROUP BY 1, 2, 3"""), params):
         sortie(r.id_nom, r.lot, r.date, r.q)
-    for r in await db.execute(text("""
-        SELECT id_nom, lot, date, sum(ecart) AS q FROM inventaires_produits
+    for r in await db.execute(text(f"""
+        SELECT id_nom, lot, date, sum(ecart) AS q FROM ({INVENTAIRE_RESOLU}) ir
         WHERE id_nom = ANY(:ids) AND date > :debut AND ecart <> 0 GROUP BY 1, 2, 3"""), params):
         cible = lots[r.id_nom].get(_cle(r.lot))
         if cible is not None:
