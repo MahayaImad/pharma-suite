@@ -251,9 +251,13 @@ La demande change les jours de **garde** et pendant **Ramadan et les Aïd** :
 la prévision des commandes en tient compte.
 
 - **Trois types de garde** (table `gardes`, migration 006) :
-  `soiree` (jusqu'à 23 h, ex. 2026-11-07), `24h` (ex. 2026-10-01 ; les
-  ventes de la nuit sont **datées du lendemain** dans EASYPHARM) et `jour`
-  (ouverture un jour de fermeture habituelle).
+  `soiree` (jusqu'à 23 h, ex. 2026-11-07), `24h` et `jour` (ouverture un
+  jour de fermeture habituelle).
+- **Une garde se date du jour où elle commence** (confirmé le 2026-11-12).
+  La garde 24 h du **30/09/2026** a couru du mercredi 30/09 au matin au
+  jeudi 01/10 au matin ; EASYPHARM date ses ventes de la nuit (0 h – 6 h)
+  **du lendemain**, le 01/10. Corrigée par la migration 008 (elle avait été
+  saisie au 01/10).
 - **Gardes passées** : retrouvées dans les heures de vente
   (`sorties.heure`) par `scripts/detecter_gardes.py`, qui apprend les
   horaires habituels de chaque jour de la semaine et repère les ventes hors
