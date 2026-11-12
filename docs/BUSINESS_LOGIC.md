@@ -193,6 +193,13 @@ Conséquences :
 - Reconstituer un stock **passé** reste un calcul (stock actuel, en
   remontant les mouvements) : c'est une estimation, à la différence du stock
   du jour.
+- **Historique** (`historique_stock_jour`, colonne `source`, migration 009) :
+  depuis le 2026-11-12, une **photo** du stock de chaque produit actif ou en
+  stock est prise chaque soir à 23 h 50 (heure d'Alger), donc exacte ; le
+  passé antérieur ne peut être que **reconstitué** (estimation), par
+  produit ou par lot — méthode choisie d'après
+  `scripts/diagnostiquer_historique_stock.py`. Une reconstitution n'écrase
+  jamais une photo.
 
 ### 3.4 Familles de produits (confirmé le 2026-11-11)
 

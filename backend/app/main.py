@@ -59,6 +59,20 @@ async def _monthly_segmentation() -> None:
     logger.info("[Scheduler] Segmentation mensuelle terminée.")
 
 
+async def _photo_stock_du_soir() -> None:
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+
+    from app.services.photo_stock import prendre_photo
+
+    jour = datetime.now(timezone.utc).astimezone(ZoneInfo("Africa/Algiers")).date()
+    try:
+        async with AsyncSessionLocal() as db:
+            await prendre_photo(db, jour)
+    except Exception as erreur:  # le planificateur ne doit pas tomber
+        logger.exception(f"[Photo stock] échec : {erreur}")
+
+
 # ── Startup / Shutdown ─────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -85,8 +99,16 @@ async def lifespan(app: FastAPI):
         id="monthly_abc_xyz",
         replace_existing=True,
     )
+    # Photo du stock chaque soir à 23 h 50 (heure d'Alger), après la fermeture
+    # et les gardes de soirée (23 h).
+    _scheduler.add_job(
+        _photo_stock_du_soir,
+        CronTrigger(hour=23, minute=50),
+        id="photo_stock_soir",
+        replace_existing=True,
+    )
     _scheduler.start()
-    logger.info("[Scheduler] Scheduler mensuel ABC/XYZ activé.")
+    logger.info("[Scheduler] Classement ABC/XYZ mensuel et photo du stock du soir activés.")
 
     yield
 

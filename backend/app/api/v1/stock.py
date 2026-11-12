@@ -432,6 +432,19 @@ async def _reglages(db: AsyncSession) -> dict[str, Decimal]:
     return {r.cle: r.valeur for r in lignes}
 
 
+@router.post("/photo-du-jour")
+async def photo_du_jour(
+    db: AsyncSession = Depends(get_db),
+    current: dict = Depends(get_current_user),
+):
+    """Relève tout de suite le stock du jour dans l'historique (prise aussi
+    automatiquement chaque soir à 23 h 50). Administrateur uniquement."""
+    if current.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Réservé aux administrateurs")
+    from app.services.photo_stock import prendre_photo
+    return await prendre_photo(db, _aujourdhui_alger())
+
+
 @router.get("/reglages")
 async def lire_reglages(
     db: AsyncSession = Depends(get_db),

@@ -161,6 +161,8 @@ async def reconstituer_et_sauvegarder(
         ON CONFLICT (id_nom, date) DO UPDATE SET
             stock_eod  = EXCLUDED.stock_eod,
             updated_at = NOW()
+        -- Une photo du soir est exacte : une estimation ne la remplace pas.
+        WHERE historique_stock_jour.source <> 'photo'
     """)
 
     for ligne in lignes:

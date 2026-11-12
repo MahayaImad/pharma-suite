@@ -22,7 +22,8 @@ from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
-TABLES_VIDEES = ("sorties_produits", "entrees_produits", "nomenclature", "familles", "sync_status")
+TABLES_VIDEES = ("sorties_produits", "entrees_produits", "nomenclature", "familles", "sync_status",
+                 "historique_stock_jour")
 
 
 @pytest_asyncio.fixture
