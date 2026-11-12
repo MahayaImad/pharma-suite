@@ -112,31 +112,57 @@ async def main() -> int:
         ecrire(f"- ajustements sur 12 mois : {r.n} lignes, +{int(r.plus)} / {int(r.moins)} unités, "
                f"{r.sans_lot} sans numéro de lot")
 
-    ecrire("\n### Clé produit des lignes d'inventaire\n")
+    ecrire("\n### Clé produit des lignes d'inventaire (12 mois)\n")
+    ecrire("Trois hypothèses pour `inventaires_produits.id_produit` : la ligne de lot "
+           "(`entrees_produits.id`), l'identifiant de ligne de stock partagé "
+           "(`entrees_produits.id_produit`), ou le produit (`nomenclature.id`). La bonne retrouve "
+           "le même nom et le même numéro de lot.\n")
+    base = await sql("""
+        SELECT count(*) AS n, count(*) FILTER (WHERE id_nom IS NULL) AS sans_id_nom,
+               count(*) FILTER (WHERE id_produit IS NULL) AS sans_id_produit
+        FROM inventaires_produits WHERE date > :d""", d=debut)
+    n = base[0].n if base else 0
+    if n:
+        ecrire(f"- lignes : {n} ; id_nom vide {pc(base[0].sans_id_nom / n)} ; "
+               f"id_produit vide {pc(base[0].sans_id_produit / n)}")
+        hypotheses = {
+            "ligne de lot (entrees_produits.id)": "entrees_produits e ON e.id = ip.id_produit",
+            "ligne de stock (entrees_produits.id_produit)":
+                "(SELECT DISTINCT ON (id_produit) * FROM entrees_produits ORDER BY id_produit, id DESC) e "
+                "ON e.id_produit = ip.id_produit",
+        }
+        for nom, jointure in hypotheses.items():
+            for r in await sql(f"""
+                SELECT count(e.id) AS existe,
+                       count(*) FILTER (WHERE e.id IS NOT NULL AND COALESCE(trim(e.lot), '') = COALESCE(trim(ip.lot), ''))
+                           AS meme_lot,
+                       count(*) FILTER (WHERE e.id IS NOT NULL AND nm.nom = ip.produit) AS meme_nom
+                FROM inventaires_produits ip
+                LEFT JOIN {jointure}
+                LEFT JOIN nomenclature nm ON nm.id = e.id_nom
+                WHERE ip.date > :d""", d=debut):
+                ecrire(f"- {nom} : trouvée {pc(r.existe / n)}, même numéro de lot {pc(r.meme_lot / n)}, "
+                       f"même nom {pc(r.meme_nom / n)}")
+        for r in await sql("""
+            SELECT count(nm.id) AS existe, count(*) FILTER (WHERE nm.nom = ip.produit) AS meme_nom
+            FROM inventaires_produits ip LEFT JOIN nomenclature nm ON nm.id = ip.id_produit
+            WHERE ip.date > :d""", d=debut):
+            ecrire(f"- produit (nomenclature.id) : trouvé {pc(r.existe / n)}, même nom {pc(r.meme_nom / n)}")
+
+    ecrire("\n### Ventes rattachées à leur lot par `id_produit` (12 mois)\n")
     for r in await sql("""
         SELECT count(*) AS n,
-               count(*) FILTER (WHERE ip.id_nom IS NULL) AS sans_id_nom,
-               count(*) FILTER (WHERE ip.id_produit IS NULL) AS sans_id_produit,
-               -- Hypothèse 1 : id_produit = la ligne de lot (entrees_produits.id)
-               count(ep.id) AS lot_existe,
-               count(*) FILTER (WHERE ep.id IS NOT NULL
-                                AND COALESCE(trim(ep.lot), '') = COALESCE(trim(ip.lot), '')) AS lot_meme_numero,
-               count(*) FILTER (WHERE ep.id IS NOT NULL AND n_ep.nom = ip.produit) AS lot_meme_nom,
-               -- Hypothèse 2 : id_produit = le produit (nomenclature.id)
-               count(n.id) AS produit_existe,
-               count(*) FILTER (WHERE n.id IS NOT NULL AND n.nom = ip.produit) AS produit_meme_nom
-        FROM inventaires_produits ip
-        LEFT JOIN entrees_produits ep ON ep.id = ip.id_produit
-        LEFT JOIN nomenclature n_ep ON n_ep.id = ep.id_nom
-        LEFT JOIN nomenclature n ON n.id = ip.id_produit
-        WHERE ip.date > :d""", d=debut):
+               count(*) FILTER (WHERE NULLIF(trim(sp.lot), '') IS NULL) AS sans_lot,
+               count(*) FILTER (WHERE EXISTS (SELECT 1 FROM entrees_produits e
+                                              WHERE e.id_produit = sp.id_produit AND e.id_nom = sp.id_nom)) AS par_id,
+               count(*) FILTER (WHERE NULLIF(trim(sp.lot), '') IS NULL AND EXISTS (
+                   SELECT 1 FROM entrees_produits e WHERE e.id_produit = sp.id_produit AND e.id_nom = sp.id_nom))
+                   AS sans_lot_par_id
+        FROM sorties_produits sp WHERE sp.date > :d AND sp.qte_sortie > 0""", d=debut):
         if r.n:
-            ecrire(f"- lignes (12 mois) : {r.n} ; id_nom vide : {pc(r.sans_id_nom / r.n)} ; "
-                   f"id_produit vide : {pc(r.sans_id_produit / r.n)}")
-            ecrire(f"- si id_produit = ligne de lot : existe {pc(r.lot_existe / r.n)}, même numéro de lot "
-                   f"{pc(r.lot_meme_numero / r.n)}, même nom de produit {pc(r.lot_meme_nom / r.n)}")
-            ecrire(f"- si id_produit = produit : existe {pc(r.produit_existe / r.n)}, même nom de produit "
-                   f"{pc(r.produit_meme_nom / r.n)}")
+            ecrire(f"- ventes dont id_produit retrouve une ligne de stock du même produit : {pc(r.par_id / r.n)}")
+            if r.sans_lot:
+                ecrire(f"- parmi les {r.sans_lot} ventes sans numéro de lot : {pc(r.sans_lot_par_id / r.sans_lot)}")
 
     ecrire("\n### Motifs des ajustements (12 mois)\n")
     ecrire("| motif | lignes | unités en plus | unités en moins |")
