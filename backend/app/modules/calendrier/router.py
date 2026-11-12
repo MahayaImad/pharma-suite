@@ -39,6 +39,12 @@ async def lire_gardes(annee: Optional[int] = Query(None, ge=2000, le=2100), svc:
     return await _repondre(svc.gardes(annee))
 
 
+@router.post("/gardes/proposer", response_model=s.Reponse[list[s.Garde]])
+async def proposer_gardes(mois: int = Query(3, ge=1, le=12), svc: CalendrierService = Depends(_service)):
+    """Propose les gardes à venir d'après la rotation (à confirmer)."""
+    return await _repondre(svc.proposer_gardes(mois))
+
+
 @router.put("/gardes/{jour}", response_model=s.Reponse[s.Garde])
 async def enregistrer_garde(jour: date, saisie: s.GardeSaisie, svc: CalendrierService = Depends(_service)):
     return await _repondre(svc.enregistrer_garde(jour, saisie))

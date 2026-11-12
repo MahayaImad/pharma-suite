@@ -11,6 +11,10 @@ abstract interface class CalendrierApi {
   Future<Garde> enregistrerGarde(DateTime jour, TypeGarde type, {String? note});
   Future<void> supprimerGarde(DateTime jour);
 
+  /// Ajoute les gardes des [mois] prochains mois d'après la rotation (à
+  /// confirmer) ; renvoie celles qui ont été ajoutées.
+  Future<List<Garde>> proposerGardes({int mois = 3});
+
   Future<List<Evenement>> evenements();
   Future<Evenement> enregistrerEvenement(TypeEvenement type, DateTime debut, DateTime fin, {int? id});
   Future<void> supprimerEvenement(int id);
@@ -55,6 +59,12 @@ class CalendrierApiDio implements CalendrierApi {
   Future<Garde> enregistrerGarde(DateTime jour, TypeGarde type, {String? note}) => _appel(
     () => _dio.put('/calendrier/gardes/${jourApi(jour)}', data: {'type': type.api, 'note': note}),
     (d) => Garde.fromJson(d as Map<String, dynamic>),
+  );
+
+  @override
+  Future<List<Garde>> proposerGardes({int mois = 3}) => _appel(
+    () => _dio.post('/calendrier/gardes/proposer', queryParameters: {'mois': mois}),
+    (d) => _liste(d, Garde.fromJson),
   );
 
   @override

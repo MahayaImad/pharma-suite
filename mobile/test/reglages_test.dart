@@ -33,6 +33,20 @@ class FauxCalendrier implements CalendrierApi {
   }
 
   @override
+  Future<List<Garde>> proposerGardes({int mois = 3}) async {
+    final g = Garde(
+      date: DateTime.now().add(const Duration(days: 12)),
+      type: TypeGarde.soiree,
+      source: 'prevision',
+      confirme: false,
+      note: 'proposée : rotation de 10 jours',
+    );
+    if (gardesEnBase.any((x) => x.source == 'prevision')) return [];
+    gardesEnBase.add(g);
+    return [g];
+  }
+
+  @override
   Future<void> supprimerGarde(DateTime jour) async => gardesEnBase.removeWhere((g) => g.date == jour);
 
   @override
@@ -180,5 +194,22 @@ void main() {
   testWidgets('PC : pas de débordement', (tester) async {
     await _lancer(tester, taille: const Size(1440, 900));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('proposer les gardes à venir, puis rien de plus au second appui', (tester) async {
+    await _lancer(tester);
+    await tester.tap(find.byKey(const ValueKey('proposer-gardes')));
+    await tester.pumpAndSettle();
+    expect(find.text('1 garde proposée, à confirmer quand le planning est connu.'), findsOneWidget);
+    expect(find.text('proposée'), findsOneWidget);
+    expect(find.text('1 proposée d\'après la rotation, à confirmer'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('proposer-gardes')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Aucune nouvelle garde à proposer'), findsOneWidget);
+  });
+
+  testWidgets('employé : pas de bouton de proposition', (tester) async {
+    await _lancer(tester, role: 'employee');
+    expect(find.byKey(const ValueKey('proposer-gardes')), findsNothing);
   });
 }

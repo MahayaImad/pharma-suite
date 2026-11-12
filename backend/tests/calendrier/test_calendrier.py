@@ -106,3 +106,67 @@ async def test_lecture_pour_tous_ecriture_pour_le_titulaire(api):
     r = await api.put("/calendrier/gardes/2026-12-01", json={"type": "soiree"})
     assert (r.status_code, r.json()["error"]["code"]) == (403, "interdit")
     assert (await api.post("/calendrier/feries", json={"date": "2027-01-12", "label": "x"})).status_code == 403
+
+
+# ── Rotation ────────────────────────────────────────────────────────────────
+
+from datetime import date, timedelta  # noqa: E402
+
+from app.modules.calendrier.rotation import GardeConnue, periode, proposer  # noqa: E402
+
+
+def _soirees(depuis, n, pas=10):
+    return [GardeConnue(depuis + timedelta(days=pas * i), "soiree", "detection") for i in range(n)]
+
+
+def test_periode_la_plus_frequente_sinon_valeur_observee():
+    assert periode([g.date for g in _soirees(date(2026, 1, 1), 6, pas=12)], "soiree") == 12
+    assert periode([date(2026, 1, 1), date(2026, 1, 9)], "soiree") == 10      # une seule fois : défaut
+    assert periode([], "24h") == 112
+
+
+def test_propositions_depuis_la_derniere_garde_de_chaque_type():
+    gardes = _soirees(date(2026, 9, 28), 5) + [          # 28/09 … 07/11 (sam.)
+        GardeConnue(date(2026, 10, 16), "jour", "detection"),
+        GardeConnue(date(2026, 9, 30), "24h", "saisie"),
+        GardeConnue(date(2026, 11, 27), "soiree", "saisie"),   # déjà saisie : jamais reproposée
+    ]
+    p = proposer(gardes, aujourdhui=date(2026, 11, 12), horizon_jours=92)   # jusqu'au 12/02/2027
+    assert [(x.date, x.type) for x in p] == [
+        (date(2026, 11, 17), "soiree"),
+        (date(2026, 12, 7), "soiree"),     # 27/11 déjà prise → sautée, la rotation continue
+        (date(2026, 12, 17), "soiree"),
+        (date(2026, 12, 25), "jour"),      # 16/10 + 70 j
+        (date(2026, 12, 27), "soiree"),
+        (date(2027, 1, 6), "soiree"),
+        (date(2027, 1, 16), "soiree"),
+        (date(2027, 1, 20), "24h"),        # 30/09 + 112 j
+        (date(2027, 1, 26), "soiree"),
+        (date(2027, 2, 5), "soiree"),
+    ]
+
+
+def test_une_soiree_qui_tombe_un_vendredi_est_signalee():
+    p = proposer([GardeConnue(date(2026, 11, 7), "soiree", "saisie")], date(2026, 11, 12), horizon_jours=20)
+    assert [(x.date, "vendredi" in x.note) for x in p] == [(date(2026, 11, 17), False), (date(2026, 11, 27), True)]
+
+
+def test_les_propositions_ne_servent_pas_de_base():
+    gardes = [GardeConnue(date(2026, 11, 7), "soiree", "saisie"),
+              GardeConnue(date(2026, 11, 20), "soiree", "prevision")]
+    p = proposer(gardes, aujourdhui=date(2026, 11, 12), horizon_jours=10)
+    assert [x.date for x in p] == [date(2026, 11, 17)]
+
+
+async def test_route_proposer(api):
+    await api.put("/calendrier/gardes/2026-11-07", json={"type": "soiree"})
+    r = await api.post("/calendrier/gardes/proposer", params={"mois": 1})
+    proposees = r.json()["data"]
+    assert proposees and all(g["source"] == "prevision" and not g["confirme"] for g in proposees)
+    # Relancer ne duplique rien ; confirmer une proposition la garde comme telle.
+    assert (await api.post("/calendrier/gardes/proposer", params={"mois": 1})).json()["data"] == []
+    jour = proposees[0]["date"]
+    g = (await api.put(f"/calendrier/gardes/{jour}", json={"type": "soiree"})).json()["data"]
+    assert (g["source"], g["confirme"]) == ("prevision", True)
+    utilisateur.update(role="user")
+    assert (await api.post("/calendrier/gardes/proposer")).status_code == 403

@@ -13,6 +13,7 @@ from typing import Optional
 
 from app.modules.calendrier import schemas as s
 from app.modules.calendrier.repository import CalendrierRepository
+from app.modules.calendrier.rotation import GardeConnue, proposer
 
 
 class ErreurCalendrier(Exception):
@@ -46,6 +47,14 @@ class CalendrierService:
     async def enregistrer_garde(self, jour: date, saisie: s.GardeSaisie) -> s.Garde:
         qui = self._admin()
         return s.Garde(**await self.repo.enregistrer_garde(jour, saisie.type, saisie.note, qui))
+
+    async def proposer_gardes(self, mois: int) -> list[s.Garde]:
+        """Ajoute les gardes des [mois] prochains mois d'après la rotation,
+        à confirmer."""
+        qui = self._admin()
+        connues = [GardeConnue(g["date"], g["type"], g["source"]) for g in await self.repo.toutes_les_gardes()]
+        propositions = proposer(connues, date.today(), horizon_jours=round(mois * 30.5))
+        return [s.Garde(**g) for g in await self.repo.ajouter_propositions(propositions, qui)]
 
     async def supprimer_garde(self, jour: date) -> None:
         self._admin()

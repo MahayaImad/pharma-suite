@@ -354,6 +354,7 @@ class _SectionGardes extends ConsumerWidget {
           ..sort((a, b) => a.date.compareTo(b.date));
         final passees = gardes.where((g) => g.date.isBefore(aujourdhui)).toList();
         final aConfirmer = passees.where((g) => g.aConfirmer).length;
+        final proposees = aVenir.where((g) => g.proposee).length;
         Widget ligne(Garde g) => _Ligne(
           cle: 'garde-${jourApi(g.date)}',
           titre: _dateCourte(g.date),
@@ -364,7 +365,9 @@ class _SectionGardes extends ConsumerWidget {
               couleur: context.schema.onPrimaryContainer,
               fond: context.schema.primaryContainer,
             ),
-            if (g.aConfirmer)
+            if (g.proposee)
+              _Badge('proposée', couleur: context.couleurs.encre2, fond: context.couleurs.neutreDoux)
+            else if (g.aConfirmer)
               _Badge('à confirmer', couleur: context.etats.alerte, fond: context.etats.alerteDoux),
           ],
           surAppui: modifiable ? () => _dialogueGarde(context, ref, garde: g) : null,
@@ -383,8 +386,25 @@ class _SectionGardes extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _SousTitre('À venir', compte: aVenir.length),
+            _SousTitre(
+              'À venir',
+              compte: aVenir.length,
+              detail: proposees > 0 ? '$proposees proposée${proposees > 1 ? 's' : ''} d\'après la rotation, à confirmer' : null,
+            ),
             if (aVenir.isEmpty) const _Vide('Aucune garde à venir saisie.') else ...aVenir.map(ligne),
+            if (modifiable)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 2, 8, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const ValueKey('proposer-gardes'),
+                    onPressed: () => _proposerGardes(context, ref),
+                    icon: const Icon(Icons.auto_awesome_outlined, size: 18),
+                    label: const Text('Proposer les 3 prochains mois'),
+                  ),
+                ),
+              ),
             _SousTitre(
               'Passées',
               compte: passees.length,
@@ -444,6 +464,25 @@ class _SousTitre extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Propose les gardes à venir d'après la rotation et dit combien sont venues.
+Future<void> _proposerGardes(BuildContext context, WidgetRef ref) async {
+  final messager = ScaffoldMessenger.of(context);
+  String message;
+  try {
+    final ajoutees = await ref.read(calendrierApiProvider).proposerGardes(mois: 3);
+    ref.invalidate(gardesProvider);
+    message = ajoutees.isEmpty
+        ? 'Aucune nouvelle garde à proposer : les trois prochains mois sont déjà remplis.'
+        : '${ajoutees.length} garde${ajoutees.length > 1 ? 's' : ''} proposée${ajoutees.length > 1 ? 's' : ''}, '
+              'à confirmer quand le planning est connu.';
+  } catch (e) {
+    message = ErreurApi.depuis(e).message;
+  }
+  messager
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(message)));
 }
 
 Future<void> _dialogueGarde(BuildContext context, WidgetRef ref, {Garde? garde}) async {

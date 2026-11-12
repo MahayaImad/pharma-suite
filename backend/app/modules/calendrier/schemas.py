@@ -26,7 +26,7 @@ class Reponse(BaseModel, Generic[T]):
 class Garde(BaseModel):
     date: date
     type: TypeGarde
-    source: Literal["saisie", "detection"]
+    source: Literal["saisie", "detection", "prevision"]
     confirme: bool
     note: Optional[str] = None
     modifie_le: Optional[datetime] = None

@@ -34,6 +34,27 @@ class CalendrierRepository:
         await self.db.commit()
         return ligne
 
+    async def toutes_les_gardes(self) -> list[dict]:
+        r = await self.db.execute(text("SELECT date, type, source FROM gardes ORDER BY date"))
+        return [dict(x._mapping) for x in r]
+
+    async def ajouter_propositions(self, propositions: list, qui: str) -> list[dict]:
+        """Enregistre des gardes proposées, non confirmées ; un jour déjà
+        pris n'est pas touché."""
+        lignes = []
+        for p in propositions:
+            r = await self.db.execute(text("""
+                INSERT INTO gardes (date, type, source, confirme, note, modifie_le, modifie_par)
+                VALUES (:d, :t, 'prevision', false, :n, now(), :qui)
+                ON CONFLICT (date) DO NOTHING
+                RETURNING date, type, source, confirme, note, modifie_le, modifie_par
+            """), {"d": p.date, "t": p.type, "n": p.note, "qui": qui})
+            ligne = r.one_or_none()
+            if ligne:
+                lignes.append(dict(ligne._mapping))
+        await self.db.commit()
+        return lignes
+
     async def supprimer_garde(self, jour: date) -> bool:
         r = await self.db.execute(text("DELETE FROM gardes WHERE date = :d"), {"d": jour})
         await self.db.commit()

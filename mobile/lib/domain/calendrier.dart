@@ -55,8 +55,12 @@ abstract class Garde with _$Garde {
 
   factory Garde.fromJson(Map<String, dynamic> json) => _$GardeFromJson(json);
 
-  /// Retrouvée dans les heures de vente, pas encore confirmée par l'officine.
-  bool get aConfirmer => source == 'detection' && !confirme;
+  /// Retrouvée dans les ventes ou proposée par la rotation, pas encore
+  /// confirmée par l'officine.
+  bool get aConfirmer => (source == 'detection' || source == 'prevision') && !confirme;
+
+  /// Proposée d'après la rotation, pas encore confirmée.
+  bool get proposee => source == 'prevision' && !confirme;
 }
 
 @freezed

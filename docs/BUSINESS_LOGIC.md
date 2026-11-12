@@ -259,7 +259,15 @@ la prévision des commandes en tient compte.
   horaires habituels de chaque jour de la semaine et repère les ventes hors
   horaires. Les candidates sont enregistrées `source = 'detection'`,
   `confirme = false` : l'officine les confirme.
-- **Gardes à venir** : saisies par l'officine (`source = 'saisie'`).
+- **Gardes à venir** : saisies par l'officine (`source = 'saisie'`), ou
+  **proposées d'après la rotation** (`source = 'prevision'`, migration 007,
+  bouton « Proposer les 3 prochains mois ») puis confirmées. Rotation
+  observée sur 3 ans (rapport du 2026-11-12) : **soirée tous les 10 jours**
+  (45 fois), **vendredi entier toutes les 10 semaines** (70 j, 9 fois ;
+  parfois 77), **24 h tous les ~16 semaines** (112–118 j). La période de
+  chaque type est recalculée sur les gardes connues ; on part de la dernière
+  garde passée ; un jour déjà pris n'est jamais reproposé ; une soirée qui
+  tombe un vendredi (jour de fermeture) est signalée « à vérifier ».
 - **Ramadan, Aïd el-Fitr, Aïd el-Adha** : table `evenements_calendrier`,
   dates 2022–2027 pré-remplies d'après le calendrier lunaire, marquées
   `a_verifier` (l'annonce officielle peut décaler d'un jour), modifiables.
