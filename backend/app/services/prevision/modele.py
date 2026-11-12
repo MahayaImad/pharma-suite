@@ -74,10 +74,15 @@ def classer(demande: np.ndarray, censure: np.ndarray, premiere_vente: Optional[i
     return Classe("intermittent" if cv2 < CV2_SEUIL else "sporadique", adi, cv2, n_vente)
 
 
-def rythme(demande: np.ndarray, censure: np.ndarray, ouvert: np.ndarray, jour: int, type_: str) -> float:
-    """Vente moyenne par jour ouvert, hors jours en rupture, sur la fenêtre du type."""
+def rythme(demande: np.ndarray, censure: np.ndarray, ouvert: np.ndarray, jour: int, type_: str,
+           premiere_vente: Optional[int] = None) -> float:
+    """Vente moyenne par jour ouvert, hors jours en rupture, sur la fenêtre du
+    type. Un produit nouveau n'est compté qu'à partir de sa première vente :
+    les semaines d'avant, il n'existait pas."""
     fenetre = FENETRE_COURTE if type_ in ("regulier", "irregulier") else FENETRE_LONGUE
     debut = max(0, jour - fenetre)
+    if type_ == "nouveau" and premiere_vente is not None:
+        debut = max(debut, premiere_vente)
     garde = (~censure[debut:jour]) & ouvert[debut:jour]
     if not garde.any():
         return 0.0
@@ -93,11 +98,14 @@ def ecart_type(demande: np.ndarray, censure: np.ndarray, ouvert: np.ndarray, jou
 
 # ── Effets du calendrier ────────────────────────────────────────────────────
 
-def profil_semaine(total: np.ndarray, dates: list[date]) -> np.ndarray:
+def profil_semaine(total: np.ndarray, dates: list[date], gardes: Optional[dict] = None) -> np.ndarray:
     """Poids de chaque jour de la semaine (lundi = 0), moyenne 1 sur les jours
-    où l'officine vend ; 0 un jour de fermeture."""
+    où l'officine vend ; 0 un jour de fermeture. Appris sur les jours
+    ordinaires : une garde le vendredi ne rend pas le vendredi « ouvert »."""
     sommes, nombres = np.zeros(7), np.zeros(7)
     for v, d in zip(total, dates):
+        if gardes and d in gardes:
+            continue
         sommes[d.weekday()] += v
         nombres[d.weekday()] += 1
     moyennes = np.divide(sommes, nombres, out=np.zeros(7), where=nombres > 0)
@@ -109,20 +117,25 @@ def profil_semaine(total: np.ndarray, dates: list[date]) -> np.ndarray:
 
 def facteurs_garde(total: np.ndarray, dates: list[date], gardes: dict[date, str]) -> dict[str, float]:
     """Ventes de l'officine un jour de garde ÷ médiane des jours ordinaires du
-    même jour de semaine. Un jour de fermeture ouvert en garde est comparé à
-    la médiane des jours ouverts."""
+    même jour de semaine. Un jour **de fermeture** ouvert en garde (le
+    vendredi) est comparé à la médiane des jours **ouverts** : comparé aux
+    vendredis ordinaires, presque sans vente, il donnait un facteur absurde
+    (× 145 sur la base réelle le 2026-11-12)."""
+    semaine = profil_semaine(total, dates, gardes)
     ordinaires: dict[int, list[float]] = {j: [] for j in range(7)}
     for v, d in zip(total, dates):
         if d not in gardes and v > 0:
             ordinaires[d.weekday()].append(v)
-    tous = [v for vs in ordinaires.values() for v in vs]
-    reference_ouverte = float(np.median(tous)) if tous else 0.0
+    ouverts = [v for j, vs in ordinaires.items() if semaine[j] > 0 for v in vs]
+    reference_ouverte = float(np.median(ouverts)) if ouverts else 0.0
     rapports: dict[str, list[float]] = {}
     for v, d in zip(total, dates):
         type_ = gardes.get(d)
         if type_ is None:
             continue
-        base = float(np.median(ordinaires[d.weekday()])) if ordinaires[d.weekday()] else reference_ouverte
+        ferme = semaine[d.weekday()] == 0
+        base = (reference_ouverte if ferme or not ordinaires[d.weekday()]
+                else float(np.median(ordinaires[d.weekday()])))
         if base > 0:
             rapports.setdefault(type_, []).append(v / base)
     return {t: float(np.median(r)) for t, r in rapports.items()}

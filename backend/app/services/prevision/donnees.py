@@ -97,7 +97,7 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
 
     # Calendrier appris avant le rejeu seulement : le rejeu ne voit pas l'avenir.
     avant = slice(0, debut_rejeu)
-    semaine = m.profil_semaine(total[avant], dates[avant])
+    semaine = m.profil_semaine(total[avant], dates[avant], gardes)
     cal = m.Calendrier(semaine, gardes,
                        m.facteurs_garde(total[avant], dates[avant], {d: t for d, t in gardes.items()
                                                                      if d < dates[debut_rejeu]}),

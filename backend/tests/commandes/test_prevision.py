@@ -84,3 +84,34 @@ def test_rejeu_d_un_produit_regulier():
     assert r.rupture_simulee <= 3          # au plus les premiers jours
     assert r.taux_service > 0.97
     assert 0 < r.stock_moyen_simule < 20   # pas de stock démesuré
+
+
+def test_une_garde_le_vendredi_est_comparee_a_un_jour_ouvert():
+    """Officine fermée le vendredi (1 vente « parasite »), 10 par jour ouvert ;
+    un vendredi de garde : 12. Facteur 1,2 — pas 12 (12 ÷ 1)."""
+    dates = _jours(28)
+    vendredi_garde = date(2025, 1, 17)
+    total = np.array([(12.0 if d == vendredi_garde else 1.0) if d.weekday() == 4 else 10.0 for d in dates])
+    assert m.facteurs_garde(total, dates, {vendredi_garde: "jour"}) == {"jour": 1.2}
+
+
+def test_produit_nouveau_compte_depuis_sa_premiere_vente():
+    demande = np.array([0.0] * 100 + [4.0] * 20)
+    rien = np.zeros(120, dtype=bool)
+    ouvert = np.ones(120, dtype=bool)
+    assert m.rythme(demande, rien, ouvert, 120, "nouveau", premiere_vente=100) == 4.0
+    assert m.rythme(demande, rien, ouvert, 120, "intermittent") < 1
+
+
+def test_politique_sans_plancher_pour_les_produits_rares_stocke_moins():
+    from app.services.prevision.rejeu import Politique
+    n = 300
+    dates = _jours(n)
+    ouvert = np.array([d.weekday() != 4 for d in dates])
+    demande = np.where(np.arange(n) % 4 == 0, 1.0, 0.0)               # 1 boîte tous les 4 jours
+    stock_hist = np.full(n, 2.0)
+    cal = m.Calendrier(m.profil_semaine(np.where(ouvert, 5.0, 0.0), dates), {}, {}, [])
+    pr = Produit(1, demande, stock_hist, "C", 1)
+    avec = simuler(pr, dates, 200, cal, ouvert)
+    sans = simuler(pr, dates, 200, cal, ouvert, Politique("sobre", z_facteur=0.5, plancher_rares=False))
+    assert sans.stock_moyen_simule < avec.stock_moyen_simule
