@@ -17,6 +17,9 @@ Chaque jour du rejeu :
        quantité       = S − stock − commandes en cours, arrondie à la boîte
        produit lent   : garder 1 boîte s'il s'est vendu dans les 6 mois
 
+Un produit référencé pendant le rejeu reçoit sa première réception réelle et
+n'est mesuré qu'à partir de ce jour (la réalité comme la simulation).
+
 Limite connue : la demande « réelle » est la vente enregistrée ; les jours
 où l'officine était en rupture, la vraie demande est inconnue (souvent sous-
 estimée), ce qui avantage un peu l'historique dans la comparaison.
@@ -67,6 +70,11 @@ class Produit:
     delai_ouvres: int
     ramadan: float = 1.0
     saison: Optional[np.ndarray] = None
+    # Première réception réelle, si le produit est référencé pendant le rejeu :
+    # (indice du jour, quantité). Référencer un produit est une décision de
+    # l'officine que la méthode ne peut pas deviner : le rejeu la reprend
+    # telle quelle et ne mesure le produit qu'à partir de ce jour.
+    lancement: Optional[tuple[int, float]] = None
 
 
 @dataclass
@@ -114,6 +122,10 @@ def simuler(p: Produit, dates: list[date], debut: int, cal: m.Calendrier, ouvert
     demande_totale = servie = 0.0
     commandes = 0
     classe = m.classer(p.demande, cens, premiere, debut)
+    depart = debut
+    if p.lancement is not None and p.lancement[0] >= debut:
+        depart = p.lancement[0]
+        arrivees[depart] += p.lancement[1]
 
     for d in range(debut, n):
         stock += arrivees[d]
@@ -124,7 +136,7 @@ def simuler(p: Produit, dates: list[date], debut: int, cal: m.Calendrier, ouvert
         servie += sert
         stock_sim[d] = stock
 
-        if dates[d].weekday() == VENDREDI:
+        if dates[d].weekday() == VENDREDI or d < depart:
             continue
         if (d - debut) % RECLASSEMENT_JOURS == 0:
             classe = m.classer(p.demande, cens, premiere, d + 1)
@@ -149,9 +161,9 @@ def simuler(p: Produit, dates: list[date], debut: int, cal: m.Calendrier, ouvert
             arrivees[arrivee] += math.ceil(manque - 1e-9)
             commandes += 1
 
-    reel = p.stock_hist[debut:]
+    reel = p.stock_hist[depart:]
     connus = ~np.isnan(reel)
-    simule = stock_sim[debut:]
+    simule = stock_sim[depart:]
     return Resultat(
         id=p.id, type=classe.type, classe_abc=p.classe_abc, jours=int(connus.sum()),
         rupture_reelle=int((reel[connus] <= 0).sum()),

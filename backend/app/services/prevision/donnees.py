@@ -71,6 +71,19 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
         WHERE ep.id_nom = ANY(:ids) AND COALESCE(ep.type_entree, '') <> 'AV' AND COALESCE(ep.type_achat, '') <> 'E'
         ORDER BY ep.id_nom, ep.date_entree DESC NULLS LAST, ep.id DESC"""), params)}
 
+    # Première réception (hors avoirs) des produits référencés pendant le rejeu.
+    lancements = {r.id_nom: (index[r.jour], float(r.q)) for r in await db.execute(text("""
+        WITH premieres AS (
+            SELECT id_nom, min(date_entree) AS jour FROM entrees_produits
+            WHERE id_nom = ANY(:ids) AND COALESCE(type_entree, '') <> 'AV' AND qte_entree > 0
+            GROUP BY id_nom)
+        SELECT p.id_nom, p.jour, sum(e.qte_entree) AS q
+        FROM premieres p JOIN entrees_produits e
+          ON e.id_nom = p.id_nom AND e.date_entree = p.jour
+         AND COALESCE(e.type_entree, '') <> 'AV' AND e.qte_entree > 0
+        WHERE p.jour BETWEEN :debut_rejeu AND :fin
+        GROUP BY p.id_nom, p.jour"""), params) if r.jour in index}
+
     demande = {i: np.zeros(n) for i in ids}
     total = np.zeros(n)
     for r in await db.execute(text(f"""
@@ -116,5 +129,6 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
             id=r.id, demande=demande[r.id], stock_hist=stocks[r.id], classe_abc=r.segment_abc,
             delai_ouvres=int(delais[r.id]) if delais.get(r.id) is not None else delai_defaut,
             ramadan=ramadan, saison=m.indices_saison(demande[r.id], dates, debut_rejeu),
+            lancement=lancements.get(r.id),
         ))
     return Donnees(dates, debut_rejeu, produits, {r.id: Decimal(r.prix) for r in lignes}, cal, ouvert)

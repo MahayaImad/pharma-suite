@@ -115,3 +115,21 @@ def test_politique_sans_plancher_pour_les_produits_rares_stocke_moins():
     avec = simuler(pr, dates, 200, cal, ouvert)
     sans = simuler(pr, dates, 200, cal, ouvert, Politique("sobre", z_facteur=0.5, plancher_rares=False))
     assert sans.stock_moyen_simule < avec.stock_moyen_simule
+
+
+def test_produit_reference_pendant_le_rejeu_recoit_sa_premiere_reception():
+    """Produit inexistant avant le jour 150 (stock réel 0), reçu ce jour-là
+    (6 boîtes) puis vendu 1 par jour ouvert. Sans reprise de la réception, la
+    simulation serait en rupture jusqu'à la première vente ; avec, elle est
+    mesurée à partir du jour 150 seulement."""
+    n = 220
+    dates = _jours(n)
+    ouvert = np.array([d.weekday() != 4 for d in dates])
+    demande = np.where((np.arange(n) >= 150) & ouvert, 1.0, 0.0)
+    stock_hist = np.where(np.arange(n) >= 150, 5.0, 0.0)
+    cal = m.Calendrier(m.profil_semaine(np.where(ouvert, 5.0, 0.0), dates), {}, {}, [])
+    r = simuler(Produit(1, demande, stock_hist, "B", 1, lancement=(150, 6.0)), dates, 100, cal, ouvert)
+    assert r.jours == 70                    # mesuré du jour 150 au jour 219
+    assert r.rupture_reelle == 0
+    assert r.taux_service > 0.95
+    assert r.rupture_simulee <= 2
