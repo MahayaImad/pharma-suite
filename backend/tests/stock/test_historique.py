@@ -94,3 +94,27 @@ async def test_ajustement_rattache_par_code_barre(db):
         "SELECT date, stock_eod FROM historique_stock_jour WHERE id_nom = 1 ORDER BY date"))}
     # 7 aujourd'hui ; la casse de 3 au jour j2 : 10 en fin de j3 et avant
     assert serie == {j(0): 7, j(1): 7, j(2): 7, j(3): 10, j(4): 10, j(5): 10}
+
+
+async def test_lots_retrouves_par_id_produit(db):
+    """Inventaire et vente sans numéro de lot désignent leur lot par
+    id_produit = entrees_produits.id (convention d'EASYPHARM)."""
+    await db.execute(text("TRUNCATE inventaires_produits"))
+    await db.execute(text("INSERT INTO nomenclature (id, nom, archive) VALUES (1, 'P', false), (2, 'Q', false)"))
+    await db.execute(text("""
+        INSERT INTO entrees_produits (id, id_nom, lot, date_entree, qte_entree, stock, prix_achat, prix_vente, type_entree)
+        VALUES (41, 1, 'L1', :e, 10, 4, 10, 15, 'A'), (42, 2, 'L1', :e, 10, 10, 10, 15, 'A')"""), {"e": j(5)})
+    # Vente sans numéro de lot du lot 41 (j1, 5 u) ; inventaire du lot 41 (j3, −1),
+    # son numéro « L1 » existe aussi chez le produit 2 : seul l'id_produit tranche.
+    await db.execute(text("""INSERT INTO sorties_produits (id, id_nom, lot, id_produit, date, qte_sortie, prix_vente, type_sortie)
+        VALUES (1, 1, '', 41, :d, 5, 15, 'V')"""), {"d": j(1)})
+    await db.execute(text("""INSERT INTO inventaires_produits (id, id_nom, lot, id_produit, date, ecart, motif)
+        VALUES (1, NULL, 'L1', 41, :d, -1, 'Casse')"""), {"d": j(3)})
+    await db.execute(text("REFRESH MATERIALIZED VIEW mv_stock_produits"))
+    await db.commit()
+    await reconstituer(db, j(5), T)
+    serie = {(l.id_nom, l.date): float(l.stock_eod) for l in await db.execute(text(
+        "SELECT id_nom, date, stock_eod FROM historique_stock_jour"))}
+    # Produit 1 : 4 ; fin j1 4 ; fin j2 = 4 + 5 = 9 ; fin j3 9 ; fin j4 = 9 + 1 (casse de j3) = 10 ; j5 10
+    assert [serie[(1, j(k))] for k in range(6)] == [4, 4, 9, 9, 10, 10]
+    assert {serie[(2, j(k))] for k in range(6)} == {10}       # l'autre « L1 » n'est pas touché

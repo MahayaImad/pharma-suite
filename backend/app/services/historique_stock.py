@@ -5,7 +5,8 @@ Méthode retenue (docs/BUSINESS_LOGIC.md §3.4) : chaque lot existe à partir de
 sa date d'entrée ; à rebours, stock(veille) = stock(jour) + sorties du jour
 (ventes, avoirs fournisseur, échanges vers une autre pharmacie) − ajustements
 d'inventaire du jour. Le stock d'un produit est la somme de ses lots. Un
-numéro de lot vide regroupe les lots sans numéro du produit.
+numéro de lot vide regroupe les lots sans numéro du produit. Inventaire et
+ventes désignent leur lot par `id_produit` (= `entrees_produits.id`).
 
 Le stock de fin de journée de chaque produit actif ou en stock, chaque jour
 de [debut] à aujourd'hui, va dans `historique_stock_jour` avec
@@ -30,19 +31,31 @@ from app.services.reconstitution_stock import LotHistorique, par_lot
 
 TAILLE_LOT_ECRITURE = 5000
 
-# Une ligne d'inventaire désigne sa ligne de stock par le code-barres, unique
-# par lot dans EASYPHARM (id_nom y est vide) : on en tire le produit et le
-# numéro de lot ; à défaut de code-barres, id_nom et lot de la ligne.
+# Une ligne d'inventaire désigne sa ligne de lot par `id_produit` =
+# `entrees_produits.id` (99,9 % retrouvées, même lot et même nom, diagnostic
+# du 2026-11-12) ; à défaut par le code-barres, unique par lot ; à défaut par
+# ses propres id_nom et lot (id_nom y est vide dans EASYPHARM).
 INVENTAIRE_RESOLU = """
     SELECT ip.date, ip.ecart, ip.motif, ip.prix_achat_ttc,
-           COALESCE(e.id_nom, ip.id_nom) AS id_nom,
-           COALESCE(e.lot, ip.lot) AS lot
+           COALESCE(par_id.id_nom, par_cb.id_nom, ip.id_nom) AS id_nom,
+           COALESCE(par_id.lot, par_cb.lot, ip.lot) AS lot
     FROM inventaires_produits ip
+    LEFT JOIN entrees_produits par_id ON par_id.id = ip.id_produit
     LEFT JOIN LATERAL (
         SELECT id_nom, lot FROM entrees_produits
-        WHERE code_barre = ip.code_barre AND NULLIF(trim(ip.code_barre), '') IS NOT NULL
+        WHERE par_id.id IS NULL AND code_barre = ip.code_barre AND NULLIF(trim(ip.code_barre), '') IS NOT NULL
         ORDER BY id DESC LIMIT 1
-    ) e ON true
+    ) par_cb ON true
+"""
+
+# Ventes : le numéro de lot manque sur 24 % des lignes ; `id_produit` désigne
+# alors la ligne de lot (même convention que l'inventaire), retenue seulement
+# si elle est du même produit.
+VENTES_RESOLUES = """
+    SELECT sp.id_nom, sp.date, sp.qte_sortie,
+           COALESCE(NULLIF(trim(sp.lot), ''), e.lot, sp.lot) AS lot
+    FROM sorties_produits sp
+    LEFT JOIN entrees_produits e ON e.id = sp.id_produit AND e.id_nom = sp.id_nom
 """
 
 
@@ -104,8 +117,8 @@ async def reconstituer(
             cible.ajouter_sortie(jour, float(qte))
 
     # Mouvements après [debut] : seuls ceux-là changent les jours reconstitués.
-    for r in await db.execute(text("""
-        SELECT id_nom, lot, date, sum(qte_sortie) AS q FROM sorties_produits
+    for r in await db.execute(text(f"""
+        SELECT id_nom, lot, date, sum(qte_sortie) AS q FROM ({VENTES_RESOLUES}) v
         WHERE id_nom = ANY(:ids) AND date > :debut GROUP BY 1, 2, 3"""), params):
         sortie(r.id_nom, r.lot, r.date, r.q)
     for r in await db.execute(text("""

@@ -32,7 +32,7 @@ from statistics import median
 from sqlalchemy import text
 
 from app.core.database import AsyncSessionLocal
-from app.services.historique_stock import INVENTAIRE_RESOLU
+from app.services.historique_stock import INVENTAIRE_RESOLU, VENTES_RESOLUES
 from app.services.reconstitution_stock import LotHistorique, accord_ruptures, par_lot, par_produit, qualite
 
 lignes: list[str] = []
@@ -159,7 +159,26 @@ async def main() -> int:
             WHERE ip.date > :d""", d=debut):
             ecrire(f"- produit (nomenclature.id) : trouvé {pc(r.existe / n)}, même nom {pc(r.meme_nom / n)}")
 
-    ecrire("\n### Ventes rattachées à leur lot par `id_produit` (12 mois)\n")
+    ecrire("\n### Ventes rattachées à leur lot par `id_produit` = `entrees_produits.id` (12 mois)\n")
+    for r in await sql("""
+        SELECT count(*) AS n,
+               count(*) FILTER (WHERE NULLIF(trim(sp.lot), '') IS NULL) AS sans_lot,
+               count(e.id) AS trouvee,
+               count(*) FILTER (WHERE e.id IS NOT NULL AND NULLIF(trim(sp.lot), '') IS NOT NULL
+                                AND trim(e.lot) = trim(sp.lot)) AS meme_lot,
+               count(*) FILTER (WHERE e.id IS NOT NULL AND NULLIF(trim(sp.lot), '') IS NULL) AS sans_lot_trouvee
+        FROM sorties_produits sp
+        LEFT JOIN entrees_produits e ON e.id = sp.id_produit AND e.id_nom = sp.id_nom
+        WHERE sp.date > :d AND sp.qte_sortie > 0""", d=debut):
+        if r.n:
+            avec_lot = r.n - r.sans_lot
+            ecrire(f"- ligne de lot du même produit retrouvée : {pc(r.trouvee / r.n)}")
+            if avec_lot:
+                ecrire(f"- quand la vente a un numéro de lot, c'est le même : {pc(r.meme_lot / avec_lot)}")
+            if r.sans_lot:
+                ecrire(f"- ventes sans numéro de lot rattachées par id_produit : {pc(r.sans_lot_trouvee / r.sans_lot)}")
+
+    ecrire("\n### Ventes et identifiant de ligne de stock partagé (12 mois)\n")
     for r in await sql("""
         SELECT count(*) AS n,
                count(*) FILTER (WHERE NULLIF(trim(sp.lot), '') IS NULL) AS sans_lot,
@@ -226,8 +245,8 @@ async def main() -> int:
             WHERE id_nom = :i AND COALESCE(type_entree, '') <> 'AV' AND date_entree IS NOT NULL
             GROUP BY 1"""
         lignes_lots = await sql(requete_lots, i=id_nom)
-        ventes_lot = await sql("""
-            SELECT COALESCE(trim(lot), '') AS lot, date, sum(qte_sortie) AS q FROM sorties_produits
+        ventes_lot = await sql(f"""
+            SELECT COALESCE(trim(lot), '') AS lot, date, sum(qte_sortie) AS q FROM ({VENTES_RESOLUES}) v
             WHERE id_nom = :i AND date > :d GROUP BY 1, 2""", i=id_nom, d=debut)
         avoirs_lot = await sql("""
             SELECT COALESCE(trim(lot), '') AS lot, date_entree AS date, sum(abs(qte_entree)) AS q
