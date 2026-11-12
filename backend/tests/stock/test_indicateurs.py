@@ -258,3 +258,27 @@ async def test_le_calcul_groupe_donne_les_memes_chiffres_que_la_fiche(api, db):
                 ligne["qte_a_risque"], ligne["cmm"]) == (
             fiche["stock_securite"], fiche["stock_maximum"], fiche["couverture_jours"],
             fiche["qte_a_risque"], fiche["cmm"]), id_nom
+
+
+async def test_un_echange_recu_n_est_pas_le_fournisseur_principal(api, db):
+    """Dernière entrée : un échange reçu d'une pharmacie voisine (type_achat
+    'E', prix 0). Le fournisseur principal reste le grossiste du dernier achat."""
+    await db.execute(text("DELETE FROM fournisseurs WHERE id IN (7, 8)"))
+    await db.execute(text("""
+        INSERT INTO fournisseurs (id, fournisseur, delai_livraison) VALUES (7, 'GROSSISTE', 1), (8, 'PHARMACIE VOISINE', 9)
+    """))
+    await db.execute(text("INSERT INTO nomenclature (id, nom, archive) VALUES (1, 'P', false)"))
+    await db.execute(text("""
+        INSERT INTO entrees_produits (id, id_nom, stock, qte_entree, prix_achat, prix_vente,
+                                      id_fournisseur, date_entree, type_entree, type_achat)
+        VALUES (1, 1, 10, 10, 100, 150, 7, '2026-10-01', 'A', 'N'),
+               (2, 1, 2, 2, 0, 150, 8, '2026-11-05', 'A', 'E')
+    """))
+    await db.commit()
+    await api.post("/stock/refresh-cache")
+    r = (await api.get("/stock/products/1/indicateurs")).json()
+    assert r["fournisseur"]["nom"] == "GROSSISTE"
+    assert r["fournisseur"]["delai_jours_ouvres"] == 1
+    # Le calcul groupé (liste) choisit le même fournisseur, donc le même délai.
+    ligne = (await api.get("/stock/products")).json()["items"][0]
+    assert ligne["stock_securite"] == r["stock_securite"]

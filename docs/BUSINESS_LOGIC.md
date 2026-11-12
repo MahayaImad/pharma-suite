@@ -212,11 +212,19 @@ stock d'un lot.
 | Avoir fournisseur | `entrees_produits`, `type_entree = 'AV'` | **sortie** | retour au fournisseur ; quantité saisie **positive** (123 lignes) |
 | Vente | `sorties_produits.qte_sortie` | sortie | un retour client est une quantité négative (§2.3) |
 | Échange vers une autre pharmacie | `echanges_sorties_produits.qte` (type `ES`) | sortie | porte le lot |
+| **Échange reçu** d'une autre pharmacie | `entrees_produits`, **`type_achat = 'E'`**, **`prix_achat = 0`** | entrée | crée un lot comme un achat (confirmé le 2026-11-12) |
 | **Ajustement d'inventaire** | `inventaires_produits.ecart` | **±** | `ecart = stock_reel − stock_theorique`, par **lot**, à la `date` de l'inventaire ; positif = stock retrouvé, négatif = perte (casse, péremption, vol). 27 876 lignes : la table est utilisée au fil de l'eau, pas seulement pour l'inventaire d'ouverture |
 | **Instance** | `instance_produits` | sortie | le produit sort du stock **à la mise en instance**, sans paiement ; la vente est enregistrée plus tard |
 
 À rebours, pour un lot : stock(veille) = stock(jour) + sorties du jour −
 ajustements du jour ; avant sa date d'entrée, le lot n'existe pas.
+
+**Échanges reçus** (`type_achat = 'E'`) : ce ne sont pas des achats. Ils
+sont **exclus** de tout ce qui parle des fournisseurs — fournisseur principal
+d'un produit, délai de livraison, prix d'achat par fournisseur. Leur prix
+d'achat nul fait aussi baisser la valeur du stock et le prix d'achat moyen
+de leurs lots : effet faible (quelques centaines de lignes par an), à
+corriger si besoin en les valorisant au dernier prix d'achat réel.
 
 **Instances** : leur historique exact n'existe pas depuis 2023 (la ligne est
 supprimée d'`instance_produits` une fois traitée). Elles se retrouvent
@@ -278,7 +286,8 @@ portent aussi). Règles :
   d'EASYPHARM : la synchronisation ne l'écrase pas). Sans saisie, on prend le
   réglage `delai_livraison_jours` (1).
 - Le **fournisseur principal** d'un produit est celui de sa dernière entrée
-  hors avoir (`entrees_produits.id_fournisseur`, `type_entree <> 'AV'`).
+  qui est un vrai achat : ni avoir (`type_entree <> 'AV'`), ni échange reçu
+  (`type_achat <> 'E'`) (`entrees_produits.id_fournisseur`).
 - Les jours fériés ne sont pas encore retirés du calcul.
 
 ### 3.7 Gardes et fêtes à date mobile (confirmé le 2026-11-12)

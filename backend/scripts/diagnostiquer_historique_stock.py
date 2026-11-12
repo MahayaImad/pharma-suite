@@ -75,6 +75,13 @@ async def main() -> int:
         FROM entrees_produits GROUP BY 1 ORDER BY 2 DESC"""):
         ecrire(f"| {r.type_e} | {r.n} | {int(r.q)} | {r.neg} |")
 
+    ecrire("\nAchats et échanges reçus (`type_achat`) :\n")
+    for r in await sql("""
+        SELECT COALESCE(NULLIF(type_achat, ''), '(vide)') AS type_a, count(*) AS n,
+               count(*) FILTER (WHERE prix_achat = 0) AS prix_nul
+        FROM entrees_produits GROUP BY 1 ORDER BY 2 DESC"""):
+        ecrire(f"- `{r.type_a}` : {r.n} lignes, dont {r.prix_nul} à prix d'achat nul")
+
     ecrire("\n## 2. Ventes des 12 derniers mois et numéro de lot\n")
     v = await sql("""
         SELECT count(*) AS n,

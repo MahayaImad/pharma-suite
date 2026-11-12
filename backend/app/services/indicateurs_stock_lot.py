@@ -89,7 +89,7 @@ async def calculer_tous(db: AsyncSession, jour: date) -> dict[int, Indicateurs]:
         SELECT DISTINCT ON (ep.id_nom) ep.id_nom, f.delai_livraison
         FROM entrees_produits ep
         LEFT JOIN fournisseurs f ON f.id = ep.id_fournisseur
-        WHERE COALESCE(ep.type_entree, '') <> 'AV'
+        WHERE COALESCE(ep.type_entree, '') <> 'AV' AND COALESCE(ep.type_achat, '') <> 'E'
         ORDER BY ep.id_nom, ep.date_entree DESC NULLS LAST, ep.id DESC
     """))}
     lots: dict[int, list[ind.LotFefo]] = {}

@@ -528,12 +528,15 @@ async def indicateurs_produit(
     jours_historique = min(365, (jour - premiere_vente).days + 1) if premiere_vente else 365
     sigma = ind.ecart_type_journalier([float(v.qte or 0) for v in ventes], jours_historique)
 
-    # Fournisseur principal : celui de la dernière entrée hors avoir.
+    # Fournisseur principal : celui du dernier vrai achat, ni avoir ni échange
+    # reçu (docs/BUSINESS_LOGIC.md §3.6).
     fournisseur = (await db.execute(text("""
         SELECT ep.id_fournisseur, COALESCE(f.fournisseur, ep.fournisseur) AS nom, f.delai_livraison
         FROM entrees_produits ep
         LEFT JOIN fournisseurs f ON f.id = ep.id_fournisseur
         WHERE ep.id_nom = :id AND COALESCE(ep.type_entree, '') <> 'AV'
+          -- Un échange reçu (type_achat 'E', prix 0) n'est pas un achat.
+          AND COALESCE(ep.type_achat, '') <> 'E'
         ORDER BY ep.date_entree DESC NULLS LAST, ep.id DESC
         LIMIT 1
     """), {"id": product_id})).fetchone()
