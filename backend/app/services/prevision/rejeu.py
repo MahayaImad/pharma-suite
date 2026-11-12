@@ -26,39 +26,18 @@ estimée), ce qui avantage un peu l'historique dans la comparaison.
 """
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 from typing import Optional
 
 import numpy as np
 
-from app.services import indicateurs_stock as ind
 from app.services.prevision import modele as m
+from app.services.prevision.proposition import (  # noqa: F401  (réexportés)
+    POLITIQUE, RARES, VENDREDI, Politique, decider, jour_de_commande_suivant,
+)
 
-VENDREDI = 4
 RECLASSEMENT_JOURS = 7       # le type de demande est recalculé chaque semaine
-
-
-@dataclass(frozen=True)
-class Politique:
-    """Réglages de la politique de commande, comparés par le rejeu.
-
-    z_facteur          multiplie le Z du taux de service (1 = A 95 %, B 90 %, C 85 %)
-    plancher           stock de sécurité minimal d'un produit qui se vend (boîtes)
-    plancher_rares     appliquer aussi ce plancher aux intermittents et sporadiques
-    fenetre_lent       un produit lent est gardé en stock (1 boîte) s'il s'est
-                       vendu dans ces derniers jours
-    """
-    nom: str = "actuelle"
-    z_facteur: float = 1.0
-    plancher: float = 1.0
-    plancher_rares: bool = True
-    fenetre_lent: int = 182
-
-
-POLITIQUE = Politique()
-RARES = ("intermittent", "sporadique")
 
 
 @dataclass
@@ -103,18 +82,12 @@ def censure(demande: np.ndarray, stock_hist: np.ndarray) -> np.ndarray:
     return (np.nan_to_num(stock_matin, nan=1.0) <= 0) & (demande <= 0)
 
 
-def jour_de_commande_suivant(jour: date) -> date:
-    suivant = jour + timedelta(days=1)
-    return suivant + timedelta(days=1) if suivant.weekday() == VENDREDI else suivant
-
-
 def simuler(p: Produit, dates: list[date], debut: int, cal: m.Calendrier, ouvert: np.ndarray,
             politique: Politique = POLITIQUE) -> Resultat:
     n = len(dates)
     cens = censure(p.demande, p.stock_hist)
     ventes_idx = np.flatnonzero(p.demande > 0)
     premiere = int(ventes_idx[0]) if ventes_idx.size else None
-    z = ind.Z_PAR_CLASSE.get((p.classe_abc or "").upper(), ind.Z_DEFAUT) * politique.z_facteur
 
     stock = float(np.nan_to_num(p.stock_hist[debut - 1], nan=0.0)) if debut > 0 else 0.0
     arrivees = np.zeros(n + 30)
@@ -141,24 +114,12 @@ def simuler(p: Produit, dates: list[date], debut: int, cal: m.Calendrier, ouvert
         if (d - debut) % RECLASSEMENT_JOURS == 0:
             classe = m.classer(p.demande, cens, premiere, d + 1)
 
-        arrivee = (ind.date_livraison(dates[d], p.delai_ouvres) - dates[0]).days
-        suivante = (ind.date_livraison(jour_de_commande_suivant(dates[d]), p.delai_ouvres) - dates[0]).days
-        if classe.type == "lent":
-            vendu_recemment = p.demande[max(0, d - politique.fenetre_lent):d + 1].sum() > 0
-            cible = 1.0 if vendu_recemment else 0.0
-        else:
-            couverts = [dates[0] + timedelta(days=k) for k in range(d + 1, suivante)]
-            r = m.rythme(p.demande, cens, ouvert, d + 1, classe.type, premiere)
-            prevu = m.demande_prevue(r, couverts, cal, p.saison, p.ramadan)
-            jours_ouverts = sum(1 for j in couverts if cal.poids(j, None, 1.0) > 0)
-            securite = z * m.ecart_type(p.demande, cens, ouvert, d + 1) * math.sqrt(max(1, jours_ouverts))
-            if r > 0 and (politique.plancher_rares or classe.type not in RARES):
-                securite = max(securite, politique.plancher)
-            cible = prevu + securite
         en_cours = float(arrivees[d + 1:].sum())
-        manque = cible - stock - en_cours
-        if manque > 1e-9 and arrivee < len(arrivees):
-            arrivees[arrivee] += math.ceil(manque - 1e-9)
+        dec = decider(p.demande, cens, ouvert, dates, d, classe, premiere, p.classe_abc, p.delai_ouvres,
+                      cal, stock, en_cours, p.saison, p.ramadan, politique)
+        arrivee = (dec.arrivee - dates[0]).days
+        if dec.quantite > 0 and arrivee < len(arrivees):
+            arrivees[arrivee] += dec.quantite
             commandes += 1
 
     reel = p.stock_hist[depart:]
