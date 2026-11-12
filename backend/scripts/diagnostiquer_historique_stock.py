@@ -112,6 +112,32 @@ async def main() -> int:
         ecrire(f"- ajustements sur 12 mois : {r.n} lignes, +{int(r.plus)} / {int(r.moins)} unités, "
                f"{r.sans_lot} sans numéro de lot")
 
+    ecrire("\n### Clé produit des lignes d'inventaire\n")
+    for r in await sql("""
+        SELECT count(*) AS n,
+               count(*) FILTER (WHERE ip.id_nom IS NULL) AS sans_id_nom,
+               count(*) FILTER (WHERE ip.id_produit IS NULL) AS sans_id_produit,
+               -- Hypothèse 1 : id_produit = la ligne de lot (entrees_produits.id)
+               count(ep.id) AS lot_existe,
+               count(*) FILTER (WHERE ep.id IS NOT NULL
+                                AND COALESCE(trim(ep.lot), '') = COALESCE(trim(ip.lot), '')) AS lot_meme_numero,
+               count(*) FILTER (WHERE ep.id IS NOT NULL AND n_ep.nom = ip.produit) AS lot_meme_nom,
+               -- Hypothèse 2 : id_produit = le produit (nomenclature.id)
+               count(n.id) AS produit_existe,
+               count(*) FILTER (WHERE n.id IS NOT NULL AND n.nom = ip.produit) AS produit_meme_nom
+        FROM inventaires_produits ip
+        LEFT JOIN entrees_produits ep ON ep.id = ip.id_produit
+        LEFT JOIN nomenclature n_ep ON n_ep.id = ep.id_nom
+        LEFT JOIN nomenclature n ON n.id = ip.id_produit
+        WHERE ip.date > :d""", d=debut):
+        if r.n:
+            ecrire(f"- lignes (12 mois) : {r.n} ; id_nom vide : {pc(r.sans_id_nom / r.n)} ; "
+                   f"id_produit vide : {pc(r.sans_id_produit / r.n)}")
+            ecrire(f"- si id_produit = ligne de lot : existe {pc(r.lot_existe / r.n)}, même numéro de lot "
+                   f"{pc(r.lot_meme_numero / r.n)}, même nom de produit {pc(r.lot_meme_nom / r.n)}")
+            ecrire(f"- si id_produit = produit : existe {pc(r.produit_existe / r.n)}, même nom de produit "
+                   f"{pc(r.produit_meme_nom / r.n)}")
+
     ecrire("\n### Motifs des ajustements (12 mois)\n")
     ecrire("| motif | lignes | unités en plus | unités en moins |")
     ecrire("|---|---:|---:|---:|")
