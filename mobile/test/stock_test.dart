@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pharmasuite/app.dart';
 import 'package:pharmasuite/core/router/routeur.dart';
 import 'package:pharmasuite/data/api/stock_api.dart';
+import 'package:pharmasuite/domain/session.dart';
 import 'package:pharmasuite/domain/stock.dart';
+import 'package:pharmasuite/features/connexion/application/session_controller.dart';
 import 'package:pharmasuite/features/preferences/application/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,6 +20,7 @@ Future<void> _lancer(
   FausseStockApi api, {
   Size taille = _portable,
   String depart = '/stock',
+  String? role,
 }) async {
   tester.view.physicalSize = taille;
   tester.view.devicePixelRatio = 1;
@@ -30,6 +33,13 @@ Future<void> _lancer(
         preferencesLocalesProvider.overrideWithValue(prefs),
         stockApiProvider.overrideWithValue(api),
         routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
+        if (role != null)
+          sessionProvider.overrideWithBuild(
+            (ref, _) => Session(
+              jeton: 'j',
+              profil: Profil(utilisateur: 'u', role: role),
+            ),
+          ),
       ],
       child: const PharmaSuite(),
     ),
@@ -183,5 +193,32 @@ void main() {
     await tester.tap(find.byTooltip('Fermer'));
     await tester.pumpAndSettle();
     expect(find.text('Fiche produit'), findsNothing);
+  });
+
+  testWidgets('consommable proposé : le titulaire confirme depuis la fiche', (tester) async {
+    final api = FausseStockApi(
+      produits: [
+        ...FausseStockApi.exemples,
+        const Produit(id: 9, nom: 'AIGUILLES INSUPEN', stock: 40, actif: true, consommablePropose: true),
+      ],
+    );
+    await _lancer(tester, api, depart: '/stock/9', role: 'admin');
+    expect(find.byKey(const ValueKey('proposition-consommable')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('consommable-oui')));
+    await tester.pumpAndSettle();
+    expect(api.decisionsConsommable.single, (9, true));
+    expect(find.byKey(const ValueKey('proposition-consommable')), findsNothing);
+    expect(find.text('Consommable'), findsWidgets); // étiquette et case
+  });
+
+  testWidgets('employé : la case consommable est grisée, pas de boutons de décision', (tester) async {
+    final api = FausseStockApi(
+      produits: [const Produit(id: 9, nom: 'AIGUILLES', stock: 40, actif: true, consommablePropose: true)],
+    );
+    await _lancer(tester, api, depart: '/stock/9', role: 'employee');
+    expect(find.byKey(const ValueKey('consommable-oui')), findsNothing);
+    await _voir(tester, find.byKey(const ValueKey('case-consommable')));
+    final caseConso = tester.widget<SwitchListTile>(find.byKey(const ValueKey('case-consommable')));
+    expect(caseConso.onChanged, isNull);
   });
 }

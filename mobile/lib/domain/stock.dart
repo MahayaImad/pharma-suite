@@ -75,6 +75,10 @@ abstract class Produit with _$Produit {
     @JsonKey(name: 'valeur_a_risque') @Default(0) double valeurARisque,
     @JsonKey(name: 'qte_surstock') @Default(0) int qteSurstock,
     @JsonKey(name: 'valeur_surstock') @Default(0) double valeurSurstock,
+    // Consommable donné, jamais vendu (docs/BUSINESS_LOGIC.md §3.4) : décidé
+    // par le titulaire, ou proposé par la détection et à confirmer.
+    @Default(false) bool consommable,
+    @JsonKey(name: 'consommable_propose') @Default(false) bool consommablePropose,
   }) = _Produit;
 
   factory Produit.fromJson(Map<String, dynamic> json) => _$ProduitFromJson(json);

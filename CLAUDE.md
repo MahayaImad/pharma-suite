@@ -75,7 +75,8 @@ et les préférences. **Écran Stock réel** (`/stock`, `/stock/:id`), présenta
 groupes à commander, péremption à risque, surstock (`GET /stock/a-traiter`),
 puis tout le stock (familles, tri, liste paginée avec jauge stock / maximum /
 sécurité) ; fiche produit avec conseil, jauge, projection du stock en FEFO,
-lots à risque, réapprovisionnement (CMM, CMJ, délai, SS, max) et prix ; liste et fiche côte à
+lots à risque, réapprovisionnement (CMM, CMJ, délai, SS, max), prix et case
+« consommable » (titulaire) ; liste et fiche côte à
 côte sur PC. **Calendrier et réglages** (`/preferences/reglages`) : gardes
 (saisie, confirmation des gardes détectées), Ramadan et Aïd, jours fériés,
 constantes du calcul des commandes ; modification réservée au titulaire

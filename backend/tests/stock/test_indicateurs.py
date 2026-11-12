@@ -309,3 +309,37 @@ async def test_taux_de_peremption(api, db):
     r = (await api.get("/stock/peremption", params={"mois": 1})).json()
     assert (r["unites_perimees"], r["valeur_perimee"], r["valeur_achats"], r["taux_pct"]) == (5, 56, 1000, 5.6)
     assert [p["nom"] for p in r["produits"]] == ["P"]
+
+
+async def test_consommable_decide_par_le_titulaire_et_sorti_du_surstock(api, db):
+    """GROS (500 en stock, vendu 1/j) est en surstock ; déclaré consommable, il
+    n'y est plus. Une proposition de la détection se lit sur la fiche."""
+    await db.execute(text("TRUNCATE produits_consommables"))
+    await _jeu_a_traiter(db)
+    await db.execute(text(
+        "INSERT INTO produits_consommables (id_nom, consommable, confirme, source) VALUES (3, true, false, 'detection')"))
+    await db.commit()
+    await api.post("/stock/refresh-cache")
+    fiche = (await api.get("/stock/products/3")).json()
+    assert (fiche["consommable"], fiche["consommable_propose"]) == (False, True)
+    assert "GROS" in [p["nom"] for p in (await api.get("/stock/a-traiter")).json()["surstock"]]
+
+    assert (await api.put("/stock/products/4/consommable", json={"consommable": True})).status_code == 200
+    assert "GROS" not in [p["nom"] for p in (await api.get("/stock/a-traiter")).json()["surstock"]]
+    assert (await api.get("/stock/products/4")).json()["consommable"] is True
+    # Refuser une proposition : décidé, plus proposé.
+    await api.put("/stock/products/3/consommable", json={"consommable": False})
+    fiche = (await api.get("/stock/products/3")).json()
+    assert (fiche["consommable"], fiche["consommable_propose"]) == (False, False)
+    liste = (await api.get("/stock/consommables")).json()
+    assert [(p["id"], p["confirme"]) for p in liste] == [(4, True)]
+
+
+async def test_seul_le_titulaire_decide_consommable(api, db, monkeypatch):
+    from app.api.v1 import stock
+    from app.core.security import get_current_user
+    await db.execute(text("INSERT INTO nomenclature (id, nom, archive) VALUES (1, 'P', false)"))
+    await db.commit()
+    api._transport.app.dependency_overrides[get_current_user] = lambda: {"username": "e", "role": "employee"}
+    assert (await api.put("/stock/products/1/consommable", json={"consommable": True})).status_code == 403
+    assert stock  # module chargé

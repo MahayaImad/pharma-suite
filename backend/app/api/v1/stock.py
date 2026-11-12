@@ -243,8 +243,9 @@ async def list_products(
         params["id_famille"] = id_famille
     tous = await ind_lot.calculer_tous(db, _aujourdhui_alger())
     if etat in _ETATS_CALCULES:
+        consommables = await _consommables(db)
         ids = [i for i, x in tous.items()
-               if (x.qte_a_risque if etat == "a_risque" else x.qte_surstock) > 0]
+               if (x.qte_a_risque if etat == "a_risque" else x.qte_surstock) > 0 and i not in consommables]
         conditions.append("n.id = ANY(:ids_etat)")
         params["ids_etat"] = ids
     elif etat:
@@ -344,9 +345,10 @@ async def a_traiter(
         "SELECT id, segment_abc FROM nomenclature WHERE id = ANY(:ids)"), {"ids": commander})}
     commander.sort(key=lambda i: (ordre_classe.get(classes.get(i) or "", 3),
                                   -(tous[i].cmm if i in tous else 0), i))
-    risque = sorted((x for x in tous.values() if x.qte_a_risque > 0),
+    consommables = await _consommables(db)
+    risque = sorted((x for x in tous.values() if x.qte_a_risque > 0 and x.id_nom not in consommables),
                     key=lambda x: (-x.valeur_a_risque, x.id_nom))
-    surstock = sorted((x for x in tous.values() if x.qte_surstock > 0),
+    surstock = sorted((x for x in tous.values() if x.qte_surstock > 0 and x.id_nom not in consommables),
                       key=lambda x: (-x.valeur_surstock, x.id_nom))
     return {
         "compteurs": {
@@ -386,10 +388,12 @@ async def get_product(
             COALESCE(mv.qte_vendue_12m, 0)     AS qte_vendue_12m,
             COALESCE(mv.valeur_achat, 0)       AS valeur_achat,
             COALESCE(mv.valeur_vente, 0)       AS valeur_vente,
-            n.segment_abc, n.segment_xyz, n.categorie, n.disponibilite
+            n.segment_abc, n.segment_xyz, n.categorie, n.disponibilite,
+            pc.consommable, pc.confirme AS consommable_confirme
         FROM nomenclature n
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
         LEFT JOIN familles f ON f.id = n.id_famille
+        LEFT JOIN produits_consommables pc ON pc.id_nom = n.id
         WHERE n.id = :id
     """), {"id": product_id})
     p = res.fetchone()
@@ -416,6 +420,10 @@ async def get_product(
         "valeur_vente": _f(p.valeur_vente),
         "segment_abc": p.segment_abc, "segment_xyz": p.segment_xyz,
         "categorie": p.categorie, "disponibilite": p.disponibilite,
+        # Consommable donné (docs/BUSINESS_LOGIC.md §3.4) : décidé par le
+        # titulaire, ou proposé par la détection et à confirmer.
+        "consommable": bool(p.consommable and p.consommable_confirme),
+        "consommable_propose": bool(p.consommable and not p.consommable_confirme),
     }
 
 
@@ -665,6 +673,55 @@ async def indicateurs_produit(
             for r in risques
         ],
     }
+
+
+class ConsommableDecision(PydanticBaseModel):
+    consommable: bool
+
+
+@router.put("/products/{product_id}/consommable")
+async def decider_consommable(
+    product_id: int,
+    decision: ConsommableDecision,
+    db: AsyncSession = Depends(get_db),
+    current: dict = Depends(get_current_user),
+):
+    """Le titulaire déclare (ou non) un produit consommable : donné, jamais
+    vendu, sorti du stock par ajustement. La décision est définitive pour la
+    détection : un refus n'est plus reproposé."""
+    if current.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Réservé au titulaire")
+    if not (await db.execute(text("SELECT 1 FROM nomenclature WHERE id = :i"), {"i": product_id})).first():
+        raise HTTPException(status_code=404, detail="Produit introuvable")
+    await db.execute(text("""
+        INSERT INTO produits_consommables (id_nom, consommable, confirme, source, modifie_par)
+        VALUES (:i, :c, true, 'saisie', :qui)
+        ON CONFLICT (id_nom) DO UPDATE SET consommable = :c, confirme = true,
+            modifie_le = now(), modifie_par = :qui
+    """), {"i": product_id, "c": decision.consommable, "qui": current.get("username")})
+    await db.commit()
+    return {"id": product_id, "consommable": decision.consommable}
+
+
+@router.get("/consommables")
+async def lister_consommables(
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """Consommables confirmés et proposés (à confirmer)."""
+    lignes = await db.execute(text("""
+        SELECT pc.id_nom, n.nom, pc.consommable, pc.confirme, pc.source
+        FROM produits_consommables pc JOIN nomenclature n ON n.id = pc.id_nom
+        WHERE pc.consommable ORDER BY pc.confirme, n.nom
+    """))
+    return [{"id": r.id_nom, "nom": r.nom, "confirme": r.confirme, "source": r.source} for r in lignes]
+
+
+async def _consommables(db: AsyncSession) -> set[int]:
+    """Consommables confirmés : ni surstock ni péremption à risque, puisqu'ils
+    ne se vendent pas."""
+    return {r.id_nom for r in await db.execute(text(
+        "SELECT id_nom FROM produits_consommables WHERE consommable AND confirme"))}
 
 
 # ── Gestion archive / quota ───────────────────────────────────────────────────

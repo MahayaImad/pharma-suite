@@ -249,6 +249,12 @@ Autres valeurs de `type_achat` vues : `R` (123 lignes, les avoirs `AV`) et
   l'inventaire. Ce ne sont **ni des pertes** (pas de démarque) **ni des
   ventes** : leur consommation se lit dans les ajustements. Ils sont à
   écarter de la démarque, de la rotation et de la prévision par les ventes.
+  **Case « consommable »** sur la fiche produit, cochée par le **titulaire
+  seul** (table `produits_consommables`, migration 011). Les produits jamais
+  vendus mais ajustés à la baisse sur 12 mois sont **proposés** (44 le
+  2026-11-12) : le titulaire confirme ou refuse ; une décision n'est jamais
+  reproposée. Un consommable confirmé sort des groupes « surstock » et
+  « péremption à risque ».
 - Les autres écarts (casse, vol, erreurs de saisie) forment la **démarque**.
 
 **Instances** : leur historique exact n'existe pas depuis 2023 (la ligne est

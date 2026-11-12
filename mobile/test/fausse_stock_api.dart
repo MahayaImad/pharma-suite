@@ -4,7 +4,7 @@ import 'package:pharmasuite/domain/stock.dart';
 
 /// API stock simulée, avec quelques produits vraisemblables.
 class FausseStockApi implements StockApi {
-  FausseStockApi({this.panne = false, List<Produit>? produits}) : _produits = produits ?? exemples;
+  FausseStockApi({this.panne = false, List<Produit>? produits}) : _produits = List.of(produits ?? exemples);
 
   bool panne;
   final List<Produit> _produits;
@@ -118,6 +118,15 @@ class FausseStockApi implements StockApi {
   Future<Produit> fiche(int id) async {
     if (panne) throw const ErreurApi('Le serveur ne répond pas.', reseau: true);
     return _produits.firstWhere((p) => p.id == id);
+  }
+
+  final decisionsConsommable = <(int, bool)>[];
+
+  @override
+  Future<void> deciderConsommable(int id, bool consommable) async {
+    decisionsConsommable.add((id, consommable));
+    final i = _produits.indexWhere((p) => p.id == id);
+    if (i >= 0) _produits[i] = _produits[i].copyWith(consommable: consommable, consommablePropose: false);
   }
 
   @override

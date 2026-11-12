@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/themes.dart';
 import '../../../core/widgets/pastille_etat.dart';
+import '../../../data/api/client_api.dart';
+import '../../../data/api/stock_api.dart';
+import '../../reglages/application/reglages_providers.dart' show peutModifierProvider;
 import '../../../domain/format.dart';
 import '../../../domain/stock.dart';
 import '../application/stock_providers.dart';
@@ -127,9 +130,11 @@ class _Contenu extends ConsumerWidget {
             if (p.psychotrope == 1) const Etiquette('Psychotrope', icone: Icons.gpp_maybe_outlined),
             if (p.remboursable == 1) const Etiquette('Remboursable', icone: Icons.verified_outlined),
             if (p.categorie != null && p.categorie!.isNotEmpty) Etiquette(libelle(p.categorie!)),
+            if (p.consommable) const Etiquette('Consommable', icone: Icons.volunteer_activism_outlined),
           ],
         ),
         const SizedBox(height: 16),
+        if (p.consommablePropose) ...[_PropositionConsommable(produit: p), const SizedBox(height: 16)],
         _Bande(produit: p, indicateurs: i),
         const SizedBox(height: 16),
         _JaugeFiche(produit: p, pret: i != null),
@@ -146,6 +151,8 @@ class _Contenu extends ConsumerWidget {
         const SizedBox(height: 22),
         const _Titre('Réapprovisionnement'),
         _Reappro(produit: p),
+        const SizedBox(height: 22),
+        _CaseConsommable(produit: p),
         const SizedBox(height: 22),
         const _Titre('Prix'),
         _Prix(produit: p),
@@ -932,6 +939,118 @@ class _LigneLot extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Enregistre la décision du titulaire et rafraîchit la fiche et les listes.
+Future<void> _deciderConsommable(BuildContext context, WidgetRef ref, Produit p, bool oui) async {
+  final messager = ScaffoldMessenger.of(context);
+  try {
+    await ref.read(stockApiProvider).deciderConsommable(p.id, oui);
+    ref.invalidate(ficheProduitProvider(p.id));
+    ref.invalidate(aTraiterProvider);
+    ref.invalidate(listeProduitsProvider);
+    messager
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(oui ? 'Marqué consommable : écarté du surstock et des pertes.' : 'Non consommable.'),
+        ),
+      );
+  } catch (e) {
+    messager
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(ErreurApi.depuis(e).message)));
+  }
+}
+
+/// Produit jamais vendu mais ajusté à la baisse : la détection le propose
+/// comme consommable, le titulaire tranche.
+class _PropositionConsommable extends ConsumerWidget {
+  const _PropositionConsommable({required this.produit});
+  final Produit produit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final modifiable = ref.watch(peutModifierProvider);
+    return Container(
+      key: const ValueKey('proposition-consommable'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: context.etats.alerteDoux, borderRadius: BorderRadius.circular(14)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.volunteer_activism_outlined, color: context.etats.alerte),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Consommable donné ?',
+                  style: TextStyle(color: context.etats.alerte, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Jamais vendu, mais sorti du stock par ajustements d\'inventaire. Un consommable '
+                  'n\'est compté ni comme une perte ni comme un surstock.',
+                  style: TextStyle(color: context.schema.onSurface, fontSize: 13, height: 1.4),
+                ),
+                if (modifiable) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilledButton.tonal(
+                        key: const ValueKey('consommable-oui'),
+                        onPressed: () => _deciderConsommable(context, ref, produit, true),
+                        child: const Text('Oui, consommable'),
+                      ),
+                      TextButton(
+                        key: const ValueKey('consommable-non'),
+                        onPressed: () => _deciderConsommable(context, ref, produit, false),
+                        child: const Text('Non'),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Case « consommable » : cochée par le titulaire seul.
+class _CaseConsommable extends ConsumerWidget {
+  const _CaseConsommable({required this.produit});
+  final Produit produit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final modifiable = ref.watch(peutModifierProvider);
+    return Container(
+      decoration: BoxDecoration(
+        color: context.schema.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.couleurs.bord),
+      ),
+      child: SwitchListTile(
+        key: const ValueKey('case-consommable'),
+        value: produit.consommable,
+        onChanged: modifiable ? (v) => _deciderConsommable(context, ref, produit, v) : null,
+        title: const Text('Consommable', style: TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(
+          modifiable
+              ? 'Donné, jamais vendu (aiguilles, sachets, lecteurs…) : ni perte ni surstock.'
+              : 'Donné, jamais vendu. Seul le titulaire modifie cette case.',
+          style: TextStyle(fontSize: 12.5, color: context.couleurs.encre3),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }

@@ -77,6 +77,8 @@ _Produit _$ProduitFromJson(Map<String, dynamic> json) => _Produit(
   valeurARisque: (json['valeur_a_risque'] as num?)?.toDouble() ?? 0,
   qteSurstock: (json['qte_surstock'] as num?)?.toInt() ?? 0,
   valeurSurstock: (json['valeur_surstock'] as num?)?.toDouble() ?? 0,
+  consommable: json['consommable'] as bool? ?? false,
+  consommablePropose: json['consommable_propose'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ProduitToJson(_Produit instance) => <String, dynamic>{
@@ -114,6 +116,8 @@ Map<String, dynamic> _$ProduitToJson(_Produit instance) => <String, dynamic>{
   'valeur_a_risque': instance.valeurARisque,
   'qte_surstock': instance.qteSurstock,
   'valeur_surstock': instance.valeurSurstock,
+  'consommable': instance.consommable,
+  'consommable_propose': instance.consommablePropose,
 };
 
 _Lot _$LotFromJson(Map<String, dynamic> json) => _Lot(
