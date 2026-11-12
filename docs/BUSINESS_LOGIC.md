@@ -236,6 +236,21 @@ unités payées (voir aussi `commandes_fournisseurs_produits.taux_ug`).
 Autres valeurs de `type_achat` vues : `R` (123 lignes, les avoirs `AV`) et
 `I` (3 lignes).
 
+**Motif des ajustements** (`inventaires_produits.motif`, confirmé le
+2026-11-12) :
+
+- **Péremption** : `motif = 'Péremption'` avec un **écart négatif** = les
+  périmés retirés du stock. Base du **taux de péremption** = valeur des
+  périmés (écart × prix d'achat de la ligne) ÷ valeur des achats de la
+  période × 100 ; objectif courant : sous 1 à 2 %. `GET /stock/peremption`.
+- **Consommables donnés** : certains produits sont achetés mais **jamais
+  vendus**, donnés gratuitement (aiguilles Insupen, sachets, lecteurs de
+  glycémie…) ; ils sortent du stock par un **ajustement à zéro** à
+  l'inventaire. Ce ne sont **ni des pertes** (pas de démarque) **ni des
+  ventes** : leur consommation se lit dans les ajustements. Ils sont à
+  écarter de la démarque, de la rotation et de la prévision par les ventes.
+- Les autres écarts (casse, vol, erreurs de saisie) forment la **démarque**.
+
 **Instances** : leur historique exact n'existe pas depuis 2023 (la ligne est
 supprimée d'`instance_produits` une fois traitée). Elles se retrouvent
 ensuite dans les ventes : on les compte à la date de la vente, ce qui

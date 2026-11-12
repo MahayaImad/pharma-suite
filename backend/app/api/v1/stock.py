@@ -432,6 +432,70 @@ async def _reglages(db: AsyncSession) -> dict[str, Decimal]:
     return {r.cle: r.valeur for r in lignes}
 
 
+# Un ajustement d'inventaire pour péremption (docs/BUSINESS_LOGIC.md §3.4) :
+# motif « Péremption » (accent et casse indifférents), écart négatif.
+_EST_PEREMPTION = "ip.motif ILIKE 'p_remption%' AND ip.ecart < 0"
+
+
+@router.get("/peremption")
+async def taux_peremption(
+    mois: int = Query(12, ge=1, le=36),
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """Taux de péremption = valeur des périmés ÷ valeur des achats × 100.
+
+    - Périmés : ajustements d'inventaire au motif « Péremption », écart négatif,
+      valorisés au prix d'achat de la ligne d'inventaire (à défaut, prix
+      moyen du produit).
+    - Achats : entrées hors avoirs et hors échanges reçus ; les unités
+      gratuites comptent pour 0.
+    Objectif courant : sous 1 à 2 %.
+    """
+    debut = _aujourdhui_alger().replace(day=1)
+    for _i in range(mois - 1):
+        debut = (debut - timedelta(days=1)).replace(day=1)
+    params = {"debut": debut}
+    valeur_perimes = f"""-ip.ecart * COALESCE(NULLIF(ip.prix_achat_ttc, 0), mv.prix_moyen_pondere, 0)"""
+    totaux = (await db.execute(text(f"""
+        SELECT COALESCE(sum(-ip.ecart), 0) AS unites, COALESCE(sum({valeur_perimes}), 0) AS valeur
+        FROM inventaires_produits ip LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
+        WHERE ip.date >= :debut AND {_EST_PEREMPTION}
+    """), params)).one()
+    achats = (await db.execute(text("""
+        SELECT COALESCE(sum(qte_entree * prix_achat), 0) FROM entrees_produits
+        WHERE date_entree >= :debut AND COALESCE(type_entree, '') <> 'AV' AND COALESCE(type_achat, '') <> 'E'
+    """), params)).scalar()
+    par_mois = await db.execute(text(f"""
+        SELECT date_trunc('month', ip.date)::date AS m, sum(-ip.ecart) AS unites, sum({valeur_perimes}) AS valeur
+        FROM inventaires_produits ip LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
+        WHERE ip.date >= :debut AND {_EST_PEREMPTION}
+        GROUP BY 1 ORDER BY 1
+    """), params)
+    produits = await db.execute(text(f"""
+        SELECT ip.id_nom, n.nom, sum(-ip.ecart) AS unites, sum({valeur_perimes}) AS valeur
+        FROM inventaires_produits ip
+        LEFT JOIN mv_stock_produits mv ON mv.id_nom = ip.id_nom
+        LEFT JOIN nomenclature n ON n.id = ip.id_nom
+        WHERE ip.date >= :debut AND {_EST_PEREMPTION}
+        GROUP BY 1, 2 ORDER BY 4 DESC, 1 LIMIT 10
+    """), params)
+    valeur = Decimal(totaux.valeur)
+    achats = Decimal(achats)
+    return {
+        "debut": debut.isoformat(),
+        "mois": mois,
+        "unites_perimees": int(totaux.unites),
+        "valeur_perimee": _f(valeur.quantize(Decimal("0.01"))),
+        "valeur_achats": _f(achats.quantize(Decimal("0.01"))),
+        "taux_pct": _f((valeur / achats * 100).quantize(Decimal("0.01"))) if achats else None,
+        "objectif_pct": 2,
+        "par_mois": [{"mois": r.m.isoformat(), "unites": int(r.unites), "valeur": _f(r.valeur)} for r in par_mois],
+        "produits": [{"id": r.id_nom, "nom": r.nom, "unites": int(r.unites), "valeur": _f(r.valeur)}
+                     for r in produits],
+    }
+
+
 @router.post("/photo-du-jour")
 async def photo_du_jour(
     db: AsyncSession = Depends(get_db),

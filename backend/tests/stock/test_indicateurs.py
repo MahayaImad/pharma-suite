@@ -282,3 +282,27 @@ async def test_un_echange_recu_n_est_pas_le_fournisseur_principal(api, db):
     # Le calcul groupé (liste) choisit le même fournisseur, donc le même délai.
     ligne = (await api.get("/stock/products")).json()["items"][0]
     assert ligne["stock_securite"] == r["stock_securite"]
+
+
+async def test_taux_de_peremption(api, db):
+    """Achats du mois : 100 u × 10 DA = 1 000 DA (+ 5 UG à 0 DA, + 1 avoir et un
+    échange reçu, exclus). Périmés : 3 u × 12 DA + 2 u × 0 DA (prix absent →
+    prix moyen du produit, 10 DA) = 36 + 20 = 56 DA → 5,6 %. La casse et le
+    consommable ajusté à zéro ne sont pas des périmés."""
+    await db.execute(text("TRUNCATE inventaires_produits"))
+    await db.execute(text("INSERT INTO nomenclature (id, nom, archive) VALUES (1, 'P', false), (2, 'AIGUILLES', false)"))
+    d = MERCREDI.replace(day=5)
+    await db.execute(text("""
+        INSERT INTO entrees_produits (id, id_nom, stock, qte_entree, prix_achat, prix_vente, date_entree, type_entree, type_achat)
+        VALUES (1, 1, 10, 100, 10, 15, :d, 'A', 'Facture'), (2, 1, 0, 5, 0, 15, :d, 'A', 'Facture'),
+               (3, 1, 0, 4, 10, 15, :d, 'AV', 'R'), (4, 1, 0, 7, 10, 15, :d, 'A', 'E')"""), {"d": d})
+    await db.execute(text("""
+        INSERT INTO inventaires_produits (id, id_nom, date, lot, ecart, prix_achat_ttc, motif) VALUES
+        (1, 1, :d, 'L', -3, 12, 'Péremption'), (2, 1, :d, 'L', -2, 0, 'PEREMPTION'),
+        (3, 1, :d, 'L', -1, 10, 'Casse'), (4, 2, :d, 'L', -40, 5, 'Consommable'),
+        (5, 1, :d, 'L', 2, 10, 'Péremption')"""), {"d": d})
+    await db.commit()
+    await api.post("/stock/refresh-cache")
+    r = (await api.get("/stock/peremption", params={"mois": 1})).json()
+    assert (r["unites_perimees"], r["valeur_perimee"], r["valeur_achats"], r["taux_pct"]) == (5, 56, 1000, 5.6)
+    assert [p["nom"] for p in r["produits"]] == ["P"]

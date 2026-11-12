@@ -112,6 +112,24 @@ async def main() -> int:
         ecrire(f"- ajustements sur 12 mois : {r.n} lignes, +{int(r.plus)} / {int(r.moins)} unités, "
                f"{r.sans_lot} sans numéro de lot")
 
+    ecrire("\n### Motifs des ajustements (12 mois)\n")
+    ecrire("| motif | lignes | unités en plus | unités en moins |")
+    ecrire("|---|---:|---:|---:|")
+    for r in await sql("""
+        SELECT COALESCE(NULLIF(trim(motif), ''), '(vide)') AS m, count(*) AS n,
+               COALESCE(sum(ecart) FILTER (WHERE ecart > 0), 0) AS plus,
+               COALESCE(sum(ecart) FILTER (WHERE ecart < 0), 0) AS moins
+        FROM inventaires_produits WHERE date > :d AND ecart <> 0 GROUP BY 1 ORDER BY 2 DESC LIMIT 15""", d=debut):
+        ecrire(f"| {r.m} | {r.n} | {int(r.plus)} | {int(r.moins)} |")
+    for r in await sql("""
+        SELECT count(DISTINCT ip.id_nom) AS n, COALESCE(sum(-ip.ecart), 0) AS u
+        FROM inventaires_produits ip
+        WHERE ip.date > :d AND ip.ecart < 0
+          AND NOT EXISTS (SELECT 1 FROM sorties_produits sp WHERE sp.id_nom = ip.id_nom AND sp.qte_sortie > 0)""",
+            d=debut):
+        ecrire(f"\nProduits jamais vendus mais ajustés à la baisse (consommables donnés probables) : "
+               f"{r.n} produits, {int(r.u)} unités")
+
     ecrire(f"\n## 4. Les méthodes sur les {a.produits} produits les plus vendus (12 mois)\n")
     produits = [r.id_nom for r in await sql("""
         SELECT sp.id_nom FROM sorties_produits sp JOIN mv_stock_produits mv ON mv.id_nom = sp.id_nom
