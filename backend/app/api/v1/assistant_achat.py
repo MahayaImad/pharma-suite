@@ -538,9 +538,10 @@ async def reconstituer_stock(
     _: dict = Depends(get_current_user),
 ):
     """
-    Reconstitue le stock réel historique pour tous les produits.
-    Utilise : sorties + entrees + inventaires_produits (ecart) + rechange_sorties_produits.
-    S'exécute en arrière-plan. À lancer une fois par mois.
+    Reconstitue l'historique du stock de tous les produits actifs ou en stock,
+    par lot : ventes, avoirs, échanges, ajustements d'inventaire
+    (app/services/historique_stock.py). En arrière-plan ; les photos du soir
+    ne sont jamais remplacées.
     """
     global _reconstitution_en_cours
     if _reconstitution_en_cours:
@@ -551,45 +552,18 @@ async def reconstituer_stock(
 
 
 async def _run_reconstitution(mois: int) -> None:
+    """Reconstitution par lot, tous mouvements (docs/BUSINESS_LOGIC.md §3.4) ;
+    ne remplace jamais une photo du soir."""
     global _reconstitution_en_cours
     _reconstitution_en_cours = True
     try:
-        from app.core.database import AsyncSessionLocal
-        from app.services.purchase_engine.stock_history import reconstituer_et_sauvegarder
         from datetime import date, timedelta
 
-        date_debut = (date.today() - timedelta(days=mois * 30)).strftime("%Y-%m-%d")
+        from app.core.database import AsyncSessionLocal
+        from app.services.historique_stock import reconstituer
 
-        # 1. Charger la liste des produits dans une session dédiée
         async with AsyncSessionLocal() as db:
-            produits = (await db.execute(text("""
-                SELECT n.id AS id_nom, COALESCE(mv.stock_actuel, 0) AS stock_actuel
-                FROM nomenclature n
-                JOIN mv_stock_produits mv ON mv.id_nom = n.id
-                WHERE n.archive = FALSE
-                ORDER BY n.id
-            """))).fetchall()
-
-        logger.info("Reconstitution stock : %d produits × %d mois", len(produits), mois)
-        nb_ok = 0
-        nb_err = 0
-
-        # 2. Une session isolée par produit — une erreur n'affecte pas les autres
-        for prod in produits:
-            try:
-                async with AsyncSessionLocal() as db:
-                    nb = await reconstituer_et_sauvegarder(
-                        db, prod.id_nom, float(prod.stock_actuel), date_debut
-                    )
-                    await db.commit()
-                if nb > 0:
-                    nb_ok += 1
-            except Exception as exc:
-                logger.warning("Reconstitution id_nom=%s : %s", prod.id_nom, exc)
-                nb_err += 1
-
-        logger.info("Reconstitution terminée — %d OK, %d erreurs / %d produits",
-                    nb_ok, nb_err, len(produits))
+            await reconstituer(db, date.today() - timedelta(days=mois * 30), date.today())
     except Exception as exc:
         logger.exception("Erreur reconstitution stock : %s", exc)
     finally:
