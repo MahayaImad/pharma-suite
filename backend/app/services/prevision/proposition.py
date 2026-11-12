@@ -92,5 +92,6 @@ def decider(demande: np.ndarray, cens: np.ndarray, ouvert: np.ndarray, dates: li
             securite = max(securite, politique.plancher)
         cible = prevu + securite
     manque = cible - stock - en_cours
-    quantite = math.ceil(manque - 1e-9) if manque > 1e-9 else 0
+    # Tolérance : 3,0000000004 boîtes (bruit des poids du calendrier) font 3, pas 4.
+    quantite = math.ceil(manque - 1e-6) if manque > 1e-6 else 0
     return Decision(classe.type, quantite, r, len(couverts), prevu, securite, cible, stock, en_cours, arrivee)

@@ -376,6 +376,35 @@ dernier calcul de la vue `mv_stock_produits` (`POST /stock/refresh-cache`,
 appelé par l'agent après chaque passe), notée dans `sync_status` sous le nom
 de la vue, et rendue par `GET /stock/resume` (`donnees_du`, UTC).
 
+### 3.9 Commandes fournisseurs (arrêté le 2026-11-12)
+
+- **PharmaSuite propose et prépare, EASYPHARM reçoit.** La commande vit dans
+  PharmaSuite (brouillon → validée → envoyée, ou annulée) ; la livraison
+  arrive dans EASYPHARM par e-facture. L'agent n'écrit jamais dans EASYPHARM.
+- **Une commande par jour et par fournisseur**, chaque soir sauf le vendredi.
+  Commande à la boîte, sans colisage.
+- **Quantité** : la méthode mesurée par le rejeu sur 12 mois, politique
+  « actuelle » retenue (ruptures 13,7 % contre 29,5 % en réel, stock moyen
+  19,0 M DA contre 26,2 M DA). Voir `docs/05-stock-guide.md`.
+- **Fournisseur d'un produit** : son dernier achat hors avoirs (`AV`) et
+  échanges (`type_achat = 'E'`), au dernier prix d'achat.
+- **Deux types de grossistes**, pharmaceutique et parapharmaceutique
+  (`fournisseurs_commande.type`), deviné à la migration puis corrigé par le
+  titulaire. Un fournisseur non actif ne reçoit pas de panier : ses produits
+  sont listés « sans fournisseur ».
+- **Psychotropes** : commandés dans EASYPHARM (bon spécial). PharmaSuite les
+  liste à part, sans brouillon.
+- **Validation** : le titulaire (rôle `admin`) ou un employé désigné
+  (`commandes_valideurs`). Préparer et corriger un brouillon : tout
+  utilisateur connecté. Une commande validée est figée (rouvrir pour la
+  corriger).
+- **En cours** : une commande validée ou envoyée compte jusqu'à sa livraison
+  prévue ; ensuite, elle est dans le stock d'EASYPHARM.
+- **Budget du mois** (`reglages_stock.budget_mensuel_commandes`, 0 = aucun) :
+  reste = budget − achats reçus ce mois (EASYPHARM, hors avoirs et échanges)
+  − commandes engagées pas encore livrées.
+- **Bon** : texte prêt pour WhatsApp, produit et boîtes, sans prix.
+
 ---
 
 ## 4. Bordereaux CHIFA (CNAS)

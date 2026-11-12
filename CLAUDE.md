@@ -188,6 +188,7 @@ router au passage.
 | `sms` | passerelle SMS avec file d'attente |
 | `chatbot` | question en français → SQL → réponse formatée |
 | `modules/calendrier` | gardes, Ramadan et Aïd, jours fériés — **premier module au format cible** (`app/modules/calendrier/` : router, service, repository, schemas ; réponses `{data, error}`) |
+| `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). **Pas encore d'écran mobile.** |
 
 ## Pièges connus (ne pas se faire avoir)
 
