@@ -166,6 +166,19 @@ demande vaut zéro) et **biais**, suivis dans le temps et par classe.
   aligner les filtres de vente sur la règle de la section 3 (retour =
   quantité négative). *Phase 6.*
 
+**Méthode retenue et mesurée (2026-11-12)** — `app/services/prevision/` :
+classement de Syntetos et Boylan (régulier, irrégulier, intermittent,
+sporadique) plus « lent » (< 12 jours de vente par an) et « nouveau »
+(< 90 jours) ; rythme = vente moyenne par jour ouvert sur 8 semaines
+(régulier, irrégulier) ou 26 semaines (autres), **jours de rupture exclus**
+(stock nul au matin et rien vendu) ; effets multiplicatifs : jour de la
+semaine (profil de l'officine), garde (rapport des ventes un jour de garde),
+saison (indice mensuel si le produit est saisonnier : profil marqué et stable
+sur deux années pleines), Ramadan (rapport au Ramadan précédent, ramené vers
+1 si peu de volume). Le **rejeu** (`scripts/rejouer_commandes.py`) rejoue les
+12 derniers mois jour par jour et compare ruptures et stock moyen à la
+réalité, par type et par classe, avant toute mise en service.
+
 ### Bloc 3 — Décider quand et combien commander
 
 ```
@@ -184,6 +197,12 @@ quantité économique EOQ = √(2 × demande annuelle × coût de commande ÷ co
 - Contraintes réelles : colisage, minimum de commande, remises par palier,
   unités gratuites, budget.
 
+- **Politique du rejeu** (`app/services/prevision/rejeu.py`) : commande
+  chaque soir sauf le vendredi ; niveau cible = demande prévue jusqu'à
+  l'arrivée de la commande **suivante** (jeudi → dimanche) + stock de
+  sécurité Z(ABC) × σ × √(jours ouverts couverts), au moins 1 boîte ;
+  quantité = cible − stock − en cours, à la boîte ; produit lent : 1 boîte
+  s'il s'est vendu dans les 6 mois.
 - **Existe** : `purchase_engine/stock_params.py` (SS, ROP, EOQ ; taux de
   service A 95 %, B 90 %, C 85 %) ; `optimizer.py` (quantités entières sous
   contrainte de budget, PuLP) ; tables `parametres_stock` et
