@@ -189,3 +189,11 @@ async def test_reglage_fournisseur_reserve_au_titulaire(api):
     assert vue["sans_fournisseur"] == [] and "ANCIEN C" in [p["fournisseur"]["nom"] for p in vue["paniers"]]
     noms = [f["nom"] for f in (await api.get("/commandes/reglages/fournisseurs")).json()["data"]]
     assert noms == ["ANCIEN C", "GROSSISTE A", "PARA B"]
+
+
+async def test_le_vendredi_on_prepare_la_commande_du_samedi(api, monkeypatch):
+    monkeypatch.setattr(service, "aujourdhui", lambda: date(2026, 11, 13))
+    vue = await _jour(api)
+    assert vue["jour"] == "2026-11-14" and not vue["ferme"] and vue["paniers"]
+    r = await api.post("/commandes/preparer")
+    assert r.status_code == 200 and _panier(r.json()["data"], "GROSSISTE A")["commande"]["jour"] == "2026-11-14"

@@ -6,7 +6,8 @@
   échanges), séparé en pharmaceutique et parapharmaceutique selon le type du
   grossiste. Les psychotropes se commandent dans EASYPHARM : ils sont listés
   à part, sans brouillon. Un produit sans fournisseur actif aussi.
-- Pas de commande le vendredi (grossistes fermés).
+- Pas de commande le vendredi (grossistes fermés) : ce jour-là, l'écran
+  prépare celle du samedi.
 - « Préparer » enregistre la proposition en brouillons, un par fournisseur ;
   tout utilisateur connecté peut préparer et corriger un brouillon.
 - Valider : le titulaire (rôle admin) ou un employé désigné. Envoyer : une
@@ -17,7 +18,7 @@
 from __future__ import annotations
 
 import time
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Optional
 from zoneinfo import ZoneInfo
@@ -28,7 +29,7 @@ from app.modules.commandes.repository import CommandesRepository
 from app.services import indicateurs_stock as ind
 from app.services.prevision.donnees import Donnees, charger
 from app.services.prevision.du_jour import proposer_tous
-from app.services.prevision.proposition import VENDREDI, Decision
+from app.services.prevision.proposition import VENDREDI, Decision, jour_de_commande_suivant
 
 ALGER = ZoneInfo("Africa/Algiers")
 JOURS = ("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
@@ -42,6 +43,13 @@ class ErreurCommandes(Exception):
 
 def aujourdhui() -> date:
     return datetime.now(timezone.utc).astimezone(ALGER).date()
+
+
+def jour_de_commande() -> date:
+    """Aujourd'hui ; le vendredi (grossistes fermés), la commande à préparer
+    est celle du samedi."""
+    j = aujourdhui()
+    return jour_de_commande_suivant(j - timedelta(days=1)) if j.weekday() == VENDREDI else j
 
 
 # Données du calcul (lourdes : ventes depuis 2023), gardées jusqu'au prochain
@@ -120,7 +128,7 @@ class CommandesService:
 
     # ── Vue du jour ──
     async def journee(self, jour: Optional[date] = None) -> dict:
-        jour = jour or aujourdhui()
+        jour = jour or jour_de_commande()
         budget = await self.repo.budget(jour)
         vue: dict[str, Any] = {
             "jour": jour, "donnees_du": await self.repo.donnees_du(),
@@ -188,7 +196,7 @@ class CommandesService:
     async def preparer(self, jour: Optional[date] = None) -> dict:
         """Enregistre en brouillons les paniers proposés qui n'ont pas encore
         de commande aujourd'hui."""
-        jour = jour or aujourdhui()
+        jour = jour or jour_de_commande()
         if jour.weekday() == VENDREDI:
             raise ErreurCommandes("ferme", "Pas de commande le vendredi : les grossistes sont fermés.", 409)
         vue = await self.journee(jour)
