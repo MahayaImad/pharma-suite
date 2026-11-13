@@ -21,10 +21,19 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
 - **Calendrier et réglages** (Préférences) : gardes à venir et passées (les
   gardes retrouvées dans les ventes se confirment d'un geste), Ramadan et
   Aïd par année (« à vérifier » jusqu'à validation), jours fériés, et les
-  trois constantes du calcul des commandes. Lecture pour tous, modification
-  par le titulaire.
-- Accueil, Alertes, Inventaire et Commandes affichent encore « Bientôt
-  disponible ».
+  constantes du calcul des commandes, dont le budget mensuel. Lecture pour
+  tous, modification par le titulaire.
+- **Commandes** (`/commandes`, `/commandes/:fournisseur`) : le budget du mois
+  (dépensé, proposé ce soir, reste après), « Préparer toutes les commandes »,
+  puis une carte par grossiste, pharmaceutiques puis parapharmaceutiques
+  (montant, lignes, étape, ruptures) ; psychotropes et produits sans
+  fournisseur actif signalés à part. Panier d'un grossiste : chaque ligne dit
+  pourquoi cette quantité (« 3,1/j × 2 j + sécurité 2 − stock 0 »), avec une
+  jauge et − / + en brouillon ; ajout d'un produit à la main ; barre fixe en
+  bas avec le total et l'action de l'étape : Préparer, Valider (titulaire ou
+  employé désigné), Envoyer par WhatsApp (bon prérempli, à copier sinon).
+  Panier à côté des cartes sur PC.
+- Accueil, Alertes et Inventaire affichent encore « Bientôt disponible ».
 
 Adresse de l'API : `--dart-define=API_URL=…` si fourni ; sinon, en web,
 `<origine de la page>/api/v1` (nginx relaie vers l'API) ; sinon

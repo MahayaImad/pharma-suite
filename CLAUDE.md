@@ -79,7 +79,10 @@ lots à risque, réapprovisionnement (CMM, CMJ, délai, SS, max), prix et case
 « consommable » (titulaire) ; liste et fiche côte à
 côte sur PC. **Calendrier et réglages** (`/preferences/reglages`) : gardes
 (saisie, confirmation des gardes détectées), Ramadan et Aïd, jours fériés,
-constantes du calcul des commandes ; **Consommables**
+constantes du calcul des commandes et budget mensuel ; **Commandes**
+(`/commandes`, `/commandes/:fournisseur`) : budget du mois, une carte par
+grossiste, panier avec quantités modifiables, validation et bon WhatsApp ;
+**Consommables**
 (`/preferences/consommables`) : proposés à confirmer ou refuser, puis
 confirmés ; modification réservée au titulaire (rôle `admin`). Les
 Préférences ne gardent que le thème, ces deux entrées et « Se déconnecter »
@@ -188,7 +191,7 @@ router au passage.
 | `sms` | passerelle SMS avec file d'attente |
 | `chatbot` | question en français → SQL → réponse formatée |
 | `modules/calendrier` | gardes, Ramadan et Aïd, jours fériés — **premier module au format cible** (`app/modules/calendrier/` : router, service, repository, schemas ; réponses `{data, error}`) |
-| `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). **Pas encore d'écran mobile.** |
+| `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). Écran mobile `/commandes` (cartes des grossistes, panier avec barre fixe du bas). Réglage des fournisseurs (type, WhatsApp) et des valideurs : API seulement, pas encore d'écran. |
 
 ## Pièges connus (ne pas se faire avoir)
 

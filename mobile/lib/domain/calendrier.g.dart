@@ -24,7 +24,11 @@ Map<String, dynamic> _$GardeToJson(_Garde instance) => <String, dynamic>{
   'modifie_par': instance.modifiePar,
 };
 
-const _$TypeGardeEnumMap = {TypeGarde.soiree: 'soiree', TypeGarde.h24: '24h', TypeGarde.jour: 'jour'};
+const _$TypeGardeEnumMap = {
+  TypeGarde.soiree: 'soiree',
+  TypeGarde.h24: '24h',
+  TypeGarde.jour: 'jour',
+};
 
 _Evenement _$EvenementFromJson(Map<String, dynamic> json) => _Evenement(
   id: (json['id'] as num).toInt(),
@@ -34,13 +38,14 @@ _Evenement _$EvenementFromJson(Map<String, dynamic> json) => _Evenement(
   aVerifier: json['a_verifier'] as bool? ?? false,
 );
 
-Map<String, dynamic> _$EvenementToJson(_Evenement instance) => <String, dynamic>{
-  'id': instance.id,
-  'type': _$TypeEvenementEnumMap[instance.type]!,
-  'date_debut': instance.debut.toIso8601String(),
-  'date_fin': instance.fin.toIso8601String(),
-  'a_verifier': instance.aVerifier,
-};
+Map<String, dynamic> _$EvenementToJson(_Evenement instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'type': _$TypeEvenementEnumMap[instance.type]!,
+      'date_debut': instance.debut.toIso8601String(),
+      'date_fin': instance.fin.toIso8601String(),
+      'a_verifier': instance.aVerifier,
+    };
 
 const _$TypeEvenementEnumMap = {
   TypeEvenement.ramadan: 'ramadan',

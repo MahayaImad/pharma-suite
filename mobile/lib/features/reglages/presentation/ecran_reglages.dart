@@ -873,6 +873,11 @@ const _reglagesConnus = {
     'jours ouvrés',
     'Pour un fournisseur sans délai saisi. Vendredi et samedi ne comptent pas.',
   ),
+  'budget_mensuel_commandes': (
+    'Budget mensuel des commandes',
+    'DA',
+    '0 : pas de budget. Reste = budget − achats reçus ce mois − commandes envoyées pas encore livrées.',
+  ),
 };
 
 class _SectionReglages extends ConsumerWidget {
