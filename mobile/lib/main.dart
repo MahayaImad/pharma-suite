@@ -11,9 +11,6 @@ Future<void> main() async {
   // thème choisi.
   final preferences = await SharedPreferences.getInstance();
   runApp(
-    ProviderScope(
-      overrides: [preferencesLocalesProvider.overrideWithValue(preferences)],
-      child: const PharmaSuite(),
-    ),
+    ProviderScope(overrides: [preferencesLocalesProvider.overrideWithValue(preferences)], child: const PharmaSuite()),
   );
 }

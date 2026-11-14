@@ -73,7 +73,7 @@ redirection go_router tant qu'on n'est pas connecté, déconnexion dans le menu
 et les préférences. **Écran Stock réel** (`/stock`, `/stock/:id`), présentation
 « à traiter d'abord » : tuiles ruptures / sous le seuil / valeur à risque,
 groupes à commander, péremption à risque, surstock (`GET /stock/a-traiter`),
-puis tout le stock (familles, tri, liste paginée avec jauge stock / maximum /
+puis tout le stock (familles, laboratoire, tri, liste paginée avec jauge stock / maximum /
 sécurité) ; fiche produit avec conseil, jauge, projection du stock en FEFO,
 lots à risque, réapprovisionnement (CMM, CMJ, délai, SS, max), prix et case
 « consommable » (titulaire) ; liste et fiche côte à
@@ -191,7 +191,7 @@ router au passage.
 | `sms` | passerelle SMS avec file d'attente |
 | `chatbot` | question en français → SQL → réponse formatée |
 | `modules/calendrier` | gardes, Ramadan et Aïd, jours fériés — **premier module au format cible** (`app/modules/calendrier/` : router, service, repository, schemas ; réponses `{data, error}`) |
-| `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). Écran mobile `/commandes` (cartes des grossistes, panier avec barre fixe du bas). Réglage des fournisseurs (type, WhatsApp) et des valideurs : API seulement, pas encore d'écran. |
+| `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). Écran mobile `/commandes` (cartes des grossistes, panier avec barre fixe du bas). Préférences › Fournisseurs et validation : tous les fournisseurs (inactif par défaut sans commande depuis 30 jours), type, WhatsApp, employés valideurs. |
 
 ## Pièges connus (ne pas se faire avoir)
 

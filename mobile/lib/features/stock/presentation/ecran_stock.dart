@@ -136,7 +136,7 @@ class _ListeState extends ConsumerState<_Liste> {
     final liste = ref.watch(listeProduitsProvider);
     final filtre = ref.watch(filtreProduitsProvider);
     // Sans recherche ni filtre d'état : d'abord ce qui est à traiter.
-    final accueil = filtre.etat == null && filtre.recherche.trim().isEmpty;
+    final accueil = filtre.etat == null && filtre.recherche.trim().isEmpty && filtre.labo == null;
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -154,11 +154,7 @@ class _ListeState extends ConsumerState<_Liste> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: _ChampRecherche(
-                  controleur: _recherche,
-                  surSaisie: _chercher,
-                  surEffacer: _effacerRecherche,
-                ),
+                child: _ChampRecherche(controleur: _recherche, surSaisie: _chercher, surEffacer: _effacerRecherche),
               ),
             ),
             SliverToBoxAdapter(child: _Tuiles(choisi: filtre.etat)),
@@ -177,10 +173,7 @@ class _ListeState extends ConsumerState<_Liste> {
                       texte: filtre.recherche.isNotEmpty
                           ? 'Rien ne correspond à « ${filtre.recherche} ».'
                           : 'Aucun produit ne correspond à ces filtres.',
-                      action: OutlinedButton(
-                        onPressed: _effacerTout,
-                        child: const Text('Effacer les filtres'),
-                      ),
+                      action: OutlinedButton(onPressed: _effacerTout, child: const Text('Effacer les filtres')),
                     ),
                   )
                 else
@@ -194,10 +187,7 @@ class _ListeState extends ConsumerState<_Liste> {
                               padding: EdgeInsets.all(16),
                               child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
                             )
-                          : LigneProduit(
-                              produit: l.produits[i],
-                              choisi: l.produits[i].id == widget.selection,
-                            ),
+                          : LigneProduit(produit: l.produits[i], choisi: l.produits[i].id == widget.selection),
                     ),
                   ),
               ],
@@ -427,11 +417,7 @@ class _Tuile extends StatelessWidget {
                       texte,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: .92),
-                        fontSize: 12,
-                        height: 1.25,
-                      ),
+                      style: TextStyle(color: Colors.white.withValues(alpha: .92), fontSize: 12, height: 1.25),
                     ),
                   ],
                 ),
@@ -478,8 +464,7 @@ class _Groupes extends ConsumerWidget {
                       ? 'Rupture · ${decimal(p.cmm)} vendus par mois'
                       : '${entier(p.stock)} en stock, seuil ${entier(p.seuil ?? 0)}'
                             '${p.couverture == null ? '' : ' · ${p.couverture} j de couverture'}',
-                  action: (p) =>
-                      _BoutonAction('Commander', plein: true, surAppui: () => bientotCommandes(context)),
+                  action: (p) => _BoutonAction('Commander', plein: true, surAppui: () => bientotCommandes(context)),
                 ),
               if (a.aRisque.isNotEmpty)
                 _Groupe(
@@ -585,12 +570,7 @@ class _Groupe extends StatelessWidget {
 }
 
 class _CarteAction extends StatelessWidget {
-  const _CarteAction({
-    required this.produit,
-    required this.raison,
-    required this.couleur,
-    required this.action,
-  });
+  const _CarteAction({required this.produit, required this.raison, required this.couleur, required this.action});
 
   final Produit produit;
   final String raison;
@@ -681,7 +661,8 @@ class _TitreListe extends ConsumerWidget {
     final recherche = filtre.recherche.trim();
     final titre = filtre.etat?.libelle ?? (recherche.isNotEmpty ? 'Résultats' : 'Tout le stock');
     final filtreActif = filtre.etat != null || recherche.isNotEmpty;
-    return Padding(
+    final labo = filtre.labo;
+    final ligne = Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
       child: Row(
         children: [
@@ -707,11 +688,7 @@ class _TitreListe extends ConsumerWidget {
                     child: Text(
                       entier(total!),
                       key: const ValueKey('nombre-produits'),
-                      style: TextStyle(
-                        color: context.couleurs.encre2,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: context.couleurs.encre2, fontWeight: FontWeight.w700, fontSize: 12),
                     ),
                   ),
                 if (filtreActif)
@@ -723,6 +700,15 @@ class _TitreListe extends ConsumerWidget {
                   ),
               ],
             ),
+          ),
+          IconButton(
+            key: const ValueKey('bouton-labo'),
+            tooltip: 'Filtrer par laboratoire',
+            visualDensity: VisualDensity.compact,
+            isSelected: labo != null,
+            icon: const Icon(Icons.factory_outlined, size: 20),
+            selectedIcon: Icon(Icons.factory, size: 20, color: context.schema.primary),
+            onPressed: () => choisirLaboratoire(context, ref),
           ),
           PopupMenuButton<TriProduits>(
             tooltip: 'Trier',
@@ -739,15 +725,110 @@ class _TitreListe extends ConsumerWidget {
                 children: [
                   Text(
                     'Trier par ${filtre.tri.libelle.toLowerCase()}',
-                    style: TextStyle(
-                      color: context.schema.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: context.schema.primary, fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                   Icon(Icons.arrow_drop_down_rounded, color: context.schema.primary),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (labo == null) return ligne;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ligne,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+          child: InputChip(
+            key: const ValueKey('puce-labo'),
+            avatar: const Icon(Icons.factory_outlined, size: 16),
+            label: Text(libelle(labo)),
+            onDeleted: () => notif.labo(null),
+            deleteButtonTooltipMessage: 'Tous les laboratoires',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Choix du laboratoire : liste cherchable des laboratoires des produits actifs.
+Future<void> choisirLaboratoire(BuildContext context, WidgetRef ref) async {
+  final choisi = await showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => const _ChoixLaboratoire(),
+  );
+  if (choisi != null) ref.read(filtreProduitsProvider.notifier).labo(choisi);
+}
+
+class _ChoixLaboratoire extends ConsumerStatefulWidget {
+  const _ChoixLaboratoire();
+
+  @override
+  ConsumerState<_ChoixLaboratoire> createState() => _ChoixLaboratoireState();
+}
+
+class _ChoixLaboratoireState extends ConsumerState<_ChoixLaboratoire> {
+  String _recherche = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final labos = ref.watch(laboratoiresProvider);
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.75,
+      maxChildSize: 0.95,
+      builder: (context, defilement) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              key: const ValueKey('recherche-labo'),
+              autofocus: false,
+              onChanged: (t) => setState(() => _recherche = t),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: 'Chercher un laboratoire',
+                isDense: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+          Expanded(
+            child: labos.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => MessageErreur(erreur: e, reessayer: () => ref.invalidate(laboratoiresProvider)),
+              data: (tous) {
+                final q = _recherche.trim().toLowerCase();
+                final visibles = [
+                  for (final l in tous)
+                    if (q.isEmpty || l.labo.toLowerCase().contains(q)) l,
+                ];
+                if (visibles.isEmpty) {
+                  return const MessageVide(titre: 'Aucun laboratoire', texte: 'Rien ne correspond.');
+                }
+                return ListView.builder(
+                  controller: defilement,
+                  itemCount: visibles.length,
+                  itemBuilder: (context, i) {
+                    final l = visibles[i];
+                    return ListTile(
+                      key: ValueKey('labo-${l.labo}'),
+                      title: Text(libelle(l.labo)),
+                      trailing: Text(
+                        '${entier(l.produitsActifs)} produits',
+                        style: TextStyle(color: context.couleurs.encre3, fontSize: 12),
+                      ),
+                      onTap: () => Navigator.pop(context, l.labo),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -764,9 +845,7 @@ class _Familles extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final familles = ref.watch(resumeStockProvider).value?.familles ?? const [];
     final choisie = ref.watch(filtreProduitsProvider.select((f) => f.idFamille));
-    final visibles = familles
-        .where((f) => f.id != null && (f.produitsActifs > 0 || f.id == choisie))
-        .toList();
+    final visibles = familles.where((f) => f.id != null && (f.produitsActifs > 0 || f.id == choisie)).toList();
     if (visibles.isEmpty) return const SizedBox(height: 8);
 
     void choisir(int? id) => ref.read(filtreProduitsProvider.notifier).famille(id);
@@ -792,12 +871,7 @@ class _Familles extends ConsumerWidget {
 }
 
 class _PastilleFamille extends StatelessWidget {
-  const _PastilleFamille({
-    required this.texte,
-    required this.choisie,
-    required this.surChoix,
-    this.idFamille,
-  });
+  const _PastilleFamille({required this.texte, required this.choisie, required this.surChoix, this.idFamille});
 
   final String texte;
   final int? idFamille;
@@ -847,10 +921,7 @@ class _PastilleFamille extends StatelessWidget {
 
 /// Nom lisible : « DOLIPRANE » → « Doliprane », dosage compris.
 String nomLisible(Produit p) {
-  final brut = [
-    p.nom,
-    if (p.dosage != null && p.dosage!.isNotEmpty && !p.nom.contains(p.dosage!)) p.dosage!,
-  ].join(' ');
+  final brut = [p.nom, if (p.dosage != null && p.dosage!.isNotEmpty && !p.nom.contains(p.dosage!)) p.dosage!].join(' ');
   return libelleProduit(brut);
 }
 
@@ -894,10 +965,7 @@ class LigneProduit extends StatelessWidget {
       color: choisi ? context.schema.primaryContainer.withValues(alpha: .45) : context.schema.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: choisi ? context.schema.primary : context.couleurs.bord,
-          width: choisi ? 1.6 : 1,
-        ),
+        side: BorderSide(color: choisi ? context.schema.primary : context.couleurs.bord, width: choisi ? 1.6 : 1),
       ),
       child: InkWell(
         key: ValueKey('produit-${p.id}'),

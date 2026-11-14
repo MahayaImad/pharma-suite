@@ -72,9 +72,7 @@ class _Volet extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: compact
-              ? const EdgeInsets.fromLTRB(20, 22, 20, 22)
-              : const EdgeInsets.fromLTRB(52, 44, 52, 44),
+          padding: compact ? const EdgeInsets.fromLTRB(20, 22, 20, 22) : const EdgeInsets.fromLTRB(52, 44, 52, 44),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -83,9 +81,7 @@ class _Volet extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: .92),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x330B2552), blurRadius: 24, offset: Offset(0, 8)),
-                  ],
+                  boxShadow: const [BoxShadow(color: Color(0x330B2552), blurRadius: 24, offset: Offset(0, 8))],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -253,10 +249,7 @@ class _EtatFormulaire extends ConsumerState<_Formulaire> {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Avec votre compte EASYPHARM',
-                style: TextStyle(fontSize: 15, color: Color(0xFF55657D)),
-              ),
+              const Text('Avec votre compte EASYPHARM', style: TextStyle(fontSize: 15, color: Color(0xFF55657D))),
               const SizedBox(height: 26),
               if (_erreur != null) ...[_MessageErreur(_erreur!), const SizedBox(height: 16)],
               const Text('Utilisateur', style: etiquette),

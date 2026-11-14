@@ -194,14 +194,7 @@ class _Section extends ConsumerWidget {
 
 /// Ligne d'une section : texte principal, détail, étiquettes, actions.
 class _Ligne extends StatelessWidget {
-  const _Ligne({
-    required this.titre,
-    this.detail,
-    this.etiquettes = const [],
-    this.fin,
-    this.surAppui,
-    this.cle,
-  });
+  const _Ligne({required this.titre, this.detail, this.etiquettes = const [], this.fin, this.surAppui, this.cle});
 
   final String titre;
   final String? detail;
@@ -254,17 +247,10 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-    decoration: BoxDecoration(
-      color: fond ?? context.couleurs.neutreDoux,
-      borderRadius: BorderRadius.circular(999),
-    ),
+    decoration: BoxDecoration(color: fond ?? context.couleurs.neutreDoux, borderRadius: BorderRadius.circular(999)),
     child: Text(
       texte,
-      style: TextStyle(
-        fontSize: 11.5,
-        fontWeight: FontWeight.w700,
-        color: couleur ?? context.couleurs.encre2,
-      ),
+      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: couleur ?? context.couleurs.encre2),
     ),
   );
 }
@@ -360,11 +346,7 @@ class _SectionGardes extends ConsumerWidget {
           titre: _dateCourte(g.date),
           detail: [g.type.detail, if (g.note != null && g.note!.isNotEmpty) g.note!].join(' · '),
           etiquettes: [
-            _Badge(
-              g.type.libelle,
-              couleur: context.schema.onPrimaryContainer,
-              fond: context.schema.primaryContainer,
-            ),
+            _Badge(g.type.libelle, couleur: context.schema.onPrimaryContainer, fond: context.schema.primaryContainer),
             if (g.proposee)
               _Badge('proposée', couleur: context.couleurs.encre2, fond: context.couleurs.neutreDoux)
             else if (g.aConfirmer)
@@ -544,11 +526,7 @@ Future<void> _dialogueGarde(BuildContext context, WidgetRef ref, {Garde? garde})
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (garde == null) ...[
-                _ChoixDate(
-                  libelle: 'Date de la garde',
-                  valeur: jour,
-                  surChoix: (d) => majour(() => jour = d),
-                ),
+                _ChoixDate(libelle: 'Date de la garde', valeur: jour, surChoix: (d) => majour(() => jour = d)),
                 const SizedBox(height: 14),
               ],
               RadioGroup<TypeGarde>(
@@ -573,10 +551,7 @@ Future<void> _dialogueGarde(BuildContext context, WidgetRef ref, {Garde? garde})
                 key: const ValueKey('note-garde'),
                 controller: note,
                 maxLength: 200,
-                decoration: const InputDecoration(
-                  labelText: 'Note (facultatif)',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Note (facultatif)', border: OutlineInputBorder()),
               ),
             ],
           ),
@@ -587,8 +562,7 @@ Future<void> _dialogueGarde(BuildContext context, WidgetRef ref, {Garde? garde})
               onPressed: () async {
                 if (!await _confirmerSuppression(c, 'La garde du ${_dateCourte(garde.date)}.')) return;
                 if (!c.mounted) return;
-                if (await _executer(c, ref, (api) => api.supprimerGarde(garde.date), gardesProvider) &&
-                    c.mounted) {
+                if (await _executer(c, ref, (api) => api.supprimerGarde(garde.date), gardesProvider) && c.mounted) {
                   Navigator.pop(c);
                 }
               },
@@ -603,11 +577,8 @@ Future<void> _dialogueGarde(BuildContext context, WidgetRef ref, {Garde? garde})
                     final ok = await _executer(
                       c,
                       ref,
-                      (api) => api.enregistrerGarde(
-                        jour!,
-                        type,
-                        note: note.text.trim().isEmpty ? null : note.text.trim(),
-                      ),
+                      (api) =>
+                          api.enregistrerGarde(jour!, type, note: note.text.trim().isEmpty ? null : note.text.trim()),
                       gardesProvider,
                     );
                     if (ok && c.mounted) Navigator.pop(c);
@@ -668,9 +639,7 @@ class _SectionEvenements extends ConsumerWidget {
 
 Future<void> _dialogueEvenement(BuildContext context, WidgetRef ref, {Evenement? evenement}) async {
   var type = evenement?.type ?? TypeEvenement.ramadan;
-  DateTimeRange? periode = evenement == null
-      ? null
-      : DateTimeRange(start: evenement.debut, end: evenement.fin);
+  DateTimeRange? periode = evenement == null ? null : DateTimeRange(start: evenement.debut, end: evenement.fin);
   await showDialog<void>(
     context: context,
     builder: (c) => StatefulBuilder(
@@ -683,9 +652,7 @@ Future<void> _dialogueEvenement(BuildContext context, WidgetRef ref, {Evenement?
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SegmentedButton<TypeEvenement>(
-                segments: [
-                  for (final t in TypeEvenement.values) ButtonSegment(value: t, label: Text(t.libelle)),
-                ],
+                segments: [for (final t in TypeEvenement.values) ButtonSegment(value: t, label: Text(t.libelle))],
                 selected: {type},
                 showSelectedIcon: false,
                 onSelectionChanged: (s) => majour(() => type = s.first),
@@ -699,9 +666,7 @@ Future<void> _dialogueEvenement(BuildContext context, WidgetRef ref, {Evenement?
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 icon: const Icon(Icons.date_range_outlined, size: 18),
-                label: Text(
-                  periode == null ? 'Choisir les dates' : '${date(periode!.start)} → ${date(periode!.end)}',
-                ),
+                label: Text(periode == null ? 'Choisir les dates' : '${date(periode!.start)} → ${date(periode!.end)}'),
                 onPressed: () async {
                   final p = await showDateRangePicker(
                     context: c,
@@ -724,12 +689,7 @@ Future<void> _dialogueEvenement(BuildContext context, WidgetRef ref, {Evenement?
                   return;
                 }
                 if (!c.mounted) return;
-                if (await _executer(
-                      c,
-                      ref,
-                      (api) => api.supprimerEvenement(evenement.id),
-                      evenementsProvider,
-                    ) &&
+                if (await _executer(c, ref, (api) => api.supprimerEvenement(evenement.id), evenementsProvider) &&
                     c.mounted) {
                   Navigator.pop(c);
                 }
@@ -744,8 +704,7 @@ Future<void> _dialogueEvenement(BuildContext context, WidgetRef ref, {Evenement?
                     final ok = await _executer(
                       c,
                       ref,
-                      (api) =>
-                          api.enregistrerEvenement(type, periode!.start, periode!.end, id: evenement?.id),
+                      (api) => api.enregistrerEvenement(type, periode!.start, periode!.end, id: evenement?.id),
                       evenementsProvider,
                     );
                     if (ok && c.mounted) Navigator.pop(c);
@@ -787,10 +746,7 @@ class _SectionFeries extends ConsumerWidget {
                         tooltip: 'Supprimer',
                         icon: const Icon(Icons.delete_outline, size: 20),
                         onPressed: () async {
-                          if (!await _confirmerSuppression(
-                            context,
-                            '${f.label ?? ''} ${date(f.date)}'.trim(),
-                          )) {
+                          if (!await _confirmerSuppression(context, '${f.label ?? ''} ${date(f.date)}'.trim())) {
                             return;
                           }
                           if (context.mounted) {
@@ -829,10 +785,7 @@ Future<void> _dialogueFerie(BuildContext context, WidgetRef ref) async {
                 controller: libelle,
                 maxLength: 100,
                 onChanged: (_) => majour(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Nom (ex. Yennayer)',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Nom (ex. Yennayer)', border: OutlineInputBorder()),
               ),
             ],
           ),
@@ -862,11 +815,7 @@ Future<void> _dialogueFerie(BuildContext context, WidgetRef ref) async {
 // ── Calcul des commandes ────────────────────────────────────────────────────
 
 const _reglagesConnus = {
-  'periode_commande_jours': (
-    'Période entre deux commandes',
-    'jours',
-    'Fixe le stock maximum : SS + CMM × période.',
-  ),
+  'periode_commande_jours': ('Période entre deux commandes', 'jours', 'Fixe le stock maximum : SS + CMM × période.'),
   'delai_securite_jours': ('Délai de sécurité', 'jours', 'Stock de sécurité simple : CMJ × ce délai.'),
   'delai_livraison_jours': (
     'Délai de livraison par défaut',
@@ -1000,10 +949,7 @@ class EntreeReglages extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Calendrier et réglages',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
+                  const Text('Calendrier et réglages', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                   const SizedBox(height: 2),
                   Text(
                     'Gardes, Ramadan et Aïd, jours fériés, calcul des commandes',

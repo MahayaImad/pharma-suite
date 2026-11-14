@@ -42,8 +42,7 @@ class FicheProduit extends ConsumerWidget {
             : IconButton(tooltip: 'Retour', icon: const Icon(Icons.arrow_back_rounded), onPressed: fermer),
         title: Text(enPanneau ? 'Fiche produit' : '', style: const TextStyle(fontSize: 15)),
         actions: [
-          if (enPanneau)
-            IconButton(tooltip: 'Fermer', icon: const Icon(Icons.close_rounded), onPressed: fermer),
+          if (enPanneau) IconButton(tooltip: 'Fermer', icon: const Icon(Icons.close_rounded), onPressed: fermer),
           const SizedBox(width: 4),
         ],
       ),
@@ -99,17 +98,11 @@ class _Contenu extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (enTete.isNotEmpty)
-                    Text(enTete, style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
+                  if (enTete.isNotEmpty) Text(enTete, style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
                   const SizedBox(height: 2),
                   Text(
                     nomLisible(p),
-                    style: const TextStyle(
-                      fontFamily: 'Sora',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
+                    style: const TextStyle(fontFamily: 'Sora', fontSize: 22, fontWeight: FontWeight.w700, height: 1.2),
                   ),
                   if (forme.isNotEmpty) ...[
                     const SizedBox(height: 3),
@@ -242,12 +235,7 @@ class _Bande extends StatelessWidget {
                         key: ValueKey('bande-$titre'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'Sora',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: couleur,
-                        ),
+                        style: TextStyle(fontFamily: 'Sora', fontSize: 18, fontWeight: FontWeight.w700, color: couleur),
                       ),
                     ],
                   ),
@@ -432,20 +420,7 @@ class _Conseil extends StatelessWidget {
   }
 }
 
-const _moisCourts = [
-  'janv.',
-  'févr.',
-  'mars',
-  'avr.',
-  'mai',
-  'juin',
-  'juil.',
-  'août',
-  'sept.',
-  'oct.',
-  'nov.',
-  'déc.',
-];
+const _moisCourts = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 
 /// Courbe du stock dans le temps, sans nouvelle commande, en FEFO.
 class _Projection extends StatelessWidget {
@@ -540,10 +515,7 @@ class _PeintreProjection extends CustomPainter {
     canvas.drawLine(Offset(gauche, y(0)), Offset(size.width, y(0)), axe);
     for (var m = 1; m * 30 < horizon; m++) {
       final date = DateTime(aujourdhui.year, aujourdhui.month + m, 1);
-      final j = date
-          .difference(DateTime(aujourdhui.year, aujourdhui.month, aujourdhui.day))
-          .inDays
-          .toDouble();
+      final j = date.difference(DateTime(aujourdhui.year, aujourdhui.month, aujourdhui.day)).inDays.toDouble();
       if (j >= horizon) break;
       if (largeur / horizon * 30 < 34 && m.isOdd) continue; // pas de chevauchement
       canvas.drawLine(Offset(x(j), y(0)), Offset(x(j), y(0) + 4), axe);
@@ -556,11 +528,7 @@ class _PeintreProjection extends CustomPainter {
         ..color = couleurSecurite
         ..strokeWidth = 1.2;
       for (var d = gauche; d < size.width; d += 8) {
-        canvas.drawLine(
-          Offset(d, y(stockSecurite)),
-          Offset(math.min(d + 4, size.width), y(stockSecurite)),
-          p,
-        );
+        canvas.drawLine(Offset(d, y(stockSecurite)), Offset(math.min(d + 4, size.width), y(stockSecurite)), p);
       }
       _texte(
         canvas,
@@ -823,8 +791,7 @@ class _LotsState extends ConsumerState<_Lots> {
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
           ),
-          error: (e, _) =>
-              MessageErreur(erreur: e, reessayer: () => ref.invalidate(lotsProduitProvider(cle))),
+          error: (e, _) => MessageErreur(erreur: e, reessayer: () => ref.invalidate(lotsProduitProvider(cle))),
         ),
       ],
     );
@@ -890,10 +857,7 @@ class _LigneLot extends StatelessWidget {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-                      if (lot.bloque) ...[
-                        const SizedBox(width: 6),
-                        const Etiquette('Bloqué', icone: Icons.block),
-                      ],
+                      if (lot.bloque) ...[const SizedBox(width: 6), const Etiquette('Bloqué', icone: Icons.block)],
                     ],
                   ),
                   if (details.isNotEmpty)
@@ -931,10 +895,7 @@ class _LigneLot extends StatelessWidget {
                   entier(lot.stock),
                   style: const TextStyle(fontFamily: 'Sora', fontSize: 18, fontWeight: FontWeight.w700),
                 ),
-                Text(
-                  epuise ? 'épuisé' : 'unités',
-                  style: TextStyle(fontSize: 11, color: context.couleurs.encre3),
-                ),
+                Text(epuise ? 'épuisé' : 'unités', style: TextStyle(fontSize: 11, color: context.couleurs.encre3)),
               ],
             ),
           ],
@@ -955,9 +916,7 @@ Future<void> _deciderConsommable(BuildContext context, WidgetRef ref, Produit p,
     messager
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(oui ? 'Marqué consommable : écarté du surstock et des pertes.' : 'Non consommable.'),
-        ),
+        SnackBar(content: Text(oui ? 'Marqué consommable : écarté du surstock et des pertes.' : 'Non consommable.')),
       );
   } catch (e) {
     messager

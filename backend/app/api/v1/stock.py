@@ -193,11 +193,33 @@ async def resume_stock(
 
 # ── Produits ─────────────────────────────────────────────────────────────────
 
+@router.get("/laboratoires")
+async def laboratoires(
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """Laboratoires des produits actifs (non archivés), du plus fourni au
+    moins fourni : nombre de produits actifs et en stock."""
+    lignes = await db.execute(text("""
+        SELECT upper(trim(n.labo)) AS labo,
+               count(*) AS produits_actifs,
+               count(*) FILTER (WHERE COALESCE(mv.stock_actuel, 0) > 0) AS produits_en_stock
+        FROM nomenclature n
+        JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        WHERE n.archive = false AND COALESCE(mv.actif, false) AND NULLIF(trim(n.labo), '') IS NOT NULL
+        GROUP BY 1
+        ORDER BY count(*) DESC, 1
+    """))
+    return [{"labo": r.labo, "produits_actifs": r.produits_actifs, "produits_en_stock": r.produits_en_stock}
+            for r in lignes]
+
+
 @router.get("/products")
 async def list_products(
     q: Optional[str] = Query(None, description="Recherche sur nom, DCI, code-barre"),
     famille: Optional[str] = Query(None, description="Ancien filtre par nom ; préférer id_famille"),
     id_famille: Optional[int] = Query(None, description="Filtrer par famille (familles.id)"),
+    labo: Optional[str] = Query(None, description="Filtrer par laboratoire (nomenclature.labo, exact)"),
     etat: Optional[Literal["en_stock", "rupture", "sous_seuil", "a_commander", "a_risque", "surstock"]] = Query(None),
     tri: Literal["nom", "stock", "valeur", "derniere_vente"] = Query("nom"),
     forme: Optional[str] = Query(None),
@@ -241,6 +263,9 @@ async def list_products(
     if id_famille is not None:
         conditions.append("n.id_famille = :id_famille")
         params["id_famille"] = id_famille
+    if labo:
+        conditions.append("upper(trim(n.labo)) = upper(trim(:labo))")
+        params["labo"] = labo
     tous = await ind_lot.calculer_tous(db, _aujourdhui_alger())
     if etat in _ETATS_CALCULES:
         consommables = await _consommables(db)

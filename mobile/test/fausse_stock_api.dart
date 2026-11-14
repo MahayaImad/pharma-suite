@@ -101,6 +101,7 @@ class FausseStockApi implements StockApi {
         return false;
       }
       if (filtre.idFamille != null && p.idFamille != filtre.idFamille) return false;
+      if (filtre.labo != null && (p.labo ?? '').toUpperCase() != filtre.labo) return false;
       return switch (filtre.etat) {
         null => true,
         FiltreEtat.enStock => p.stock > 0,
@@ -125,6 +126,12 @@ class FausseStockApi implements StockApi {
     const Consommable(id: 21, nom: 'AIGUILLES INSUPEN', unitesAjustees: 600, stock: 120),
     const Consommable(id: 22, nom: 'SACHETS', unitesAjustees: 900, stock: 300),
     const Consommable(id: 23, nom: 'LECTEUR GLYCEMIE', confirme: true, unitesAjustees: 40, stock: 6),
+  ];
+
+  @override
+  Future<List<Laboratoire>> laboratoires() async => const [
+    Laboratoire(labo: 'SANOFI', produitsActifs: 2),
+    Laboratoire(labo: 'SAIDAL', produitsActifs: 1),
   ];
 
   @override

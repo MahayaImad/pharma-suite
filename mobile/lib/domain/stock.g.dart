@@ -6,46 +6,39 @@ part of 'stock.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_FamilleStock _$FamilleStockFromJson(Map<String, dynamic> json) =>
-    _FamilleStock(
-      id: (json['id'] as num?)?.toInt(),
-      famille: json['famille'] as String,
-      produitsActifs: (json['produits_actifs'] as num?)?.toInt() ?? 0,
-      produitsEnStock: (json['produits_en_stock'] as num?)?.toInt() ?? 0,
-    );
+_FamilleStock _$FamilleStockFromJson(Map<String, dynamic> json) => _FamilleStock(
+  id: (json['id'] as num?)?.toInt(),
+  famille: json['famille'] as String,
+  produitsActifs: (json['produits_actifs'] as num?)?.toInt() ?? 0,
+  produitsEnStock: (json['produits_en_stock'] as num?)?.toInt() ?? 0,
+);
 
-Map<String, dynamic> _$FamilleStockToJson(_FamilleStock instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'famille': instance.famille,
-      'produits_actifs': instance.produitsActifs,
-      'produits_en_stock': instance.produitsEnStock,
-    };
+Map<String, dynamic> _$FamilleStockToJson(_FamilleStock instance) => <String, dynamic>{
+  'id': instance.id,
+  'famille': instance.famille,
+  'produits_actifs': instance.produitsActifs,
+  'produits_en_stock': instance.produitsEnStock,
+};
 
 _ResumeStock _$ResumeStockFromJson(Map<String, dynamic> json) => _ResumeStock(
-  donneesDu: json['donnees_du'] == null
-      ? null
-      : DateTime.parse(json['donnees_du'] as String),
+  donneesDu: json['donnees_du'] == null ? null : DateTime.parse(json['donnees_du'] as String),
   produitsActifs: (json['produits_actifs'] as num?)?.toInt() ?? 0,
   produitsEnStock: (json['produits_en_stock'] as num?)?.toInt() ?? 0,
   valeurAchat: (json['valeur_achat'] as num?)?.toDouble() ?? 0,
   valeurVente: (json['valeur_vente'] as num?)?.toDouble() ?? 0,
   familles:
-      (json['familles'] as List<dynamic>?)
-          ?.map((e) => FamilleStock.fromJson(e as Map<String, dynamic>))
-          .toList() ??
+      (json['familles'] as List<dynamic>?)?.map((e) => FamilleStock.fromJson(e as Map<String, dynamic>)).toList() ??
       const <FamilleStock>[],
 );
 
-Map<String, dynamic> _$ResumeStockToJson(_ResumeStock instance) =>
-    <String, dynamic>{
-      'donnees_du': instance.donneesDu?.toIso8601String(),
-      'produits_actifs': instance.produitsActifs,
-      'produits_en_stock': instance.produitsEnStock,
-      'valeur_achat': instance.valeurAchat,
-      'valeur_vente': instance.valeurVente,
-      'familles': instance.familles,
-    };
+Map<String, dynamic> _$ResumeStockToJson(_ResumeStock instance) => <String, dynamic>{
+  'donnees_du': instance.donneesDu?.toIso8601String(),
+  'produits_actifs': instance.produitsActifs,
+  'produits_en_stock': instance.produitsEnStock,
+  'valeur_achat': instance.valeurAchat,
+  'valeur_vente': instance.valeurVente,
+  'familles': instance.familles,
+};
 
 _Produit _$ProduitFromJson(Map<String, dynamic> json) => _Produit(
   id: (json['id'] as num).toInt(),
@@ -66,9 +59,7 @@ _Produit _$ProduitFromJson(Map<String, dynamic> json) => _Produit(
   valeurAchat: (json['valeur_achat'] as num?)?.toDouble() ?? 0,
   valeurVente: (json['valeur_vente'] as num?)?.toDouble() ?? 0,
   vendu12Mois: (json['qte_vendue_12m'] as num?)?.toInt(),
-  derniereVente: json['derniere_vente'] == null
-      ? null
-      : DateTime.parse(json['derniere_vente'] as String),
+  derniereVente: json['derniere_vente'] == null ? null : DateTime.parse(json['derniere_vente'] as String),
   actif: json['actif'] as bool? ?? false,
   classeAbc: json['segment_abc'] as String?,
   classeXyz: json['segment_xyz'] as String?,
@@ -131,17 +122,13 @@ _Lot _$LotFromJson(Map<String, dynamic> json) => _Lot(
   id: (json['id'] as num).toInt(),
   lot: json['lot'] as String?,
   peremption: json['peremption'] as String?,
-  peremptionDate: json['peremption_date'] == null
-      ? null
-      : DateTime.parse(json['peremption_date'] as String),
+  peremptionDate: json['peremption_date'] == null ? null : DateTime.parse(json['peremption_date'] as String),
   stock: (json['stock'] as num?)?.toInt() ?? 0,
   qteEntree: (json['qte_entree'] as num?)?.toInt() ?? 0,
   prixAchat: (json['prix_achat'] as num?)?.toDouble() ?? 0,
   prixVente: (json['prix_vente'] as num?)?.toDouble() ?? 0,
   fournisseur: json['fournisseur'] as String?,
-  dateEntree: json['date_entree'] == null
-      ? null
-      : DateTime.parse(json['date_entree'] as String),
+  dateEntree: json['date_entree'] == null ? null : DateTime.parse(json['date_entree'] as String),
   numBl: json['num_bl'] as String?,
   bloque: json['bloque'] == null ? false : _versBool(json['bloque']),
 );
@@ -170,50 +157,39 @@ _RisqueLot _$RisqueLotFromJson(Map<String, dynamic> json) => _RisqueLot(
   valeurARisque: (json['valeur_a_risque'] as num?)?.toDouble(),
 );
 
-Map<String, dynamic> _$RisqueLotToJson(_RisqueLot instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'dvr': instance.dvr,
-      'ecoulable': instance.ecoulable,
-      'stock': instance.stock,
-      'a_risque': instance.aRisque,
-      'valeur_a_risque': instance.valeurARisque,
-    };
+Map<String, dynamic> _$RisqueLotToJson(_RisqueLot instance) => <String, dynamic>{
+  'id': instance.id,
+  'dvr': instance.dvr,
+  'ecoulable': instance.ecoulable,
+  'stock': instance.stock,
+  'a_risque': instance.aRisque,
+  'valeur_a_risque': instance.valeurARisque,
+};
 
-_FournisseurPrincipal _$FournisseurPrincipalFromJson(
-  Map<String, dynamic> json,
-) => _FournisseurPrincipal(
+_FournisseurPrincipal _$FournisseurPrincipalFromJson(Map<String, dynamic> json) => _FournisseurPrincipal(
   id: (json['id'] as num?)?.toInt(),
   nom: json['nom'] as String?,
   delaiJoursOuvres: (json['delai_jours_ouvres'] as num?)?.toInt() ?? 1,
   delaiSaisi: json['delai_saisi'] as bool? ?? false,
 );
 
-Map<String, dynamic> _$FournisseurPrincipalToJson(
-  _FournisseurPrincipal instance,
-) => <String, dynamic>{
+Map<String, dynamic> _$FournisseurPrincipalToJson(_FournisseurPrincipal instance) => <String, dynamic>{
   'id': instance.id,
   'nom': instance.nom,
   'delai_jours_ouvres': instance.delaiJoursOuvres,
   'delai_saisi': instance.delaiSaisi,
 };
 
-_IndicateursProduit _$IndicateursProduitFromJson(
-  Map<String, dynamic> json,
-) => _IndicateursProduit(
+_IndicateursProduit _$IndicateursProduitFromJson(Map<String, dynamic> json) => _IndicateursProduit(
   ventes12Mois: (json['ventes_12_mois'] as num?)?.toDouble() ?? 0,
   moisHistorique: (json['mois_historique'] as num?)?.toInt() ?? 12,
   cmm: (json['cmm'] as num?)?.toDouble() ?? 0,
   cmj: (json['cmj'] as num?)?.toDouble() ?? 0,
   fournisseur: json['fournisseur'] == null
       ? null
-      : FournisseurPrincipal.fromJson(
-          json['fournisseur'] as Map<String, dynamic>,
-        ),
+      : FournisseurPrincipal.fromJson(json['fournisseur'] as Map<String, dynamic>),
   delaiLivraison: (json['delai_livraison_jours'] as num?)?.toInt() ?? 1,
-  dateLivraison: json['date_livraison'] == null
-      ? null
-      : DateTime.parse(json['date_livraison'] as String),
+  dateLivraison: json['date_livraison'] == null ? null : DateTime.parse(json['date_livraison'] as String),
   stockSecurite: (json['stock_securite'] as num?)?.toInt() ?? 0,
   stockSecuriteSimple: (json['stock_securite_simple'] as num?)?.toInt() ?? 0,
   delaiSecurite: (json['delai_securite_jours'] as num?)?.toDouble() ?? 0,
@@ -224,45 +200,53 @@ _IndicateursProduit _$IndicateursProduitFromJson(
   qteARisque: (json['qte_a_risque'] as num?)?.toInt() ?? 0,
   valeurARisque: (json['valeur_a_risque'] as num?)?.toDouble() ?? 0,
   lots:
-      (json['lots'] as List<dynamic>?)
-          ?.map((e) => RisqueLot.fromJson(e as Map<String, dynamic>))
-          .toList() ??
+      (json['lots'] as List<dynamic>?)?.map((e) => RisqueLot.fromJson(e as Map<String, dynamic>)).toList() ??
       const <RisqueLot>[],
 );
 
-Map<String, dynamic> _$IndicateursProduitToJson(_IndicateursProduit instance) =>
-    <String, dynamic>{
-      'ventes_12_mois': instance.ventes12Mois,
-      'mois_historique': instance.moisHistorique,
-      'cmm': instance.cmm,
-      'cmj': instance.cmj,
-      'fournisseur': instance.fournisseur,
-      'delai_livraison_jours': instance.delaiLivraison,
-      'date_livraison': instance.dateLivraison?.toIso8601String(),
-      'stock_securite': instance.stockSecurite,
-      'stock_securite_simple': instance.stockSecuriteSimple,
-      'delai_securite_jours': instance.delaiSecurite,
-      'periode_commande_jours': instance.periodeCommande,
-      'stock_maximum': instance.stockMaximum,
-      'couverture_jours': instance.couverture,
-      'dvr_max': instance.dvrMax,
-      'qte_a_risque': instance.qteARisque,
-      'valeur_a_risque': instance.valeurARisque,
-      'lots': instance.lots,
-    };
+Map<String, dynamic> _$IndicateursProduitToJson(_IndicateursProduit instance) => <String, dynamic>{
+  'ventes_12_mois': instance.ventes12Mois,
+  'mois_historique': instance.moisHistorique,
+  'cmm': instance.cmm,
+  'cmj': instance.cmj,
+  'fournisseur': instance.fournisseur,
+  'delai_livraison_jours': instance.delaiLivraison,
+  'date_livraison': instance.dateLivraison?.toIso8601String(),
+  'stock_securite': instance.stockSecurite,
+  'stock_securite_simple': instance.stockSecuriteSimple,
+  'delai_securite_jours': instance.delaiSecurite,
+  'periode_commande_jours': instance.periodeCommande,
+  'stock_maximum': instance.stockMaximum,
+  'couverture_jours': instance.couverture,
+  'dvr_max': instance.dvrMax,
+  'qte_a_risque': instance.qteARisque,
+  'valeur_a_risque': instance.valeurARisque,
+  'lots': instance.lots,
+};
 
-_PageProduits _$PageProduitsFromJson(Map<String, dynamic> json) =>
-    _PageProduits(
-      total: (json['total'] as num?)?.toInt() ?? 0,
-      items:
-          (json['items'] as List<dynamic>?)
-              ?.map((e) => Produit.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <Produit>[],
-    );
+_Laboratoire _$LaboratoireFromJson(Map<String, dynamic> json) => _Laboratoire(
+  labo: json['labo'] as String,
+  produitsActifs: (json['produits_actifs'] as num?)?.toInt() ?? 0,
+  produitsEnStock: (json['produits_en_stock'] as num?)?.toInt() ?? 0,
+);
 
-Map<String, dynamic> _$PageProduitsToJson(_PageProduits instance) =>
-    <String, dynamic>{'total': instance.total, 'items': instance.items};
+Map<String, dynamic> _$LaboratoireToJson(_Laboratoire instance) => <String, dynamic>{
+  'labo': instance.labo,
+  'produits_actifs': instance.produitsActifs,
+  'produits_en_stock': instance.produitsEnStock,
+};
+
+_PageProduits _$PageProduitsFromJson(Map<String, dynamic> json) => _PageProduits(
+  total: (json['total'] as num?)?.toInt() ?? 0,
+  items:
+      (json['items'] as List<dynamic>?)?.map((e) => Produit.fromJson(e as Map<String, dynamic>)).toList() ??
+      const <Produit>[],
+);
+
+Map<String, dynamic> _$PageProduitsToJson(_PageProduits instance) => <String, dynamic>{
+  'total': instance.total,
+  'items': instance.items,
+};
 
 _Compteurs _$CompteursFromJson(Map<String, dynamic> json) => _Compteurs(
   ruptures: (json['ruptures'] as num?)?.toInt() ?? 0,
@@ -274,35 +258,28 @@ _Compteurs _$CompteursFromJson(Map<String, dynamic> json) => _Compteurs(
   valeurSurstock: (json['valeur_surstock'] as num?)?.toDouble() ?? 0,
 );
 
-Map<String, dynamic> _$CompteursToJson(_Compteurs instance) =>
-    <String, dynamic>{
-      'ruptures': instance.ruptures,
-      'sous_seuil': instance.sousSeuil,
-      'a_commander': instance.aCommander,
-      'a_risque': instance.aRisque,
-      'valeur_a_risque': instance.valeurARisque,
-      'surstock': instance.surstock,
-      'valeur_surstock': instance.valeurSurstock,
-    };
+Map<String, dynamic> _$CompteursToJson(_Compteurs instance) => <String, dynamic>{
+  'ruptures': instance.ruptures,
+  'sous_seuil': instance.sousSeuil,
+  'a_commander': instance.aCommander,
+  'a_risque': instance.aRisque,
+  'valeur_a_risque': instance.valeurARisque,
+  'surstock': instance.surstock,
+  'valeur_surstock': instance.valeurSurstock,
+};
 
 _ATraiter _$ATraiterFromJson(Map<String, dynamic> json) => _ATraiter(
   compteurs: json['compteurs'] == null
       ? const Compteurs()
       : Compteurs.fromJson(json['compteurs'] as Map<String, dynamic>),
   aCommander:
-      (json['a_commander'] as List<dynamic>?)
-          ?.map((e) => Produit.fromJson(e as Map<String, dynamic>))
-          .toList() ??
+      (json['a_commander'] as List<dynamic>?)?.map((e) => Produit.fromJson(e as Map<String, dynamic>)).toList() ??
       const <Produit>[],
   aRisque:
-      (json['a_risque'] as List<dynamic>?)
-          ?.map((e) => Produit.fromJson(e as Map<String, dynamic>))
-          .toList() ??
+      (json['a_risque'] as List<dynamic>?)?.map((e) => Produit.fromJson(e as Map<String, dynamic>)).toList() ??
       const <Produit>[],
   surstock:
-      (json['surstock'] as List<dynamic>?)
-          ?.map((e) => Produit.fromJson(e as Map<String, dynamic>))
-          .toList() ??
+      (json['surstock'] as List<dynamic>?)?.map((e) => Produit.fromJson(e as Map<String, dynamic>)).toList() ??
       const <Produit>[],
 );
 
@@ -324,14 +301,13 @@ _Consommable _$ConsommableFromJson(Map<String, dynamic> json) => _Consommable(
   unitesAjustees: (json['unites_ajustees_12m'] as num?)?.toInt() ?? 0,
 );
 
-Map<String, dynamic> _$ConsommableToJson(_Consommable instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'nom': instance.nom,
-      'dosage': instance.dosage,
-      'forme_abr': instance.formeAbr,
-      'id_famille': instance.idFamille,
-      'confirme': instance.confirme,
-      'stock': instance.stock,
-      'unites_ajustees_12m': instance.unitesAjustees,
-    };
+Map<String, dynamic> _$ConsommableToJson(_Consommable instance) => <String, dynamic>{
+  'id': instance.id,
+  'nom': instance.nom,
+  'dosage': instance.dosage,
+  'forme_abr': instance.formeAbr,
+  'id_famille': instance.idFamille,
+  'confirme': instance.confirme,
+  'stock': instance.stock,
+  'unites_ajustees_12m': instance.unitesAjustees,
+};

@@ -221,4 +221,21 @@ void main() {
     final caseConso = tester.widget<SwitchListTile>(find.byKey(const ValueKey('case-consommable')));
     expect(caseConso.onChanged, isNull);
   });
+
+  testWidgets('laboratoire : filtre la liste, la puce le retire', (tester) async {
+    final api = FausseStockApi();
+    await _lancer(tester, api);
+    await _voir(tester, find.byKey(const ValueKey('bouton-labo')));
+    await tester.tap(find.byKey(const ValueKey('bouton-labo')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('labo-SANOFI')));
+    await tester.pumpAndSettle();
+    expect(api.demandes.last.labo, 'SANOFI');
+    expect(find.text('À commander'), findsNothing); // plus les groupes
+    await _voir(tester, find.byKey(const ValueKey('puce-labo')));
+    expect(find.text('Sanofi'), findsWidgets);
+    await tester.tap(find.byTooltip('Tous les laboratoires'));
+    await tester.pumpAndSettle();
+    expect(api.demandes.last.labo, isNull);
+  });
 }

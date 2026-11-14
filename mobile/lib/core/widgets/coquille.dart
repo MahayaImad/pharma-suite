@@ -217,11 +217,7 @@ class _Utilisateur extends ConsumerWidget {
             backgroundColor: context.schema.primaryContainer,
             child: Text(
               profil.initiales,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: context.schema.onPrimaryContainer,
-              ),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.schema.onPrimaryContainer),
             ),
           ),
           const SizedBox(width: 10),

@@ -24,11 +24,7 @@ class PastilleStock extends StatelessWidget {
         Icons.trending_down,
       ),
       EtatStock.rupture => (NiveauEtat.critique, 'Rupture', null),
-      EtatStock.quota => (
-        NiveauEtat.alerte,
-        avecQuantite ? '$q · quota' : 'Quota',
-        Icons.lock_clock_outlined,
-      ),
+      EtatStock.quota => (NiveauEtat.alerte, avecQuantite ? '$q · quota' : 'Quota', Icons.lock_clock_outlined),
       EtatStock.inactif => (NiveauEtat.neutre, 'Inactif', null),
     };
     return PastilleEtat(niveau: niveau, libelle: texte, icone: icone);
@@ -350,10 +346,7 @@ class JaugeStock extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  decoration: BoxDecoration(
-                    color: context.couleurs.neutreDoux,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                  decoration: BoxDecoration(color: context.couleurs.neutreDoux, borderRadius: BorderRadius.circular(6)),
                 ),
                 Container(
                   width: c2.maxWidth * rempli,
@@ -366,10 +359,7 @@ class JaugeStock extends StatelessWidget {
                     bottom: -3,
                     child: Container(
                       width: 2,
-                      decoration: BoxDecoration(
-                        color: context.couleurs.encre3,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                      decoration: BoxDecoration(color: context.couleurs.encre3, borderRadius: BorderRadius.circular(2)),
                     ),
                   ),
               ],

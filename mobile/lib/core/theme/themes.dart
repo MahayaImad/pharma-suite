@@ -223,12 +223,7 @@ ThemeData construireTheme(ThemeId id) {
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: TextStyle(
-        color: p.encre,
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
-      ),
+      titleTextStyle: TextStyle(color: p.encre, fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.3),
     ),
     cardTheme: CardThemeData(
       color: p.surface,

@@ -203,10 +203,21 @@ abstract class IndicateursProduit with _$IndicateursProduit {
 }
 
 /// Une page de la liste des produits.
+/// Laboratoire et nombre de produits actifs (`GET /stock/laboratoires`).
+@freezed
+abstract class Laboratoire with _$Laboratoire {
+  const factory Laboratoire({
+    required String labo,
+    @JsonKey(name: 'produits_actifs') @Default(0) int produitsActifs,
+    @JsonKey(name: 'produits_en_stock') @Default(0) int produitsEnStock,
+  }) = _Laboratoire;
+
+  factory Laboratoire.fromJson(Map<String, dynamic> json) => _$LaboratoireFromJson(json);
+}
+
 @freezed
 abstract class PageProduits with _$PageProduits {
-  const factory PageProduits({@Default(0) int total, @Default(<Produit>[]) List<Produit> items}) =
-      _PageProduits;
+  const factory PageProduits({@Default(0) int total, @Default(<Produit>[]) List<Produit> items}) = _PageProduits;
 
   factory PageProduits.fromJson(Map<String, dynamic> json) => _$PageProduitsFromJson(json);
 }
@@ -291,6 +302,9 @@ abstract class FiltreProduits with _$FiltreProduits {
   const factory FiltreProduits({
     @Default('') String recherche,
     int? idFamille,
+
+    /// Laboratoire, tel que rendu par `GET /stock/laboratoires`.
+    String? labo,
     FiltreEtat? etat,
     @Default(TriProduits.nom) TriProduits tri,
   }) = _FiltreProduits;
@@ -341,8 +355,7 @@ typedef PointStock = ({double jour, double stock});
 /// péremption, ce qui reste du lot est perdu (chute verticale de la courbe).
 /// Les lots sans date se vendent en dernier et ne périment pas.
 List<PointStock> projectionStock(List<({int stock, int? dvr})> lots, double cmj, {int horizon = 365}) {
-  final dates = lots.where((l) => l.stock > 0).toList()
-    ..sort((a, b) => (a.dvr ?? 1 << 30).compareTo(b.dvr ?? 1 << 30));
+  final dates = lots.where((l) => l.stock > 0).toList()..sort((a, b) => (a.dvr ?? 1 << 30).compareTo(b.dvr ?? 1 << 30));
   var reste = dates.fold<double>(0, (s, l) => s + l.stock);
   final points = <PointStock>[(jour: 0, stock: reste)];
   var t = 0.0;
@@ -413,10 +426,7 @@ enum NiveauConseil { urgent, attention, risque, info, bon }
     );
   }
   if (i.cmm <= 0) {
-    return (
-      niveau: NiveauConseil.info,
-      texte: 'Aucune vente sur 12 mois : stock dormant, à écouler ou retourner.',
-    );
+    return (niveau: NiveauConseil.info, texte: 'Aucune vente sur 12 mois : stock dormant, à écouler ou retourner.');
   }
   return (
     niveau: NiveauConseil.bon,
@@ -424,5 +434,4 @@ enum NiveauConseil { urgent, attention, risque, info, bon }
   );
 }
 
-String _un(double v) =>
-    v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
+String _un(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');

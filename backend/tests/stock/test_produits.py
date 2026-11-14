@@ -136,3 +136,13 @@ async def test_fiche_chiffres(api):
     assert (p["stock"], p["prix_vente"], p["prix_achat_moyen"]) == (10, 150, 100)
     assert (p["valeur_achat"], p["valeur_vente"]) == (1000, 1500)
     assert "segment_abc" in p and "categorie" in p
+
+
+async def test_filtre_par_laboratoire(api, db):
+    await db.execute(text("UPDATE nomenclature SET labo = CASE id WHEN 1 THEN 'Sanofi ' WHEN 2 THEN 'SANOFI' "
+                          "WHEN 5 THEN 'Saidal' ELSE NULL END"))
+    await db.commit()
+    await api.post("/stock/refresh-cache")
+    labos = (await api.get("/stock/laboratoires")).json()
+    assert [(l["labo"], l["produits_actifs"]) for l in labos] == [("SANOFI", 2), ("SAIDAL", 1)]
+    assert await _noms(api, labo="sanofi") == ["ALPHA", "BETA"]

@@ -84,13 +84,7 @@ class EcranConsommables extends ConsumerWidget {
 }
 
 class _Bloc extends StatelessWidget {
-  const _Bloc({
-    required this.cle,
-    required this.titre,
-    required this.compte,
-    required this.vide,
-    required this.lignes,
-  });
+  const _Bloc({required this.cle, required this.titre, required this.compte, required this.vide, required this.lignes});
 
   final String cle, titre, vide;
   final int compte;
@@ -257,10 +251,7 @@ class EntreeConsommables extends ConsumerWidget {
                 Container(
                   key: const ValueKey('compte-a-confirmer'),
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: context.etats.alerteDoux,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+                  decoration: BoxDecoration(color: context.etats.alerteDoux, borderRadius: BorderRadius.circular(999)),
                   child: Text(
                     '$aConfirmer à confirmer',
                     style: TextStyle(color: context.etats.alerte, fontWeight: FontWeight.w700, fontSize: 12),

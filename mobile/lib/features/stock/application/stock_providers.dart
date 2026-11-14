@@ -28,6 +28,7 @@ class FiltreController extends Notifier<FiltreProduits> {
 
   void chercher(String texte) => state = state.copyWith(recherche: texte);
   void famille(int? id) => state = state.copyWith(idFamille: id);
+  void labo(String? labo) => state = state.copyWith(labo: labo);
   void etat(FiltreEtat? etat) => state = state.copyWith(etat: etat);
   void trier(TriProduits tri) => state = state.copyWith(tri: tri);
   void effacer() => state = FiltreProduits(tri: state.tri);
@@ -82,6 +83,12 @@ class ListeProduitsController extends AsyncNotifier<ListeProduits> {
 
 final listeProduitsProvider = AsyncNotifierProvider<ListeProduitsController, ListeProduits>(
   ListeProduitsController.new,
+  retry: _sansNouvelEssai,
+);
+
+/// Laboratoires des produits actifs, pour le filtre.
+final laboratoiresProvider = FutureProvider<List<Laboratoire>>(
+  (ref) => ref.watch(stockApiProvider).laboratoires(),
   retry: _sansNouvelEssai,
 );
 

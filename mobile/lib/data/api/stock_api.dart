@@ -18,6 +18,9 @@ abstract interface class StockApi {
   /// `GET /stock/consommables` : proposés d'abord, puis confirmés.
   Future<List<Consommable>> consommables();
 
+  /// `GET /stock/laboratoires` : laboratoires des produits actifs.
+  Future<List<Laboratoire>> laboratoires();
+
   /// `PUT /stock/products/{id}/consommable` (titulaire).
   Future<void> deciderConsommable(int id, bool consommable);
 
@@ -45,8 +48,7 @@ class StockApiDio implements StockApi {
   }
 
   @override
-  Future<ResumeStock> resume() =>
-      _lire('/stock/resume', (j) => ResumeStock.fromJson(j as Map<String, dynamic>));
+  Future<ResumeStock> resume() => _lire('/stock/resume', (j) => ResumeStock.fromJson(j as Map<String, dynamic>));
 
   @override
   Future<PageProduits> produits(FiltreProduits filtre, {int offset = 0, int limite = 50}) {
@@ -57,6 +59,7 @@ class StockApiDio implements StockApi {
       parametres: {
         if (recherche.isNotEmpty) 'q': recherche,
         if (filtre.idFamille != null) 'id_famille': filtre.idFamille,
+        if (filtre.labo != null) 'labo': filtre.labo,
         // Un filtre d'état suffit à lui-même ; sans lui, les produits actifs.
         if (filtre.etat != null) 'etat': filtre.etat!.api else 'actif': true,
         'tri': filtre.tri.api,
@@ -67,14 +70,15 @@ class StockApiDio implements StockApi {
   }
 
   @override
-  Future<Produit> fiche(int id) =>
-      _lire('/stock/products/$id', (j) => Produit.fromJson(j as Map<String, dynamic>));
+  Future<Produit> fiche(int id) => _lire('/stock/products/$id', (j) => Produit.fromJson(j as Map<String, dynamic>));
 
   @override
-  Future<List<Consommable>> consommables() => _lire(
-    '/stock/consommables',
-    (j) => [for (final c in j as List) Consommable.fromJson(c as Map<String, dynamic>)],
-  );
+  Future<List<Laboratoire>> laboratoires() =>
+      _lire('/stock/laboratoires', (j) => [for (final l in j as List) Laboratoire.fromJson(l as Map<String, dynamic>)]);
+
+  @override
+  Future<List<Consommable>> consommables() =>
+      _lire('/stock/consommables', (j) => [for (final c in j as List) Consommable.fromJson(c as Map<String, dynamic>)]);
 
   @override
   Future<void> deciderConsommable(int id, bool consommable) async {
@@ -86,8 +90,7 @@ class StockApiDio implements StockApi {
   }
 
   @override
-  Future<ATraiter> aTraiter() =>
-      _lire('/stock/a-traiter', (j) => ATraiter.fromJson(j as Map<String, dynamic>));
+  Future<ATraiter> aTraiter() => _lire('/stock/a-traiter', (j) => ATraiter.fromJson(j as Map<String, dynamic>));
 
   @override
   Future<IndicateursProduit> indicateurs(int id) =>

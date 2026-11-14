@@ -2186,6 +2186,282 @@ $FournisseurPrincipalCopyWith<$Res>? get fournisseur {
 
 
 /// @nodoc
+mixin _$Laboratoire {
+
+ String get labo;@JsonKey(name: 'produits_actifs') int get produitsActifs;@JsonKey(name: 'produits_en_stock') int get produitsEnStock;
+/// Create a copy of Laboratoire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LaboratoireCopyWith<Laboratoire> get copyWith => _$LaboratoireCopyWithImpl<Laboratoire>(this as Laboratoire, _$identity);
+
+  /// Serializes this Laboratoire to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Laboratoire;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Laboratoire&&(identical(other.labo, _this.labo) || other.labo == _this.labo)&&(identical(other.produitsActifs, _this.produitsActifs) || other.produitsActifs == _this.produitsActifs)&&(identical(other.produitsEnStock, _this.produitsEnStock) || other.produitsEnStock == _this.produitsEnStock));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Laboratoire;
+  return Object.hash(runtimeType,_this.labo,_this.produitsActifs,_this.produitsEnStock);
+}
+
+@override
+String toString() {
+  final _this = this as Laboratoire;
+  return 'Laboratoire(labo: ${_this.labo}, produitsActifs: ${_this.produitsActifs}, produitsEnStock: ${_this.produitsEnStock})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LaboratoireCopyWith<$Res>  {
+  factory $LaboratoireCopyWith(Laboratoire value, $Res Function(Laboratoire) _then) = _$LaboratoireCopyWithImpl;
+@useResult
+$Res call({
+ String labo,@JsonKey(name: 'produits_actifs') int produitsActifs,@JsonKey(name: 'produits_en_stock') int produitsEnStock
+});
+
+
+
+
+}
+/// @nodoc
+class _$LaboratoireCopyWithImpl<$Res>
+    implements $LaboratoireCopyWith<$Res> {
+  _$LaboratoireCopyWithImpl(this._self, this._then);
+
+  final Laboratoire _self;
+  final $Res Function(Laboratoire) _then;
+
+/// Create a copy of Laboratoire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? labo = null,Object? produitsActifs = null,Object? produitsEnStock = null,}) {
+  return _then(Laboratoire(
+labo: null == labo ? _self.labo : labo // ignore: cast_nullable_to_non_nullable
+as String,produitsActifs: null == produitsActifs ? _self.produitsActifs : produitsActifs // ignore: cast_nullable_to_non_nullable
+as int,produitsEnStock: null == produitsEnStock ? _self.produitsEnStock : produitsEnStock // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Laboratoire].
+extension LaboratoirePatterns on Laboratoire {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Laboratoire value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Laboratoire() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Laboratoire value)  $default,){
+final _that = this;
+switch (_that) {
+case _Laboratoire():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Laboratoire value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Laboratoire() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String labo, @JsonKey(name: 'produits_actifs')  int produitsActifs, @JsonKey(name: 'produits_en_stock')  int produitsEnStock)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Laboratoire() when $default != null:
+return $default(_that.labo,_that.produitsActifs,_that.produitsEnStock);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String labo, @JsonKey(name: 'produits_actifs')  int produitsActifs, @JsonKey(name: 'produits_en_stock')  int produitsEnStock)  $default,) {final _that = this;
+switch (_that) {
+case _Laboratoire():
+return $default(_that.labo,_that.produitsActifs,_that.produitsEnStock);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String labo, @JsonKey(name: 'produits_actifs')  int produitsActifs, @JsonKey(name: 'produits_en_stock')  int produitsEnStock)?  $default,) {final _that = this;
+switch (_that) {
+case _Laboratoire() when $default != null:
+return $default(_that.labo,_that.produitsActifs,_that.produitsEnStock);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Laboratoire implements Laboratoire {
+  const _Laboratoire({required this.labo, @JsonKey(name: 'produits_actifs') this.produitsActifs = 0, @JsonKey(name: 'produits_en_stock') this.produitsEnStock = 0});
+  factory _Laboratoire.fromJson(Map<String, dynamic> json) => _$LaboratoireFromJson(json);
+
+@override final  String labo;
+@override@JsonKey(name: 'produits_actifs') final  int produitsActifs;
+@override@JsonKey(name: 'produits_en_stock') final  int produitsEnStock;
+
+/// Create a copy of Laboratoire
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LaboratoireCopyWith<_Laboratoire> get copyWith => __$LaboratoireCopyWithImpl<_Laboratoire>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LaboratoireToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Laboratoire&&(identical(other.labo, labo) || other.labo == labo)&&(identical(other.produitsActifs, produitsActifs) || other.produitsActifs == produitsActifs)&&(identical(other.produitsEnStock, produitsEnStock) || other.produitsEnStock == produitsEnStock));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,labo,produitsActifs,produitsEnStock);
+}
+
+@override
+String toString() {
+    return 'Laboratoire(labo: $labo, produitsActifs: $produitsActifs, produitsEnStock: $produitsEnStock)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LaboratoireCopyWith<$Res> implements $LaboratoireCopyWith<$Res> {
+  factory _$LaboratoireCopyWith(_Laboratoire value, $Res Function(_Laboratoire) _then) = __$LaboratoireCopyWithImpl;
+@override @useResult
+$Res call({
+ String labo,@JsonKey(name: 'produits_actifs') int produitsActifs,@JsonKey(name: 'produits_en_stock') int produitsEnStock
+});
+
+
+
+
+}
+/// @nodoc
+class __$LaboratoireCopyWithImpl<$Res>
+    implements _$LaboratoireCopyWith<$Res> {
+  __$LaboratoireCopyWithImpl(this._self, this._then);
+
+  final _Laboratoire _self;
+  final $Res Function(_Laboratoire) _then;
+
+/// Create a copy of Laboratoire
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? labo = null,Object? produitsActifs = null,Object? produitsEnStock = null,}) {
+  return _then(_Laboratoire(
+labo: null == labo ? _self.labo : labo // ignore: cast_nullable_to_non_nullable
+as String,produitsActifs: null == produitsActifs ? _self.produitsActifs : produitsActifs // ignore: cast_nullable_to_non_nullable
+as int,produitsEnStock: null == produitsEnStock ? _self.produitsEnStock : produitsEnStock // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$PageProduits {
 
  int get total; List<Produit> get items;
@@ -3362,7 +3638,8 @@ as int,
 /// @nodoc
 mixin _$FiltreProduits {
 
- String get recherche; int? get idFamille; FiltreEtat? get etat; TriProduits get tri;
+ String get recherche; int? get idFamille;/// Laboratoire, tel que rendu par `GET /stock/laboratoires`.
+ String? get labo; FiltreEtat? get etat; TriProduits get tri;
 /// Create a copy of FiltreProduits
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3374,20 +3651,20 @@ $FiltreProduitsCopyWith<FiltreProduits> get copyWith => _$FiltreProduitsCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as FiltreProduits;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FiltreProduits&&(identical(other.recherche, _this.recherche) || other.recherche == _this.recherche)&&(identical(other.idFamille, _this.idFamille) || other.idFamille == _this.idFamille)&&(identical(other.etat, _this.etat) || other.etat == _this.etat)&&(identical(other.tri, _this.tri) || other.tri == _this.tri));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FiltreProduits&&(identical(other.recherche, _this.recherche) || other.recherche == _this.recherche)&&(identical(other.idFamille, _this.idFamille) || other.idFamille == _this.idFamille)&&(identical(other.labo, _this.labo) || other.labo == _this.labo)&&(identical(other.etat, _this.etat) || other.etat == _this.etat)&&(identical(other.tri, _this.tri) || other.tri == _this.tri));
 }
 
 
 @override
 int get hashCode {
   final _this = this as FiltreProduits;
-  return Object.hash(runtimeType,_this.recherche,_this.idFamille,_this.etat,_this.tri);
+  return Object.hash(runtimeType,_this.recherche,_this.idFamille,_this.labo,_this.etat,_this.tri);
 }
 
 @override
 String toString() {
   final _this = this as FiltreProduits;
-  return 'FiltreProduits(recherche: ${_this.recherche}, idFamille: ${_this.idFamille}, etat: ${_this.etat}, tri: ${_this.tri})';
+  return 'FiltreProduits(recherche: ${_this.recherche}, idFamille: ${_this.idFamille}, labo: ${_this.labo}, etat: ${_this.etat}, tri: ${_this.tri})';
 }
 
 
@@ -3398,7 +3675,7 @@ abstract mixin class $FiltreProduitsCopyWith<$Res>  {
   factory $FiltreProduitsCopyWith(FiltreProduits value, $Res Function(FiltreProduits) _then) = _$FiltreProduitsCopyWithImpl;
 @useResult
 $Res call({
- String recherche, int? idFamille, FiltreEtat? etat, TriProduits tri
+ String recherche, int? idFamille, String? labo, FiltreEtat? etat, TriProduits tri
 });
 
 
@@ -3415,11 +3692,12 @@ class _$FiltreProduitsCopyWithImpl<$Res>
 
 /// Create a copy of FiltreProduits
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? recherche = null,Object? idFamille = freezed,Object? etat = freezed,Object? tri = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? recherche = null,Object? idFamille = freezed,Object? labo = freezed,Object? etat = freezed,Object? tri = null,}) {
   return _then(FiltreProduits(
 recherche: null == recherche ? _self.recherche : recherche // ignore: cast_nullable_to_non_nullable
 as String,idFamille: freezed == idFamille ? _self.idFamille : idFamille // ignore: cast_nullable_to_non_nullable
-as int?,etat: freezed == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
+as int?,labo: freezed == labo ? _self.labo : labo // ignore: cast_nullable_to_non_nullable
+as String?,etat: freezed == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
 as FiltreEtat?,tri: null == tri ? _self.tri : tri // ignore: cast_nullable_to_non_nullable
 as TriProduits,
   ));
@@ -3506,10 +3784,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String recherche,  int? idFamille,  FiltreEtat? etat,  TriProduits tri)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String recherche,  int? idFamille,  String? labo,  FiltreEtat? etat,  TriProduits tri)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FiltreProduits() when $default != null:
-return $default(_that.recherche,_that.idFamille,_that.etat,_that.tri);case _:
+return $default(_that.recherche,_that.idFamille,_that.labo,_that.etat,_that.tri);case _:
   return orElse();
 
 }
@@ -3527,10 +3805,10 @@ return $default(_that.recherche,_that.idFamille,_that.etat,_that.tri);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String recherche,  int? idFamille,  FiltreEtat? etat,  TriProduits tri)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String recherche,  int? idFamille,  String? labo,  FiltreEtat? etat,  TriProduits tri)  $default,) {final _that = this;
 switch (_that) {
 case _FiltreProduits():
-return $default(_that.recherche,_that.idFamille,_that.etat,_that.tri);case _:
+return $default(_that.recherche,_that.idFamille,_that.labo,_that.etat,_that.tri);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3547,10 +3825,10 @@ return $default(_that.recherche,_that.idFamille,_that.etat,_that.tri);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String recherche,  int? idFamille,  FiltreEtat? etat,  TriProduits tri)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String recherche,  int? idFamille,  String? labo,  FiltreEtat? etat,  TriProduits tri)?  $default,) {final _that = this;
 switch (_that) {
 case _FiltreProduits() when $default != null:
-return $default(_that.recherche,_that.idFamille,_that.etat,_that.tri);case _:
+return $default(_that.recherche,_that.idFamille,_that.labo,_that.etat,_that.tri);case _:
   return null;
 
 }
@@ -3562,11 +3840,13 @@ return $default(_that.recherche,_that.idFamille,_that.etat,_that.tri);case _:
 
 
 class _FiltreProduits implements FiltreProduits {
-  const _FiltreProduits({this.recherche = '', this.idFamille, this.etat, this.tri = TriProduits.nom});
+  const _FiltreProduits({this.recherche = '', this.idFamille, this.labo, this.etat, this.tri = TriProduits.nom});
   
 
 @override@JsonKey() final  String recherche;
 @override final  int? idFamille;
+/// Laboratoire, tel que rendu par `GET /stock/laboratoires`.
+@override final  String? labo;
 @override final  FiltreEtat? etat;
 @override@JsonKey() final  TriProduits tri;
 
@@ -3580,18 +3860,18 @@ _$FiltreProduitsCopyWith<_FiltreProduits> get copyWith => __$FiltreProduitsCopyW
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FiltreProduits&&(identical(other.recherche, recherche) || other.recherche == recherche)&&(identical(other.idFamille, idFamille) || other.idFamille == idFamille)&&(identical(other.etat, etat) || other.etat == etat)&&(identical(other.tri, tri) || other.tri == tri));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FiltreProduits&&(identical(other.recherche, recherche) || other.recherche == recherche)&&(identical(other.idFamille, idFamille) || other.idFamille == idFamille)&&(identical(other.labo, labo) || other.labo == labo)&&(identical(other.etat, etat) || other.etat == etat)&&(identical(other.tri, tri) || other.tri == tri));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,recherche,idFamille,etat,tri);
+    return Object.hash(runtimeType,recherche,idFamille,labo,etat,tri);
 }
 
 @override
 String toString() {
-    return 'FiltreProduits(recherche: $recherche, idFamille: $idFamille, etat: $etat, tri: $tri)';
+    return 'FiltreProduits(recherche: $recherche, idFamille: $idFamille, labo: $labo, etat: $etat, tri: $tri)';
 }
 
 
@@ -3602,7 +3882,7 @@ abstract mixin class _$FiltreProduitsCopyWith<$Res> implements $FiltreProduitsCo
   factory _$FiltreProduitsCopyWith(_FiltreProduits value, $Res Function(_FiltreProduits) _then) = __$FiltreProduitsCopyWithImpl;
 @override @useResult
 $Res call({
- String recherche, int? idFamille, FiltreEtat? etat, TriProduits tri
+ String recherche, int? idFamille, String? labo, FiltreEtat? etat, TriProduits tri
 });
 
 
@@ -3619,11 +3899,12 @@ class __$FiltreProduitsCopyWithImpl<$Res>
 
 /// Create a copy of FiltreProduits
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? recherche = null,Object? idFamille = freezed,Object? etat = freezed,Object? tri = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? recherche = null,Object? idFamille = freezed,Object? labo = freezed,Object? etat = freezed,Object? tri = null,}) {
   return _then(_FiltreProduits(
 recherche: null == recherche ? _self.recherche : recherche // ignore: cast_nullable_to_non_nullable
 as String,idFamille: freezed == idFamille ? _self.idFamille : idFamille // ignore: cast_nullable_to_non_nullable
-as int?,etat: freezed == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
+as int?,labo: freezed == labo ? _self.labo : labo // ignore: cast_nullable_to_non_nullable
+as String?,etat: freezed == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
 as FiltreEtat?,tri: null == tri ? _self.tri : tri // ignore: cast_nullable_to_non_nullable
 as TriProduits,
   ));

@@ -55,8 +55,7 @@ class CalendrierApiDio implements CalendrierApi {
   ];
 
   @override
-  Future<List<Garde>> gardes() =>
-      _appel(() => _dio.get('/calendrier/gardes'), (d) => _liste(d, Garde.fromJson));
+  Future<List<Garde>> gardes() => _appel(() => _dio.get('/calendrier/gardes'), (d) => _liste(d, Garde.fromJson));
 
   @override
   Future<Garde> enregistrerGarde(DateTime jour, TypeGarde type, {String? note}) => _appel(
@@ -97,8 +96,7 @@ class CalendrierApiDio implements CalendrierApi {
   Future<void> supprimerEvenement(int id) => _appel(() => _dio.delete('/calendrier/evenements/$id'), (_) {});
 
   @override
-  Future<List<Ferie>> feries() =>
-      _appel(() => _dio.get('/calendrier/feries'), (d) => _liste(d, Ferie.fromJson));
+  Future<List<Ferie>> feries() => _appel(() => _dio.get('/calendrier/feries'), (d) => _liste(d, Ferie.fromJson));
 
   @override
   Future<Ferie> ajouterFerie(DateTime jour, String libelle) => _appel(
