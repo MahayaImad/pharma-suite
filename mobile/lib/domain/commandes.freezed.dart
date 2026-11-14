@@ -2410,7 +2410,9 @@ as String,
 /// @nodoc
 mixin _$FournisseurReglage {
 
- int get id; String? get nom; TypeFournisseur get type; bool get actif; String? get whatsapp;@JsonKey(name: 'delai_livraison') int? get delaiLivraison;
+ int get id; String? get nom; TypeFournisseur get type; bool get actif;/// Pas encore réglé par le titulaire : actif s'il a livré ou reçu une
+/// commande dans les 30 derniers jours.
+ bool get auto; String? get whatsapp; String? get telephone;@JsonKey(name: 'derniere_commande') DateTime? get derniereCommande;@JsonKey(name: 'delai_livraison') int? get delaiLivraison;
 /// Create a copy of FournisseurReglage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2424,20 +2426,20 @@ $FournisseurReglageCopyWith<FournisseurReglage> get copyWith => _$FournisseurReg
 @override
 bool operator ==(Object other) {
   final _this = this as FournisseurReglage;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FournisseurReglage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.actif, _this.actif) || other.actif == _this.actif)&&(identical(other.whatsapp, _this.whatsapp) || other.whatsapp == _this.whatsapp)&&(identical(other.delaiLivraison, _this.delaiLivraison) || other.delaiLivraison == _this.delaiLivraison));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FournisseurReglage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.actif, _this.actif) || other.actif == _this.actif)&&(identical(other.auto, _this.auto) || other.auto == _this.auto)&&(identical(other.whatsapp, _this.whatsapp) || other.whatsapp == _this.whatsapp)&&(identical(other.telephone, _this.telephone) || other.telephone == _this.telephone)&&(identical(other.derniereCommande, _this.derniereCommande) || other.derniereCommande == _this.derniereCommande)&&(identical(other.delaiLivraison, _this.delaiLivraison) || other.delaiLivraison == _this.delaiLivraison));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as FournisseurReglage;
-  return Object.hash(runtimeType,_this.id,_this.nom,_this.type,_this.actif,_this.whatsapp,_this.delaiLivraison);
+  return Object.hash(runtimeType,_this.id,_this.nom,_this.type,_this.actif,_this.auto,_this.whatsapp,_this.telephone,_this.derniereCommande,_this.delaiLivraison);
 }
 
 @override
 String toString() {
   final _this = this as FournisseurReglage;
-  return 'FournisseurReglage(id: ${_this.id}, nom: ${_this.nom}, type: ${_this.type}, actif: ${_this.actif}, whatsapp: ${_this.whatsapp}, delaiLivraison: ${_this.delaiLivraison})';
+  return 'FournisseurReglage(id: ${_this.id}, nom: ${_this.nom}, type: ${_this.type}, actif: ${_this.actif}, auto: ${_this.auto}, whatsapp: ${_this.whatsapp}, telephone: ${_this.telephone}, derniereCommande: ${_this.derniereCommande}, delaiLivraison: ${_this.delaiLivraison})';
 }
 
 
@@ -2448,7 +2450,7 @@ abstract mixin class $FournisseurReglageCopyWith<$Res>  {
   factory $FournisseurReglageCopyWith(FournisseurReglage value, $Res Function(FournisseurReglage) _then) = _$FournisseurReglageCopyWithImpl;
 @useResult
 $Res call({
- int id, String? nom, TypeFournisseur type, bool actif, String? whatsapp,@JsonKey(name: 'delai_livraison') int? delaiLivraison
+ int id, String? nom, TypeFournisseur type, bool actif, bool auto, String? whatsapp, String? telephone,@JsonKey(name: 'derniere_commande') DateTime? derniereCommande,@JsonKey(name: 'delai_livraison') int? delaiLivraison
 });
 
 
@@ -2465,14 +2467,17 @@ class _$FournisseurReglageCopyWithImpl<$Res>
 
 /// Create a copy of FournisseurReglage
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = freezed,Object? type = null,Object? actif = null,Object? whatsapp = freezed,Object? delaiLivraison = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = freezed,Object? type = null,Object? actif = null,Object? auto = null,Object? whatsapp = freezed,Object? telephone = freezed,Object? derniereCommande = freezed,Object? delaiLivraison = freezed,}) {
   return _then(FournisseurReglage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
 as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as TypeFournisseur,actif: null == actif ? _self.actif : actif // ignore: cast_nullable_to_non_nullable
+as bool,auto: null == auto ? _self.auto : auto // ignore: cast_nullable_to_non_nullable
 as bool,whatsapp: freezed == whatsapp ? _self.whatsapp : whatsapp // ignore: cast_nullable_to_non_nullable
-as String?,delaiLivraison: freezed == delaiLivraison ? _self.delaiLivraison : delaiLivraison // ignore: cast_nullable_to_non_nullable
+as String?,telephone: freezed == telephone ? _self.telephone : telephone // ignore: cast_nullable_to_non_nullable
+as String?,derniereCommande: freezed == derniereCommande ? _self.derniereCommande : derniereCommande // ignore: cast_nullable_to_non_nullable
+as DateTime?,delaiLivraison: freezed == delaiLivraison ? _self.delaiLivraison : delaiLivraison // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
@@ -2558,10 +2563,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? nom,  TypeFournisseur type,  bool actif,  String? whatsapp, @JsonKey(name: 'delai_livraison')  int? delaiLivraison)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? nom,  TypeFournisseur type,  bool actif,  bool auto,  String? whatsapp,  String? telephone, @JsonKey(name: 'derniere_commande')  DateTime? derniereCommande, @JsonKey(name: 'delai_livraison')  int? delaiLivraison)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FournisseurReglage() when $default != null:
-return $default(_that.id,_that.nom,_that.type,_that.actif,_that.whatsapp,_that.delaiLivraison);case _:
+return $default(_that.id,_that.nom,_that.type,_that.actif,_that.auto,_that.whatsapp,_that.telephone,_that.derniereCommande,_that.delaiLivraison);case _:
   return orElse();
 
 }
@@ -2579,10 +2584,10 @@ return $default(_that.id,_that.nom,_that.type,_that.actif,_that.whatsapp,_that.d
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? nom,  TypeFournisseur type,  bool actif,  String? whatsapp, @JsonKey(name: 'delai_livraison')  int? delaiLivraison)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? nom,  TypeFournisseur type,  bool actif,  bool auto,  String? whatsapp,  String? telephone, @JsonKey(name: 'derniere_commande')  DateTime? derniereCommande, @JsonKey(name: 'delai_livraison')  int? delaiLivraison)  $default,) {final _that = this;
 switch (_that) {
 case _FournisseurReglage():
-return $default(_that.id,_that.nom,_that.type,_that.actif,_that.whatsapp,_that.delaiLivraison);case _:
+return $default(_that.id,_that.nom,_that.type,_that.actif,_that.auto,_that.whatsapp,_that.telephone,_that.derniereCommande,_that.delaiLivraison);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2599,10 +2604,10 @@ return $default(_that.id,_that.nom,_that.type,_that.actif,_that.whatsapp,_that.d
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? nom,  TypeFournisseur type,  bool actif,  String? whatsapp, @JsonKey(name: 'delai_livraison')  int? delaiLivraison)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? nom,  TypeFournisseur type,  bool actif,  bool auto,  String? whatsapp,  String? telephone, @JsonKey(name: 'derniere_commande')  DateTime? derniereCommande, @JsonKey(name: 'delai_livraison')  int? delaiLivraison)?  $default,) {final _that = this;
 switch (_that) {
 case _FournisseurReglage() when $default != null:
-return $default(_that.id,_that.nom,_that.type,_that.actif,_that.whatsapp,_that.delaiLivraison);case _:
+return $default(_that.id,_that.nom,_that.type,_that.actif,_that.auto,_that.whatsapp,_that.telephone,_that.derniereCommande,_that.delaiLivraison);case _:
   return null;
 
 }
@@ -2613,15 +2618,20 @@ return $default(_that.id,_that.nom,_that.type,_that.actif,_that.whatsapp,_that.d
 /// @nodoc
 @JsonSerializable()
 
-class _FournisseurReglage implements FournisseurReglage {
-  const _FournisseurReglage({required this.id, this.nom, this.type = TypeFournisseur.pharma, this.actif = true, this.whatsapp, @JsonKey(name: 'delai_livraison') this.delaiLivraison});
+class _FournisseurReglage extends FournisseurReglage {
+  const _FournisseurReglage({required this.id, this.nom, this.type = TypeFournisseur.pharma, this.actif = true, this.auto = true, this.whatsapp, this.telephone, @JsonKey(name: 'derniere_commande') this.derniereCommande, @JsonKey(name: 'delai_livraison') this.delaiLivraison}): super._();
   factory _FournisseurReglage.fromJson(Map<String, dynamic> json) => _$FournisseurReglageFromJson(json);
 
 @override final  int id;
 @override final  String? nom;
 @override@JsonKey() final  TypeFournisseur type;
 @override@JsonKey() final  bool actif;
+/// Pas encore réglé par le titulaire : actif s'il a livré ou reçu une
+/// commande dans les 30 derniers jours.
+@override@JsonKey() final  bool auto;
 @override final  String? whatsapp;
+@override final  String? telephone;
+@override@JsonKey(name: 'derniere_commande') final  DateTime? derniereCommande;
 @override@JsonKey(name: 'delai_livraison') final  int? delaiLivraison;
 
 /// Create a copy of FournisseurReglage
@@ -2637,18 +2647,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FournisseurReglage&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.type, type) || other.type == type)&&(identical(other.actif, actif) || other.actif == actif)&&(identical(other.whatsapp, whatsapp) || other.whatsapp == whatsapp)&&(identical(other.delaiLivraison, delaiLivraison) || other.delaiLivraison == delaiLivraison));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FournisseurReglage&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.type, type) || other.type == type)&&(identical(other.actif, actif) || other.actif == actif)&&(identical(other.auto, auto) || other.auto == auto)&&(identical(other.whatsapp, whatsapp) || other.whatsapp == whatsapp)&&(identical(other.telephone, telephone) || other.telephone == telephone)&&(identical(other.derniereCommande, derniereCommande) || other.derniereCommande == derniereCommande)&&(identical(other.delaiLivraison, delaiLivraison) || other.delaiLivraison == delaiLivraison));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,nom,type,actif,whatsapp,delaiLivraison);
+    return Object.hash(runtimeType,id,nom,type,actif,auto,whatsapp,telephone,derniereCommande,delaiLivraison);
 }
 
 @override
 String toString() {
-    return 'FournisseurReglage(id: $id, nom: $nom, type: $type, actif: $actif, whatsapp: $whatsapp, delaiLivraison: $delaiLivraison)';
+    return 'FournisseurReglage(id: $id, nom: $nom, type: $type, actif: $actif, auto: $auto, whatsapp: $whatsapp, telephone: $telephone, derniereCommande: $derniereCommande, delaiLivraison: $delaiLivraison)';
 }
 
 
@@ -2659,7 +2669,7 @@ abstract mixin class _$FournisseurReglageCopyWith<$Res> implements $FournisseurR
   factory _$FournisseurReglageCopyWith(_FournisseurReglage value, $Res Function(_FournisseurReglage) _then) = __$FournisseurReglageCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String? nom, TypeFournisseur type, bool actif, String? whatsapp,@JsonKey(name: 'delai_livraison') int? delaiLivraison
+ int id, String? nom, TypeFournisseur type, bool actif, bool auto, String? whatsapp, String? telephone,@JsonKey(name: 'derniere_commande') DateTime? derniereCommande,@JsonKey(name: 'delai_livraison') int? delaiLivraison
 });
 
 
@@ -2676,15 +2686,300 @@ class __$FournisseurReglageCopyWithImpl<$Res>
 
 /// Create a copy of FournisseurReglage
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = freezed,Object? type = null,Object? actif = null,Object? whatsapp = freezed,Object? delaiLivraison = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = freezed,Object? type = null,Object? actif = null,Object? auto = null,Object? whatsapp = freezed,Object? telephone = freezed,Object? derniereCommande = freezed,Object? delaiLivraison = freezed,}) {
   return _then(_FournisseurReglage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
 as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as TypeFournisseur,actif: null == actif ? _self.actif : actif // ignore: cast_nullable_to_non_nullable
+as bool,auto: null == auto ? _self.auto : auto // ignore: cast_nullable_to_non_nullable
 as bool,whatsapp: freezed == whatsapp ? _self.whatsapp : whatsapp // ignore: cast_nullable_to_non_nullable
-as String?,delaiLivraison: freezed == delaiLivraison ? _self.delaiLivraison : delaiLivraison // ignore: cast_nullable_to_non_nullable
+as String?,telephone: freezed == telephone ? _self.telephone : telephone // ignore: cast_nullable_to_non_nullable
+as String?,derniereCommande: freezed == derniereCommande ? _self.derniereCommande : derniereCommande // ignore: cast_nullable_to_non_nullable
+as DateTime?,delaiLivraison: freezed == delaiLivraison ? _self.delaiLivraison : delaiLivraison // ignore: cast_nullable_to_non_nullable
 as int?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$Compte {
+
+ String get username; String get role; String? get nom; String? get prenom;@JsonKey(name: 'is_active') bool get actif;
+/// Create a copy of Compte
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CompteCopyWith<Compte> get copyWith => _$CompteCopyWithImpl<Compte>(this as Compte, _$identity);
+
+  /// Serializes this Compte to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Compte;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Compte&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.prenom, _this.prenom) || other.prenom == _this.prenom)&&(identical(other.actif, _this.actif) || other.actif == _this.actif));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Compte;
+  return Object.hash(runtimeType,_this.username,_this.role,_this.nom,_this.prenom,_this.actif);
+}
+
+@override
+String toString() {
+  final _this = this as Compte;
+  return 'Compte(username: ${_this.username}, role: ${_this.role}, nom: ${_this.nom}, prenom: ${_this.prenom}, actif: ${_this.actif})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CompteCopyWith<$Res>  {
+  factory $CompteCopyWith(Compte value, $Res Function(Compte) _then) = _$CompteCopyWithImpl;
+@useResult
+$Res call({
+ String username, String role, String? nom, String? prenom,@JsonKey(name: 'is_active') bool actif
+});
+
+
+
+
+}
+/// @nodoc
+class _$CompteCopyWithImpl<$Res>
+    implements $CompteCopyWith<$Res> {
+  _$CompteCopyWithImpl(this._self, this._then);
+
+  final Compte _self;
+  final $Res Function(Compte) _then;
+
+/// Create a copy of Compte
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? username = null,Object? role = null,Object? nom = freezed,Object? prenom = freezed,Object? actif = null,}) {
+  return _then(Compte(
+username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as String,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,prenom: freezed == prenom ? _self.prenom : prenom // ignore: cast_nullable_to_non_nullable
+as String?,actif: null == actif ? _self.actif : actif // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Compte].
+extension ComptePatterns on Compte {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Compte value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Compte() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Compte value)  $default,){
+final _that = this;
+switch (_that) {
+case _Compte():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Compte value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Compte() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String username,  String role,  String? nom,  String? prenom, @JsonKey(name: 'is_active')  bool actif)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Compte() when $default != null:
+return $default(_that.username,_that.role,_that.nom,_that.prenom,_that.actif);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String username,  String role,  String? nom,  String? prenom, @JsonKey(name: 'is_active')  bool actif)  $default,) {final _that = this;
+switch (_that) {
+case _Compte():
+return $default(_that.username,_that.role,_that.nom,_that.prenom,_that.actif);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String username,  String role,  String? nom,  String? prenom, @JsonKey(name: 'is_active')  bool actif)?  $default,) {final _that = this;
+switch (_that) {
+case _Compte() when $default != null:
+return $default(_that.username,_that.role,_that.nom,_that.prenom,_that.actif);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Compte extends Compte {
+  const _Compte({required this.username, this.role = 'employee', this.nom, this.prenom, @JsonKey(name: 'is_active') this.actif = true}): super._();
+  factory _Compte.fromJson(Map<String, dynamic> json) => _$CompteFromJson(json);
+
+@override final  String username;
+@override@JsonKey() final  String role;
+@override final  String? nom;
+@override final  String? prenom;
+@override@JsonKey(name: 'is_active') final  bool actif;
+
+/// Create a copy of Compte
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CompteCopyWith<_Compte> get copyWith => __$CompteCopyWithImpl<_Compte>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CompteToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Compte&&(identical(other.username, username) || other.username == username)&&(identical(other.role, role) || other.role == role)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.prenom, prenom) || other.prenom == prenom)&&(identical(other.actif, actif) || other.actif == actif));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,username,role,nom,prenom,actif);
+}
+
+@override
+String toString() {
+    return 'Compte(username: $username, role: $role, nom: $nom, prenom: $prenom, actif: $actif)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CompteCopyWith<$Res> implements $CompteCopyWith<$Res> {
+  factory _$CompteCopyWith(_Compte value, $Res Function(_Compte) _then) = __$CompteCopyWithImpl;
+@override @useResult
+$Res call({
+ String username, String role, String? nom, String? prenom,@JsonKey(name: 'is_active') bool actif
+});
+
+
+
+
+}
+/// @nodoc
+class __$CompteCopyWithImpl<$Res>
+    implements _$CompteCopyWith<$Res> {
+  __$CompteCopyWithImpl(this._self, this._then);
+
+  final _Compte _self;
+  final $Res Function(_Compte) _then;
+
+/// Create a copy of Compte
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? username = null,Object? role = null,Object? nom = freezed,Object? prenom = freezed,Object? actif = null,}) {
+  return _then(_Compte(
+username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as String,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,prenom: freezed == prenom ? _self.prenom : prenom // ignore: cast_nullable_to_non_nullable
+as String?,actif: null == actif ? _self.actif : actif // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

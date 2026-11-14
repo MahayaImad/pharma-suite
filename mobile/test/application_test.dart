@@ -75,9 +75,7 @@ void main() {
     expect(find.text('Thème'), findsNothing);
   });
 
-  testWidgets('sur portable : préférences ouvertes par leur adresse, le retour mène au stock', (
-    tester,
-  ) async {
+  testWidgets('sur portable : préférences ouvertes par leur adresse, le retour mène au stock', (tester) async {
     await _lancer(tester, taille: _portable, depart: '/preferences');
     await tester.tap(find.byTooltip('Retour'));
     await tester.pumpAndSettle();

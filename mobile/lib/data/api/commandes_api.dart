@@ -28,6 +28,9 @@ abstract interface class CommandesApi {
   Future<List<String>> valideurs();
   Future<void> ajouterValideur(String username);
   Future<void> retirerValideur(String username);
+
+  /// Comptes de l'application (titulaire seulement).
+  Future<List<Compte>> comptes();
 }
 
 class CommandesApiDio implements CommandesApi {
@@ -106,6 +109,16 @@ class CommandesApiDio implements CommandesApi {
   @override
   Future<void> retirerValideur(String username) =>
       _appel(() => _dio.delete('/commandes/reglages/valideurs/${Uri.encodeComponent(username)}'), (_) {});
+
+  @override
+  Future<List<Compte>> comptes() async {
+    try {
+      final r = await _dio.get<List<dynamic>>('/auth/users');
+      return [for (final x in r.data!) Compte.fromJson(x as Map<String, dynamic>)];
+    } catch (e) {
+      throw ErreurApi.depuis(e);
+    }
+  }
 }
 
 final commandesApiProvider = Provider<CommandesApi>((ref) => CommandesApiDio(ref.watch(dioProvider)));

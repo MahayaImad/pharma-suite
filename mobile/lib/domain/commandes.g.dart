@@ -216,7 +216,12 @@ _FournisseurReglage _$FournisseurReglageFromJson(Map<String, dynamic> json) =>
           $enumDecodeNullable(_$TypeFournisseurEnumMap, json['type']) ??
           TypeFournisseur.pharma,
       actif: json['actif'] as bool? ?? true,
+      auto: json['auto'] as bool? ?? true,
       whatsapp: json['whatsapp'] as String?,
+      telephone: json['telephone'] as String?,
+      derniereCommande: json['derniere_commande'] == null
+          ? null
+          : DateTime.parse(json['derniere_commande'] as String),
       delaiLivraison: (json['delai_livraison'] as num?)?.toInt(),
     );
 
@@ -226,6 +231,25 @@ Map<String, dynamic> _$FournisseurReglageToJson(_FournisseurReglage instance) =>
       'nom': instance.nom,
       'type': _$TypeFournisseurEnumMap[instance.type]!,
       'actif': instance.actif,
+      'auto': instance.auto,
       'whatsapp': instance.whatsapp,
+      'telephone': instance.telephone,
+      'derniere_commande': instance.derniereCommande?.toIso8601String(),
       'delai_livraison': instance.delaiLivraison,
     };
+
+_Compte _$CompteFromJson(Map<String, dynamic> json) => _Compte(
+  username: json['username'] as String,
+  role: json['role'] as String? ?? 'employee',
+  nom: json['nom'] as String?,
+  prenom: json['prenom'] as String?,
+  actif: json['is_active'] as bool? ?? true,
+);
+
+Map<String, dynamic> _$CompteToJson(_Compte instance) => <String, dynamic>{
+  'username': instance.username,
+  'role': instance.role,
+  'nom': instance.nom,
+  'prenom': instance.prenom,
+  'is_active': instance.actif,
+};

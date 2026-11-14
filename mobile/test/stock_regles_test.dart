@@ -76,10 +76,7 @@ void main() {
       const Produit(id: 1, nom: 'DOLIPRANE', dosage: '1000 MG', formeAbr: 'CPR').designation,
       'DOLIPRANE 1000 MG CPR',
     );
-    expect(
-      const Produit(id: 1, nom: 'DOLIPRANE 1000 MG', dosage: '1000 MG').designation,
-      'DOLIPRANE 1000 MG',
-    );
+    expect(const Produit(id: 1, nom: 'DOLIPRANE 1000 MG', dosage: '1000 MG').designation, 'DOLIPRANE 1000 MG');
   });
 
   test('lecture JSON de l\'API', () {

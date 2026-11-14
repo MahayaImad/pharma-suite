@@ -6,6 +6,8 @@ import 'package:pharmasuite/core/router/routeur.dart';
 import 'package:pharmasuite/data/api/commandes_api.dart';
 import 'package:pharmasuite/domain/commandes.dart';
 import 'package:pharmasuite/domain/format.dart';
+import 'package:pharmasuite/domain/session.dart';
+import 'package:pharmasuite/features/connexion/application/session_controller.dart';
 import 'package:pharmasuite/features/commandes/presentation/panier.dart';
 import 'package:pharmasuite/features/preferences/application/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +23,7 @@ Future<void> _lancer(
   FausseCommandesApi api, {
   Size taille = _portable,
   String depart = '/commandes',
+  String? role,
 }) async {
   tester.view.physicalSize = taille;
   tester.view.devicePixelRatio = 1;
@@ -37,6 +40,13 @@ Future<void> _lancer(
           return true;
         }),
         routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
+        if (role != null)
+          sessionProvider.overrideWithBuild(
+            (ref, _) => Session(
+              jeton: 'j',
+              profil: Profil(utilisateur: 'u', role: role),
+            ),
+          ),
       ],
       child: const PharmaSuite(),
     ),
@@ -177,5 +187,51 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('bouton-reessayer')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('carte-fournisseur-1')), findsOneWidget);
+  });
+
+  testWidgets('fournisseurs : actifs par défaut, inactifs à part, réglage et valideurs (titulaire)', (tester) async {
+    final api = FausseCommandesApi();
+    await _lancer(tester, api, depart: '/preferences/fournisseurs', role: 'admin');
+    expect(tester.takeException(), isNull);
+    expect(find.text('Actifs (2)'), findsOneWidget);
+    expect(find.byKey(const ValueKey('fournisseur-3')), findsNothing);
+    expect(find.text('Réglage automatique'), findsOneWidget); // PARA BELLA
+    await tester.tap(find.byKey(const ValueKey('filtre-inactifs')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('fournisseur-3')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('actif-3')));
+    await tester.pumpAndSettle();
+    expect(api.appels.last, 'regler 3 pharma true null');
+
+    await tester.tap(find.byKey(const ValueKey('filtre-tous')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('fournisseur-2')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('numero-whatsapp')), '0661 22 33 44');
+    await tester.tap(find.text('Enregistrer'));
+    await tester.pumpAndSettle();
+    expect(api.appels.last, 'regler 2 para true 0661 22 33 44');
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('ajouter-valideur')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const ValueKey('valideur-karim')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('ajouter-valideur')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('ajouter-valideur')), warnIfMissed: true);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('compte-titulaire')), findsNothing); // déjà valideur de droit
+    expect(find.byKey(const ValueKey('compte-karim')), findsNothing); // déjà désigné
+    await tester.tap(find.byKey(const ValueKey('compte-sara')));
+    await tester.pumpAndSettle();
+    expect(api.listeValideurs, ['karim', 'sara']);
+  });
+
+  testWidgets('fournisseurs : un employé voit sans pouvoir modifier', (tester) async {
+    await _lancer(tester, FausseCommandesApi(), depart: '/preferences/fournisseurs', role: 'employee');
+    expect(tester.widget<Switch>(find.byKey(const ValueKey('actif-1'))).onChanged, isNull);
+    expect(find.byKey(const ValueKey('ajouter-valideur')), findsNothing);
   });
 }

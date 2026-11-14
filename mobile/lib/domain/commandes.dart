@@ -277,14 +277,45 @@ String? numeroWhatsapp(String? brut) {
 
 @freezed
 abstract class FournisseurReglage with _$FournisseurReglage {
+  const FournisseurReglage._();
+
   const factory FournisseurReglage({
     required int id,
     String? nom,
     @Default(TypeFournisseur.pharma) TypeFournisseur type,
     @Default(true) bool actif,
+
+    /// Pas encore réglé par le titulaire : actif s'il a livré ou reçu une
+    /// commande dans les 30 derniers jours.
+    @Default(true) bool auto,
     String? whatsapp,
+    String? telephone,
+    @JsonKey(name: 'derniere_commande') DateTime? derniereCommande,
     @JsonKey(name: 'delai_livraison') int? delaiLivraison,
   }) = _FournisseurReglage;
 
   factory FournisseurReglage.fromJson(Map<String, dynamic> json) => _$FournisseurReglageFromJson(json);
+
+  FournisseurPanier get commePanier => FournisseurPanier(id: id, nom: nom, type: type, whatsapp: whatsapp);
+}
+
+/// Compte de l'application (`GET /auth/users`), pour désigner les valideurs.
+@freezed
+abstract class Compte with _$Compte {
+  const Compte._();
+
+  const factory Compte({
+    required String username,
+    @Default('employee') String role,
+    String? nom,
+    String? prenom,
+    @JsonKey(name: 'is_active') @Default(true) bool actif,
+  }) = _Compte;
+
+  factory Compte.fromJson(Map<String, dynamic> json) => _$CompteFromJson(json);
+
+  String get libelle {
+    final complet = [prenom, nom].whereType<String>().where((x) => x.trim().isNotEmpty).join(' ');
+    return complet.isEmpty ? username : '$complet ($username)';
+  }
 }

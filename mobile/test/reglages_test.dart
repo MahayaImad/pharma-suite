@@ -250,9 +250,7 @@ void main() {
     expect(find.byKey(const ValueKey('garde-2026-10-28')), findsOneWidget);
   });
 
-  testWidgets('préférences : thème, réglages, consommables, déconnexion — plus d\'aperçu ni de compte', (
-    tester,
-  ) async {
+  testWidgets('préférences : thème, réglages, consommables, déconnexion — plus d\'aperçu ni de compte', (tester) async {
     await _lancer(tester, ouvrirReglages: false);
     expect(find.text('Aperçu'), findsNothing);
     expect(find.text('Compte'), findsNothing);

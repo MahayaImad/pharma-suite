@@ -73,3 +73,8 @@ final valideursProvider = FutureProvider<List<String>>(
   (ref) => ref.watch(commandesApiProvider).valideurs(),
   retry: (_, _) => null,
 );
+
+final comptesProvider = FutureProvider<List<Compte>>(
+  (ref) => ref.watch(commandesApiProvider).comptes(),
+  retry: (_, _) => null,
+);

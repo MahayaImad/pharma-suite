@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/themes.dart';
 import '../../../core/widgets/coquille.dart';
 import '../../connexion/application/session_controller.dart';
+import '../../commandes/presentation/ecran_fournisseurs.dart';
 import '../../reglages/presentation/ecran_consommables.dart';
 import '../../reglages/presentation/ecran_reglages.dart';
 import '../application/theme_controller.dart';
@@ -40,15 +41,9 @@ class EcranPreferences extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Thème',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                  ),
+                  Text('Thème', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 2),
-                  Text(
-                    'Le choix est enregistré sur cet appareil.',
-                    style: TextStyle(color: context.couleurs.encre2),
-                  ),
+                  Text('Le choix est enregistré sur cet appareil.', style: TextStyle(color: context.couleurs.encre2)),
                   const SizedBox(height: 14),
                   Wrap(
                     spacing: 12,
@@ -71,6 +66,8 @@ class EcranPreferences extends ConsumerWidget {
                   const EntreeReglages(),
                   const SizedBox(height: 10),
                   const EntreeConsommables(),
+                  const SizedBox(height: 10),
+                  const EntreeFournisseurs(),
                   const SizedBox(height: 28),
                   // Seul accès à la déconnexion sur portable (le menu latéral est sur PC).
                   Align(

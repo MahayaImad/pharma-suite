@@ -87,10 +87,7 @@ void main() {
 
     expect(find.text(EchecConnexion.identifiants.message), findsOneWidget);
     final champ = tester.widget<EditableText>(
-      find.descendant(
-        of: find.byKey(const ValueKey('champ-mot-de-passe')),
-        matching: find.byType(EditableText),
-      ),
+      find.descendant(of: find.byKey(const ValueKey('champ-mot-de-passe')), matching: find.byType(EditableText)),
     );
     expect(champ.controller.text, isEmpty);
     expect(find.text('Connexion'), findsOneWidget);
@@ -127,11 +124,7 @@ void main() {
       jeton: 'j',
       profil: Profil(utilisateur: 'sara'),
     );
-    final prefs = await _lancer(
-      tester,
-      api: FausseAuthApi(),
-      preferences: {cleSession: jsonEncode(session.toJson())},
-    );
+    final prefs = await _lancer(tester, api: FausseAuthApi(), preferences: {cleSession: jsonEncode(session.toJson())});
     await tester.tap(find.byTooltip('Se déconnecter'));
     await tester.pumpAndSettle();
     expect(find.text('Connexion'), findsOneWidget);

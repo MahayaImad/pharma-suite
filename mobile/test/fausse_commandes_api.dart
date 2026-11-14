@@ -189,18 +189,46 @@ class FausseCommandesApi implements CommandesApi {
     );
   }
 
-  @override
-  Future<List<FournisseurReglage>> fournisseurs() async => const [];
+  List<FournisseurReglage> reglages = [
+    FournisseurReglage(
+      id: 1,
+      nom: 'GROSSISTE ATLAS',
+      auto: false,
+      whatsapp: '0550123456',
+      derniereCommande: DateTime.now(),
+    ),
+    const FournisseurReglage(id: 2, nom: 'PARA BELLA', type: TypeFournisseur.para),
+    FournisseurReglage(id: 3, nom: 'ANCIEN GROSSISTE', actif: false, derniereCommande: DateTime(2025, 3, 2)),
+  ];
+  List<String> listeValideurs = ['karim'];
 
   @override
-  Future<void> reglerFournisseur(int id, TypeFournisseur type, bool actif, String? whatsapp) async {}
+  Future<List<FournisseurReglage>> fournisseurs() async => reglages;
 
   @override
-  Future<List<String>> valideurs() async => const [];
+  Future<void> reglerFournisseur(int id, TypeFournisseur type, bool actif, String? whatsapp) async {
+    appels.add('regler $id ${type.api} $actif $whatsapp');
+    reglages = [
+      for (final f in reglages) f.id == id ? f.copyWith(type: type, actif: actif, whatsapp: whatsapp, auto: false) : f,
+    ];
+  }
 
   @override
-  Future<void> ajouterValideur(String username) async {}
+  Future<List<String>> valideurs() async => listeValideurs;
 
   @override
-  Future<void> retirerValideur(String username) async {}
+  Future<void> ajouterValideur(String username) async => listeValideurs = [...listeValideurs, username];
+
+  @override
+  Future<void> retirerValideur(String username) async => listeValideurs = [
+    for (final u in listeValideurs)
+      if (u != username) u,
+  ];
+
+  @override
+  Future<List<Compte>> comptes() async => const [
+    Compte(username: 'titulaire', role: 'admin'),
+    Compte(username: 'karim'),
+    Compte(username: 'sara', prenom: 'Sara', nom: 'B.'),
+  ];
 }
