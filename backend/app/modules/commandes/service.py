@@ -135,7 +135,7 @@ class CommandesService:
             "peut_valider": await self.peut_valider(), "ferme": jour.weekday() == VENDREDI,
             "paniers": [], "psychotropes": [], "sans_fournisseur": [],
         }
-        fournisseurs = await self.repo.fournisseurs()
+        fournisseurs = await self.repo.fournisseurs(jour)
         commandes = {c["id_fournisseur"]: c for c in await self.repo.commandes_du_jour(jour)}
         lignes_enregistrees: dict[int, list[dict]] = {}
         if commandes:
@@ -182,7 +182,7 @@ class CommandesService:
             lignes.sort(key=_ordre)
             vue["paniers"].append({
                 "fournisseur": {"id": id_f, "nom": f.get("nom"), "type": f.get("type", "pharma"),
-                                "whatsapp": f.get("whatsapp")},
+                                "whatsapp": f.get("whatsapp") or f.get("mobile")},
                 "commande": c, "livraison_prevue": c["livraison_prevue"] if c else self._livraison(jour, f),
                 "lignes": lignes, **_total(lignes),
             })
@@ -274,7 +274,7 @@ class CommandesService:
         c = await self._commande(id_commande, ("brouillon", "validee", "envoyee"))
         lignes = await self.repo.lignes([id_commande])
         infos = await self.repo.produits([l["id_nom"] for l in lignes]) if lignes else {}
-        f = (await self.repo.fournisseurs()).get(c["id_fournisseur"], {})
+        f = (await self.repo.fournisseurs(aujourdhui())).get(c["id_fournisseur"], {})
         noms = sorted(((infos.get(l["id_nom"], {}).get("nom") or f"Produit {l['id_nom']}"), l["qte"]) for l in lignes)
         j = c["jour"]
         texte = "\n".join(
@@ -286,15 +286,20 @@ class CommandesService:
 
     # ── Réglages ──
     async def fournisseurs(self) -> list[dict]:
-        """Fournisseurs réglés ou livrés : type, actif, WhatsApp."""
-        return [{"id": f["id"], "nom": f["nom"], "type": f["type"], "actif": f["actif"],
-                 "whatsapp": f["whatsapp"] or f["mobile"], "delai_livraison": f["delai_livraison"]}
-                for f in (await self.repo.fournisseurs()).values() if f["regle"]]
+        """Tous les fournisseurs : actifs d'abord. `auto` : pas encore réglé
+        par le titulaire (actif s'il a livré dans les 30 derniers jours)."""
+        tous = (await self.repo.fournisseurs(aujourdhui())).values()
+        return sorted(
+            ({"id": f["id"], "nom": f["nom"], "type": f["type"], "actif": f["actif"], "auto": not f["regle"],
+              "whatsapp": f["whatsapp"] or f["mobile"], "telephone": f["telephone"],
+              "derniere_commande": f["derniere_commande"], "delai_livraison": f["delai_livraison"]}
+             for f in tous),
+            key=lambda f: (not f["actif"], (f["nom"] or "").lower()))
 
     async def regler_fournisseur(self, id_fournisseur: int, type_: str, actif: bool,
                                  whatsapp: Optional[str]) -> None:
         qui = self._admin()
-        if id_fournisseur not in await self.repo.fournisseurs():
+        if id_fournisseur not in await self.repo.fournisseurs(aujourdhui()):
             raise ErreurCommandes("introuvable", "Fournisseur inconnu.", 404)
         await self.repo.regler_fournisseur(id_fournisseur, type_, actif, whatsapp, qui)
         await self.repo.commit()

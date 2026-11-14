@@ -45,16 +45,47 @@ class CommandesRepository:
         """), {"ids": ids})
         return {x.id: dict(x._mapping) for x in r}
 
-    async def fournisseurs(self) -> dict[int, dict]:
-        """Fournisseurs connus, avec leur réglage de commande s'il existe."""
-        r = await self.db.execute(text("""
+    async def fournisseurs(self, jour: date) -> dict[int, dict]:
+        """Tous les fournisseurs, avec leur réglage de commande.
+
+        Sans réglage du titulaire (`modifie_par` vide), un fournisseur est
+        **actif** s'il a livré (hors avoirs et échanges) ou reçu une commande
+        PharmaSuite dans les 30 derniers jours ; son type est deviné d'après
+        les produits reçus (pharmaceutique si la majorité ont une DCI ou un
+        code CNAS)."""
+        r = await self.db.execute(text(f"""
+            WITH livraisons AS (
+                SELECT ep.id_fournisseur, max(ep.date_entree) AS derniere,
+                       avg(CASE WHEN COALESCE(n.id_cnas, 0) > 0 OR NULLIF(trim(n.dci), '') IS NOT NULL
+                                THEN 1.0 ELSE 0.0 END) AS part_pharma
+                FROM entrees_produits ep LEFT JOIN nomenclature n ON n.id = ep.id_nom
+                WHERE ep.id_fournisseur IS NOT NULL AND {_EXCLUS_ACHAT}
+                GROUP BY ep.id_fournisseur
+            ), commandees AS (
+                SELECT id_fournisseur, max(jour) AS derniere FROM commandes
+                WHERE statut IN ('validee', 'envoyee') GROUP BY id_fournisseur
+            )
             SELECT f.id, f.fournisseur AS nom, f.telephone, f.mobile, f.delai_livraison,
-                   COALESCE(fc.type, 'pharma') AS type, COALESCE(fc.actif, false) AS actif,
-                   fc.whatsapp, fc.id_fournisseur IS NOT NULL AS regle
-            FROM fournisseurs f LEFT JOIN fournisseurs_commande fc ON fc.id_fournisseur = f.id
+                   NULLIF(GREATEST(COALESCE(l.derniere, DATE '1900-01-01'),
+                                   COALESCE(c.derniere, DATE '1900-01-01')), DATE '1900-01-01') AS derniere_commande,
+                   fc.modifie_par IS NOT NULL AS regle,
+                   CASE WHEN fc.modifie_par IS NOT NULL THEN fc.type
+                        WHEN COALESCE(l.part_pharma, 1) >= 0.5 THEN 'pharma' ELSE 'para' END AS type,
+                   CASE WHEN fc.modifie_par IS NOT NULL THEN fc.actif
+                        ELSE GREATEST(l.derniere, c.derniere) >= CAST(:jour AS date) - 30 END AS actif,
+                   fc.whatsapp
+            FROM fournisseurs f
+            LEFT JOIN fournisseurs_commande fc ON fc.id_fournisseur = f.id
+            LEFT JOIN livraisons l ON l.id_fournisseur = f.id
+            LEFT JOIN commandees c ON c.id_fournisseur = f.id
             ORDER BY f.fournisseur
-        """))
-        return {x.id: dict(x._mapping) for x in r}
+        """), {"jour": jour})
+        resultat = {}
+        for x in r:
+            d = dict(x._mapping)
+            d["actif"] = bool(d["actif"])
+            resultat[x.id] = d
+        return resultat
 
     async def regler_fournisseur(self, id_fournisseur: int, type_: str, actif: bool,
                                  whatsapp: Optional[str], qui: str) -> None:

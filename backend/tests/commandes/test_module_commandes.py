@@ -51,8 +51,8 @@ async def api(monkeypatch):
         for i, nom in ((1, "GROSSISTE A"), (2, "PARA B"), (3, "ANCIEN C")):
             await db.execute(text("INSERT INTO fournisseurs (id, fournisseur, mobile, delai_livraison) "
                                   "VALUES (:i, :n, '0550000000', 1)"), {"i": i, "n": nom})
-        await db.execute(text("INSERT INTO fournisseurs_commande (id_fournisseur, type, whatsapp) "
-                              "VALUES (1, 'pharma', '213550111111'), (2, 'para', NULL)"))
+        await db.execute(text("INSERT INTO fournisseurs_commande (id_fournisseur, type, whatsapp, modifie_par) "
+                              "VALUES (1, 'pharma', '213550111111', 'titulaire'), (2, 'para', NULL, 'titulaire')"))
         produits = [  # id, nom, psychotrope, fournisseur, stock, vente par jour ouvert
             (1, "ALPHA", 0, 1, 2, 4), (2, "BETA", 1, 1, 0, 1), (3, "GAMMA", 0, 2, 0, 2),
             (4, "DELTA", 0, 3, 0, 1), (5, "EPSILON", 0, 1, 100, 1)]
@@ -187,8 +187,22 @@ async def test_reglage_fournisseur_reserve_au_titulaire(api):
     service.vider_cache()
     vue = await _jour(api)
     assert vue["sans_fournisseur"] == [] and "ANCIEN C" in [p["fournisseur"]["nom"] for p in vue["paniers"]]
-    noms = [f["nom"] for f in (await api.get("/commandes/reglages/fournisseurs")).json()["data"]]
-    assert noms == ["ANCIEN C", "GROSSISTE A", "PARA B"]
+    fs = (await api.get("/commandes/reglages/fournisseurs")).json()["data"]
+    assert [(f["nom"], f["actif"], f["auto"]) for f in fs] == [
+        ("ANCIEN C", True, False), ("GROSSISTE A", True, False), ("PARA B", True, False)]
+
+
+async def test_fournisseur_sans_commande_depuis_30_jours_inactif_par_defaut(api):
+    fs = {f["nom"]: f for f in (await api.get("/commandes/reglages/fournisseurs")).json()["data"]}
+    assert (fs["ANCIEN C"]["actif"], fs["ANCIEN C"]["auto"]) == (False, True)   # dernière livraison il y a 400 j
+    assert fs["ANCIEN C"]["whatsapp"] == "0550000000"                            # mobile EASYPHARM par défaut
+    assert list(fs)[-1] == "ANCIEN C"                                            # inactifs en dernier
+    await api.db.execute(text(
+        "INSERT INTO entrees_produits (id, id_nom, id_fournisseur, date_entree, stock, qte_entree, prix_achat) "
+        "VALUES (98, 4, 3, '2026-11-01', 0, 5, 100)"))   # livré il y a 11 jours
+    await api.db.commit()
+    fs = {f["nom"]: f for f in (await api.get("/commandes/reglages/fournisseurs")).json()["data"]}
+    assert (fs["ANCIEN C"]["actif"], fs["ANCIEN C"]["auto"]) == (True, True)
 
 
 async def test_le_vendredi_on_prepare_la_commande_du_samedi(api, monkeypatch):
