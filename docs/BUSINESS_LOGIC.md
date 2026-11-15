@@ -404,6 +404,21 @@ de la vue, et rendue par `GET /stock/resume` (`donnees_du`, UTC).
   reste = budget − achats reçus ce mois (EASYPHARM, hors avoirs et échanges)
   − commandes engagées pas encore livrées.
 - **Bon** : texte prêt pour WhatsApp, produit et boîtes, sans prix.
+- **Fournisseurs actifs** : sans réglage du titulaire, un fournisseur est actif
+  s'il a livré (hors avoirs et échanges) ou reçu une commande PharmaSuite dans
+  les 30 derniers jours. Tous sont listés dans Préférences › Fournisseurs.
+- **Génériques** (arrêté le 2026-11-15) : les produits de même code DCI
+  (`nomenclature.de_equiv`, dosage et forme compris) sont interchangeables.
+  Les 3 premiers caractères du code donnent la classe thérapeutique (« 14A »
+  antidiabétiques, « 06M » hypolipémiants). Une classe présente dans
+  `classe_maladie` (maladies chroniques CNAS) garde **toutes** ses marques :
+  chaque patient est habitué à la sienne. Sinon (AINS…), seules les marques
+  les plus vendues sur 12 mois **parmi les disponibles** (en stock ou vendues
+  dans les 60 derniers jours) sont commandées (`generiques_gardes`, 2) ; les
+  autres s'écoulent, puis leur demande passe aux gardées au prorata. Le
+  titulaire force un groupe (toutes / quelques) ou une marque (garder /
+  exclure) depuis la fiche produit. La case EASYPHARM « désactiver l'alerte
+  rupture » n'est pas utilisée.
 
 ---
 

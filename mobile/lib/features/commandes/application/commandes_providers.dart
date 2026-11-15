@@ -78,3 +78,8 @@ final comptesProvider = FutureProvider<List<Compte>>(
   (ref) => ref.watch(commandesApiProvider).comptes(),
   retry: (_, _) => null,
 );
+
+final generiquesProvider = FutureProvider.family<GroupeGenerique, int>(
+  (ref, id) => ref.watch(commandesApiProvider).generiques(id),
+  retry: (_, _) => null,
+);

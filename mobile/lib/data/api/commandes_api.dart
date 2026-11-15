@@ -29,6 +29,15 @@ abstract interface class CommandesApi {
   Future<void> ajouterValideur(String username);
   Future<void> retirerValideur(String username);
 
+  /// Marques de même DCI qu'un produit, et lesquelles sont commandées.
+  Future<GroupeGenerique> generiques(int idNom);
+
+  /// Choix forcé d'une marque : « garder », « exclure » ou null (automatique).
+  Future<GroupeGenerique> choisirGenerique(int idNom, String? choix);
+
+  /// Mode forcé du groupe : « toutes », « quelques » ou null (d'après la classe).
+  Future<GroupeGenerique> modeGroupe(int idNom, String? mode);
+
   /// Comptes de l'application (titulaire seulement).
   Future<List<Compte>> comptes();
 }
@@ -109,6 +118,20 @@ class CommandesApiDio implements CommandesApi {
   @override
   Future<void> retirerValideur(String username) =>
       _appel(() => _dio.delete('/commandes/reglages/valideurs/${Uri.encodeComponent(username)}'), (_) {});
+
+  GroupeGenerique _groupe(Object? d) => GroupeGenerique.fromJson(d as Map<String, dynamic>);
+
+  @override
+  Future<GroupeGenerique> generiques(int idNom) =>
+      _appel(() => _dio.get('/commandes/generiques/$idNom', options: _long), _groupe);
+
+  @override
+  Future<GroupeGenerique> choisirGenerique(int idNom, String? choix) =>
+      _appel(() => _dio.put('/commandes/generiques/$idNom/choix', data: {'choix': choix}, options: _long), _groupe);
+
+  @override
+  Future<GroupeGenerique> modeGroupe(int idNom, String? mode) =>
+      _appel(() => _dio.put('/commandes/generiques/$idNom/mode', data: {'mode': mode}, options: _long), _groupe);
 
   @override
   Future<List<Compte>> comptes() async {

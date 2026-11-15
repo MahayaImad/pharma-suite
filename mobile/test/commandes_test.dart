@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pharmasuite/app.dart';
 import 'package:pharmasuite/core/router/routeur.dart';
 import 'package:pharmasuite/data/api/commandes_api.dart';
+import 'package:pharmasuite/data/api/stock_api.dart';
+import 'package:pharmasuite/domain/stock.dart';
 import 'package:pharmasuite/domain/commandes.dart';
 import 'package:pharmasuite/domain/format.dart';
 import 'package:pharmasuite/domain/session.dart';
@@ -13,6 +15,7 @@ import 'package:pharmasuite/features/preferences/application/theme_controller.da
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fausse_commandes_api.dart';
+import 'fausse_stock_api.dart';
 
 const _pc = Size(1440, 900);
 final liensOuverts = <Uri>[];
@@ -24,6 +27,7 @@ Future<void> _lancer(
   Size taille = _portable,
   String depart = '/commandes',
   String? role,
+  StockApi? stock,
 }) async {
   tester.view.physicalSize = taille;
   tester.view.devicePixelRatio = 1;
@@ -35,6 +39,7 @@ Future<void> _lancer(
       overrides: [
         preferencesLocalesProvider.overrideWithValue(prefs),
         commandesApiProvider.overrideWithValue(api),
+        if (stock != null) stockApiProvider.overrideWithValue(stock),
         ouvreurLienProvider.overrideWithValue((lien) async {
           liensOuverts.add(lien);
           return true;
@@ -75,6 +80,8 @@ void main() {
       expect(l.copyWith(raison: const Raison(type: 'lent')).explication, 'Vente lente : garder 1 boîte en rayon');
       expect(const LigneCommande(idNom: 2, qte: 1).explication, 'Ajouté à la main');
       expect(l.avecQuantite(3).modifiee, isTrue);
+      final reprise = l.copyWith(raison: l.raison!.copyWith(reprend: ['XYDOL 600']));
+      expect(reprise.explication, '3,1/j × 2 j + sécurité 2 − stock 0 · reprend XYDOL 600');
     });
 
     test('numéro WhatsApp et lien du bon', () {
@@ -233,5 +240,26 @@ void main() {
     await _lancer(tester, FausseCommandesApi(), depart: '/preferences/fournisseurs', role: 'employee');
     expect(tester.widget<Switch>(find.byKey(const ValueKey('actif-1'))).onChanged, isNull);
     expect(find.byKey(const ValueKey('ajouter-valideur')), findsNothing);
+  });
+
+  testWidgets('fiche produit : génériques de la même DCI, choix du titulaire', (tester) async {
+    final api = FausseCommandesApi();
+    final stock = FausseStockApi(
+      produits: [const Produit(id: 1, nom: 'SAPOFEN 600', stock: 12, actif: true, codeDci: '04B044')],
+    );
+    await _lancer(tester, api, depart: '/stock/1', role: 'admin', stock: stock);
+    final section = find.byKey(const ValueKey('section-generiques'));
+    await tester.scrollUntilVisible(section, 300, scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Seules les 2 marques les plus vendues'), findsOneWidget);
+    expect(find.text('Non recommandé'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('choix-2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('choix-2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ne plus commander'));
+    await tester.pumpAndSettle();
+    expect(api.appels.last, 'choix 2 exclure');
+    expect(find.text('Non recommandé'), findsNWidgets(2));
   });
 }

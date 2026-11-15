@@ -11,6 +11,7 @@ import '../../../data/api/stock_api.dart';
 import '../../reglages/application/reglages_providers.dart' show peutModifierProvider;
 import '../../../domain/format.dart';
 import '../../../domain/stock.dart';
+import '../../commandes/presentation/generiques_fiche.dart';
 import '../application/stock_providers.dart';
 import 'ecran_stock.dart' show bientotCommandes, nomLisible;
 import 'elements_stock.dart';
@@ -145,6 +146,7 @@ class _Contenu extends ConsumerWidget {
         const _Titre('Réapprovisionnement'),
         _Reappro(produit: p),
         const SizedBox(height: 22),
+        if ((p.codeDci ?? '').trim().isNotEmpty) SectionGeneriques(idNom: p.id),
         _CaseConsommable(produit: p),
         const SizedBox(height: 22),
         const _Titre('Prix'),
@@ -992,12 +994,14 @@ class _CaseConsommable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final modifiable = ref.watch(peutModifierProvider);
-    return Container(
-      decoration: BoxDecoration(
-        color: context.schema.surface,
+    // Material (pas un Container coloré) : la case peint son effet d'appui dessus.
+    return Material(
+      color: context.schema.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.couleurs.bord),
+        side: BorderSide(color: context.couleurs.bord),
       ),
+      clipBehavior: Clip.antiAlias,
       child: SwitchListTile(
         key: const ValueKey('case-consommable'),
         value: produit.consommable,

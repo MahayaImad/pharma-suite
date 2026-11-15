@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Raison {
 
- String get type; double get rythme;@JsonKey(name: 'jours_couverts') int get joursCouverts; double get prevu; double get securite; double get cible; double get stock;@JsonKey(name: 'en_cours') double get enCours;
+ String get type; double get rythme;@JsonKey(name: 'jours_couverts') int get joursCouverts; double get prevu; double get securite; double get cible; double get stock;@JsonKey(name: 'en_cours') double get enCours;/// Marques remplacées (génériques) dont ce produit reprend la demande.
+ List<String> get reprend;
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +31,20 @@ $RaisonCopyWith<Raison> get copyWith => _$RaisonCopyWithImpl<Raison>(this as Rai
 @override
 bool operator ==(Object other) {
   final _this = this as Raison;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Raison&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.rythme, _this.rythme) || other.rythme == _this.rythme)&&(identical(other.joursCouverts, _this.joursCouverts) || other.joursCouverts == _this.joursCouverts)&&(identical(other.prevu, _this.prevu) || other.prevu == _this.prevu)&&(identical(other.securite, _this.securite) || other.securite == _this.securite)&&(identical(other.cible, _this.cible) || other.cible == _this.cible)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.enCours, _this.enCours) || other.enCours == _this.enCours));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Raison&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.rythme, _this.rythme) || other.rythme == _this.rythme)&&(identical(other.joursCouverts, _this.joursCouverts) || other.joursCouverts == _this.joursCouverts)&&(identical(other.prevu, _this.prevu) || other.prevu == _this.prevu)&&(identical(other.securite, _this.securite) || other.securite == _this.securite)&&(identical(other.cible, _this.cible) || other.cible == _this.cible)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.enCours, _this.enCours) || other.enCours == _this.enCours)&&const DeepCollectionEquality().equals(other.reprend, _this.reprend));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Raison;
-  return Object.hash(runtimeType,_this.type,_this.rythme,_this.joursCouverts,_this.prevu,_this.securite,_this.cible,_this.stock,_this.enCours);
+  return Object.hash(runtimeType,_this.type,_this.rythme,_this.joursCouverts,_this.prevu,_this.securite,_this.cible,_this.stock,_this.enCours,const DeepCollectionEquality().hash(_this.reprend));
 }
 
 @override
 String toString() {
   final _this = this as Raison;
-  return 'Raison(type: ${_this.type}, rythme: ${_this.rythme}, joursCouverts: ${_this.joursCouverts}, prevu: ${_this.prevu}, securite: ${_this.securite}, cible: ${_this.cible}, stock: ${_this.stock}, enCours: ${_this.enCours})';
+  return 'Raison(type: ${_this.type}, rythme: ${_this.rythme}, joursCouverts: ${_this.joursCouverts}, prevu: ${_this.prevu}, securite: ${_this.securite}, cible: ${_this.cible}, stock: ${_this.stock}, enCours: ${_this.enCours}, reprend: ${_this.reprend})';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $RaisonCopyWith<$Res>  {
   factory $RaisonCopyWith(Raison value, $Res Function(Raison) _then) = _$RaisonCopyWithImpl;
 @useResult
 $Res call({
- String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours
+ String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend
 });
 
 
@@ -71,7 +72,7 @@ class _$RaisonCopyWithImpl<$Res>
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,}) {
   return _then(Raison(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
@@ -81,7 +82,8 @@ as double,securite: null == securite ? _self.securite : securite // ignore: cast
 as double,cible: null == cible ? _self.cible : cible // ignore: cast_nullable_to_non_nullable
 as double,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as double,enCours: null == enCours ? _self.enCours : enCours // ignore: cast_nullable_to_non_nullable
-as double,
+as double,reprend: null == reprend ? _self.reprend : reprend // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -166,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Raison() when $default != null:
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend);case _:
   return orElse();
 
 }
@@ -187,10 +189,10 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend)  $default,) {final _that = this;
 switch (_that) {
 case _Raison():
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +209,10 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend)?  $default,) {final _that = this;
 switch (_that) {
 case _Raison() when $default != null:
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend);case _:
   return null;
 
 }
@@ -222,7 +224,7 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 @JsonSerializable()
 
 class _Raison implements Raison {
-  const _Raison({this.type = '', this.rythme = 0, @JsonKey(name: 'jours_couverts') this.joursCouverts = 0, this.prevu = 0, this.securite = 0, this.cible = 0, this.stock = 0, @JsonKey(name: 'en_cours') this.enCours = 0});
+  const _Raison({this.type = '', this.rythme = 0, @JsonKey(name: 'jours_couverts') this.joursCouverts = 0, this.prevu = 0, this.securite = 0, this.cible = 0, this.stock = 0, @JsonKey(name: 'en_cours') this.enCours = 0,  List<String> reprend = const <String>[]}): _reprend = reprend;
   factory _Raison.fromJson(Map<String, dynamic> json) => _$RaisonFromJson(json);
 
 @override@JsonKey() final  String type;
@@ -233,6 +235,15 @@ class _Raison implements Raison {
 @override@JsonKey() final  double cible;
 @override@JsonKey() final  double stock;
 @override@JsonKey(name: 'en_cours') final  double enCours;
+/// Marques remplacées (génériques) dont ce produit reprend la demande.
+ final  List<String> _reprend;
+/// Marques remplacées (génériques) dont ce produit reprend la demande.
+@override@JsonKey() List<String> get reprend {
+  if (_reprend is EqualUnmodifiableListView) return _reprend;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_reprend);
+}
+
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
@@ -247,18 +258,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Raison&&(identical(other.type, type) || other.type == type)&&(identical(other.rythme, rythme) || other.rythme == rythme)&&(identical(other.joursCouverts, joursCouverts) || other.joursCouverts == joursCouverts)&&(identical(other.prevu, prevu) || other.prevu == prevu)&&(identical(other.securite, securite) || other.securite == securite)&&(identical(other.cible, cible) || other.cible == cible)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.enCours, enCours) || other.enCours == enCours));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Raison&&(identical(other.type, type) || other.type == type)&&(identical(other.rythme, rythme) || other.rythme == rythme)&&(identical(other.joursCouverts, joursCouverts) || other.joursCouverts == joursCouverts)&&(identical(other.prevu, prevu) || other.prevu == prevu)&&(identical(other.securite, securite) || other.securite == securite)&&(identical(other.cible, cible) || other.cible == cible)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.enCours, enCours) || other.enCours == enCours)&&const DeepCollectionEquality().equals(other.reprend, _reprend));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,type,rythme,joursCouverts,prevu,securite,cible,stock,enCours);
+    return Object.hash(runtimeType,type,rythme,joursCouverts,prevu,securite,cible,stock,enCours,const DeepCollectionEquality().hash(_reprend));
 }
 
 @override
 String toString() {
-    return 'Raison(type: $type, rythme: $rythme, joursCouverts: $joursCouverts, prevu: $prevu, securite: $securite, cible: $cible, stock: $stock, enCours: $enCours)';
+    return 'Raison(type: $type, rythme: $rythme, joursCouverts: $joursCouverts, prevu: $prevu, securite: $securite, cible: $cible, stock: $stock, enCours: $enCours, reprend: $reprend)';
 }
 
 
@@ -269,7 +280,7 @@ abstract mixin class _$RaisonCopyWith<$Res> implements $RaisonCopyWith<$Res> {
   factory _$RaisonCopyWith(_Raison value, $Res Function(_Raison) _then) = __$RaisonCopyWithImpl;
 @override @useResult
 $Res call({
- String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours
+ String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend
 });
 
 
@@ -286,7 +297,7 @@ class __$RaisonCopyWithImpl<$Res>
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,}) {
   return _then(_Raison(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
@@ -296,7 +307,8 @@ as double,securite: null == securite ? _self.securite : securite // ignore: cast
 as double,cible: null == cible ? _self.cible : cible // ignore: cast_nullable_to_non_nullable
 as double,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as double,enCours: null == enCours ? _self.enCours : enCours // ignore: cast_nullable_to_non_nullable
-as double,
+as double,reprend: null == reprend ? _self._reprend : reprend // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -2980,6 +2992,587 @@ as String,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_
 as String?,prenom: freezed == prenom ? _self.prenom : prenom // ignore: cast_nullable_to_non_nullable
 as String?,actif: null == actif ? _self.actif : actif // ignore: cast_nullable_to_non_nullable
 as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$MembreGenerique {
+
+@JsonKey(name: 'id_nom') int get idNom; String? get nom; int get stock;@JsonKey(name: 'ventes_12m') double get ventes12m; bool get garde;/// Choix du titulaire : « garder », « exclure », ou null (automatique).
+ String? get choix;
+/// Create a copy of MembreGenerique
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MembreGeneriqueCopyWith<MembreGenerique> get copyWith => _$MembreGeneriqueCopyWithImpl<MembreGenerique>(this as MembreGenerique, _$identity);
+
+  /// Serializes this MembreGenerique to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as MembreGenerique;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MembreGenerique&&(identical(other.idNom, _this.idNom) || other.idNom == _this.idNom)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.ventes12m, _this.ventes12m) || other.ventes12m == _this.ventes12m)&&(identical(other.garde, _this.garde) || other.garde == _this.garde)&&(identical(other.choix, _this.choix) || other.choix == _this.choix));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as MembreGenerique;
+  return Object.hash(runtimeType,_this.idNom,_this.nom,_this.stock,_this.ventes12m,_this.garde,_this.choix);
+}
+
+@override
+String toString() {
+  final _this = this as MembreGenerique;
+  return 'MembreGenerique(idNom: ${_this.idNom}, nom: ${_this.nom}, stock: ${_this.stock}, ventes12m: ${_this.ventes12m}, garde: ${_this.garde}, choix: ${_this.choix})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $MembreGeneriqueCopyWith<$Res>  {
+  factory $MembreGeneriqueCopyWith(MembreGenerique value, $Res Function(MembreGenerique) _then) = _$MembreGeneriqueCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'id_nom') int idNom, String? nom, int stock,@JsonKey(name: 'ventes_12m') double ventes12m, bool garde, String? choix
+});
+
+
+
+
+}
+/// @nodoc
+class _$MembreGeneriqueCopyWithImpl<$Res>
+    implements $MembreGeneriqueCopyWith<$Res> {
+  _$MembreGeneriqueCopyWithImpl(this._self, this._then);
+
+  final MembreGenerique _self;
+  final $Res Function(MembreGenerique) _then;
+
+/// Create a copy of MembreGenerique
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? idNom = null,Object? nom = freezed,Object? stock = null,Object? ventes12m = null,Object? garde = null,Object? choix = freezed,}) {
+  return _then(MembreGenerique(
+idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,ventes12m: null == ventes12m ? _self.ventes12m : ventes12m // ignore: cast_nullable_to_non_nullable
+as double,garde: null == garde ? _self.garde : garde // ignore: cast_nullable_to_non_nullable
+as bool,choix: freezed == choix ? _self.choix : choix // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [MembreGenerique].
+extension MembreGeneriquePatterns on MembreGenerique {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _MembreGenerique value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _MembreGenerique() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _MembreGenerique value)  $default,){
+final _that = this;
+switch (_that) {
+case _MembreGenerique():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _MembreGenerique value)?  $default,){
+final _that = this;
+switch (_that) {
+case _MembreGenerique() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  int stock, @JsonKey(name: 'ventes_12m')  double ventes12m,  bool garde,  String? choix)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _MembreGenerique() when $default != null:
+return $default(_that.idNom,_that.nom,_that.stock,_that.ventes12m,_that.garde,_that.choix);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  int stock, @JsonKey(name: 'ventes_12m')  double ventes12m,  bool garde,  String? choix)  $default,) {final _that = this;
+switch (_that) {
+case _MembreGenerique():
+return $default(_that.idNom,_that.nom,_that.stock,_that.ventes12m,_that.garde,_that.choix);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  int stock, @JsonKey(name: 'ventes_12m')  double ventes12m,  bool garde,  String? choix)?  $default,) {final _that = this;
+switch (_that) {
+case _MembreGenerique() when $default != null:
+return $default(_that.idNom,_that.nom,_that.stock,_that.ventes12m,_that.garde,_that.choix);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _MembreGenerique implements MembreGenerique {
+  const _MembreGenerique({@JsonKey(name: 'id_nom') required this.idNom, this.nom, this.stock = 0, @JsonKey(name: 'ventes_12m') this.ventes12m = 0, this.garde = true, this.choix});
+  factory _MembreGenerique.fromJson(Map<String, dynamic> json) => _$MembreGeneriqueFromJson(json);
+
+@override@JsonKey(name: 'id_nom') final  int idNom;
+@override final  String? nom;
+@override@JsonKey() final  int stock;
+@override@JsonKey(name: 'ventes_12m') final  double ventes12m;
+@override@JsonKey() final  bool garde;
+/// Choix du titulaire : « garder », « exclure », ou null (automatique).
+@override final  String? choix;
+
+/// Create a copy of MembreGenerique
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$MembreGeneriqueCopyWith<_MembreGenerique> get copyWith => __$MembreGeneriqueCopyWithImpl<_MembreGenerique>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$MembreGeneriqueToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MembreGenerique&&(identical(other.idNom, idNom) || other.idNom == idNom)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.ventes12m, ventes12m) || other.ventes12m == ventes12m)&&(identical(other.garde, garde) || other.garde == garde)&&(identical(other.choix, choix) || other.choix == choix));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,idNom,nom,stock,ventes12m,garde,choix);
+}
+
+@override
+String toString() {
+    return 'MembreGenerique(idNom: $idNom, nom: $nom, stock: $stock, ventes12m: $ventes12m, garde: $garde, choix: $choix)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$MembreGeneriqueCopyWith<$Res> implements $MembreGeneriqueCopyWith<$Res> {
+  factory _$MembreGeneriqueCopyWith(_MembreGenerique value, $Res Function(_MembreGenerique) _then) = __$MembreGeneriqueCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'id_nom') int idNom, String? nom, int stock,@JsonKey(name: 'ventes_12m') double ventes12m, bool garde, String? choix
+});
+
+
+
+
+}
+/// @nodoc
+class __$MembreGeneriqueCopyWithImpl<$Res>
+    implements _$MembreGeneriqueCopyWith<$Res> {
+  __$MembreGeneriqueCopyWithImpl(this._self, this._then);
+
+  final _MembreGenerique _self;
+  final $Res Function(_MembreGenerique) _then;
+
+/// Create a copy of MembreGenerique
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? idNom = null,Object? nom = freezed,Object? stock = null,Object? ventes12m = null,Object? garde = null,Object? choix = freezed,}) {
+  return _then(_MembreGenerique(
+idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,ventes12m: null == ventes12m ? _self.ventes12m : ventes12m // ignore: cast_nullable_to_non_nullable
+as double,garde: null == garde ? _self.garde : garde // ignore: cast_nullable_to_non_nullable
+as bool,choix: freezed == choix ? _self.choix : choix // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$GroupeGenerique {
+
+ String? get code; String? get classe; String get mode;@JsonKey(name: 'mode_force') String? get modeForce; bool get chronique;@JsonKey(name: 'nombre_gardes') int get nombreGardes; List<MembreGenerique> get membres;
+/// Create a copy of GroupeGenerique
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GroupeGeneriqueCopyWith<GroupeGenerique> get copyWith => _$GroupeGeneriqueCopyWithImpl<GroupeGenerique>(this as GroupeGenerique, _$identity);
+
+  /// Serializes this GroupeGenerique to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as GroupeGenerique;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GroupeGenerique&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.classe, _this.classe) || other.classe == _this.classe)&&(identical(other.mode, _this.mode) || other.mode == _this.mode)&&(identical(other.modeForce, _this.modeForce) || other.modeForce == _this.modeForce)&&(identical(other.chronique, _this.chronique) || other.chronique == _this.chronique)&&(identical(other.nombreGardes, _this.nombreGardes) || other.nombreGardes == _this.nombreGardes)&&const DeepCollectionEquality().equals(other.membres, _this.membres));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as GroupeGenerique;
+  return Object.hash(runtimeType,_this.code,_this.classe,_this.mode,_this.modeForce,_this.chronique,_this.nombreGardes,const DeepCollectionEquality().hash(_this.membres));
+}
+
+@override
+String toString() {
+  final _this = this as GroupeGenerique;
+  return 'GroupeGenerique(code: ${_this.code}, classe: ${_this.classe}, mode: ${_this.mode}, modeForce: ${_this.modeForce}, chronique: ${_this.chronique}, nombreGardes: ${_this.nombreGardes}, membres: ${_this.membres})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $GroupeGeneriqueCopyWith<$Res>  {
+  factory $GroupeGeneriqueCopyWith(GroupeGenerique value, $Res Function(GroupeGenerique) _then) = _$GroupeGeneriqueCopyWithImpl;
+@useResult
+$Res call({
+ String? code, String? classe, String mode,@JsonKey(name: 'mode_force') String? modeForce, bool chronique,@JsonKey(name: 'nombre_gardes') int nombreGardes, List<MembreGenerique> membres
+});
+
+
+
+
+}
+/// @nodoc
+class _$GroupeGeneriqueCopyWithImpl<$Res>
+    implements $GroupeGeneriqueCopyWith<$Res> {
+  _$GroupeGeneriqueCopyWithImpl(this._self, this._then);
+
+  final GroupeGenerique _self;
+  final $Res Function(GroupeGenerique) _then;
+
+/// Create a copy of GroupeGenerique
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = freezed,Object? classe = freezed,Object? mode = null,Object? modeForce = freezed,Object? chronique = null,Object? nombreGardes = null,Object? membres = null,}) {
+  return _then(GroupeGenerique(
+code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String?,classe: freezed == classe ? _self.classe : classe // ignore: cast_nullable_to_non_nullable
+as String?,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as String,modeForce: freezed == modeForce ? _self.modeForce : modeForce // ignore: cast_nullable_to_non_nullable
+as String?,chronique: null == chronique ? _self.chronique : chronique // ignore: cast_nullable_to_non_nullable
+as bool,nombreGardes: null == nombreGardes ? _self.nombreGardes : nombreGardes // ignore: cast_nullable_to_non_nullable
+as int,membres: null == membres ? _self.membres : membres // ignore: cast_nullable_to_non_nullable
+as List<MembreGenerique>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [GroupeGenerique].
+extension GroupeGeneriquePatterns on GroupeGenerique {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _GroupeGenerique value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _GroupeGenerique() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _GroupeGenerique value)  $default,){
+final _that = this;
+switch (_that) {
+case _GroupeGenerique():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _GroupeGenerique value)?  $default,){
+final _that = this;
+switch (_that) {
+case _GroupeGenerique() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? code,  String? classe,  String mode, @JsonKey(name: 'mode_force')  String? modeForce,  bool chronique, @JsonKey(name: 'nombre_gardes')  int nombreGardes,  List<MembreGenerique> membres)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _GroupeGenerique() when $default != null:
+return $default(_that.code,_that.classe,_that.mode,_that.modeForce,_that.chronique,_that.nombreGardes,_that.membres);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? code,  String? classe,  String mode, @JsonKey(name: 'mode_force')  String? modeForce,  bool chronique, @JsonKey(name: 'nombre_gardes')  int nombreGardes,  List<MembreGenerique> membres)  $default,) {final _that = this;
+switch (_that) {
+case _GroupeGenerique():
+return $default(_that.code,_that.classe,_that.mode,_that.modeForce,_that.chronique,_that.nombreGardes,_that.membres);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? code,  String? classe,  String mode, @JsonKey(name: 'mode_force')  String? modeForce,  bool chronique, @JsonKey(name: 'nombre_gardes')  int nombreGardes,  List<MembreGenerique> membres)?  $default,) {final _that = this;
+switch (_that) {
+case _GroupeGenerique() when $default != null:
+return $default(_that.code,_that.classe,_that.mode,_that.modeForce,_that.chronique,_that.nombreGardes,_that.membres);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _GroupeGenerique extends GroupeGenerique {
+  const _GroupeGenerique({this.code, this.classe, this.mode = 'toutes', @JsonKey(name: 'mode_force') this.modeForce, this.chronique = false, @JsonKey(name: 'nombre_gardes') this.nombreGardes = 2,  List<MembreGenerique> membres = const <MembreGenerique>[]}): _membres = membres,super._();
+  factory _GroupeGenerique.fromJson(Map<String, dynamic> json) => _$GroupeGeneriqueFromJson(json);
+
+@override final  String? code;
+@override final  String? classe;
+@override@JsonKey() final  String mode;
+@override@JsonKey(name: 'mode_force') final  String? modeForce;
+@override@JsonKey() final  bool chronique;
+@override@JsonKey(name: 'nombre_gardes') final  int nombreGardes;
+ final  List<MembreGenerique> _membres;
+@override@JsonKey() List<MembreGenerique> get membres {
+  if (_membres is EqualUnmodifiableListView) return _membres;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_membres);
+}
+
+
+/// Create a copy of GroupeGenerique
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$GroupeGeneriqueCopyWith<_GroupeGenerique> get copyWith => __$GroupeGeneriqueCopyWithImpl<_GroupeGenerique>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$GroupeGeneriqueToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GroupeGenerique&&(identical(other.code, code) || other.code == code)&&(identical(other.classe, classe) || other.classe == classe)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.modeForce, modeForce) || other.modeForce == modeForce)&&(identical(other.chronique, chronique) || other.chronique == chronique)&&(identical(other.nombreGardes, nombreGardes) || other.nombreGardes == nombreGardes)&&const DeepCollectionEquality().equals(other.membres, _membres));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,code,classe,mode,modeForce,chronique,nombreGardes,const DeepCollectionEquality().hash(_membres));
+}
+
+@override
+String toString() {
+    return 'GroupeGenerique(code: $code, classe: $classe, mode: $mode, modeForce: $modeForce, chronique: $chronique, nombreGardes: $nombreGardes, membres: $membres)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$GroupeGeneriqueCopyWith<$Res> implements $GroupeGeneriqueCopyWith<$Res> {
+  factory _$GroupeGeneriqueCopyWith(_GroupeGenerique value, $Res Function(_GroupeGenerique) _then) = __$GroupeGeneriqueCopyWithImpl;
+@override @useResult
+$Res call({
+ String? code, String? classe, String mode,@JsonKey(name: 'mode_force') String? modeForce, bool chronique,@JsonKey(name: 'nombre_gardes') int nombreGardes, List<MembreGenerique> membres
+});
+
+
+
+
+}
+/// @nodoc
+class __$GroupeGeneriqueCopyWithImpl<$Res>
+    implements _$GroupeGeneriqueCopyWith<$Res> {
+  __$GroupeGeneriqueCopyWithImpl(this._self, this._then);
+
+  final _GroupeGenerique _self;
+  final $Res Function(_GroupeGenerique) _then;
+
+/// Create a copy of GroupeGenerique
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = freezed,Object? classe = freezed,Object? mode = null,Object? modeForce = freezed,Object? chronique = null,Object? nombreGardes = null,Object? membres = null,}) {
+  return _then(_GroupeGenerique(
+code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String?,classe: freezed == classe ? _self.classe : classe // ignore: cast_nullable_to_non_nullable
+as String?,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as String,modeForce: freezed == modeForce ? _self.modeForce : modeForce // ignore: cast_nullable_to_non_nullable
+as String?,chronique: null == chronique ? _self.chronique : chronique // ignore: cast_nullable_to_non_nullable
+as bool,nombreGardes: null == nombreGardes ? _self.nombreGardes : nombreGardes // ignore: cast_nullable_to_non_nullable
+as int,membres: null == membres ? _self._membres : membres // ignore: cast_nullable_to_non_nullable
+as List<MembreGenerique>,
   ));
 }
 

@@ -44,6 +44,9 @@ abstract class Raison with _$Raison {
     @Default(0) double cible,
     @Default(0) double stock,
     @JsonKey(name: 'en_cours') @Default(0) double enCours,
+
+    /// Marques remplacées (génériques) dont ce produit reprend la demande.
+    @Default(<String>[]) List<String> reprend,
   }) = _Raison;
 
   factory Raison.fromJson(Map<String, dynamic> json) => _$RaisonFromJson(json);
@@ -90,7 +93,8 @@ abstract class LigneCommande with _$LigneCommande {
       '− stock ${entier(r.stock)}',
       if (r.enCours > 0) '− en cours ${entier(r.enCours)}',
     ];
-    return morceaux.join(' ');
+    final reprise = r.reprend.isEmpty ? '' : ' · reprend ${r.reprend.join(', ')}';
+    return morceaux.join(' ') + reprise;
   }
 }
 
@@ -318,4 +322,43 @@ abstract class Compte with _$Compte {
     final complet = [prenom, nom].whereType<String>().where((x) => x.trim().isNotEmpty).join(' ');
     return complet.isEmpty ? username : '$complet ($username)';
   }
+}
+
+/// Une marque d'un groupe DCI (`GET /commandes/generiques/{id}`).
+@freezed
+abstract class MembreGenerique with _$MembreGenerique {
+  const factory MembreGenerique({
+    @JsonKey(name: 'id_nom') required int idNom,
+    String? nom,
+    @Default(0) int stock,
+    @JsonKey(name: 'ventes_12m') @Default(0) double ventes12m,
+    @Default(true) bool garde,
+
+    /// Choix du titulaire : « garder », « exclure », ou null (automatique).
+    String? choix,
+  }) = _MembreGenerique;
+
+  factory MembreGenerique.fromJson(Map<String, dynamic> json) => _$MembreGeneriqueFromJson(json);
+}
+
+/// Marques de même DCI et règle appliquée : toutes les marques (classe
+/// chronique) ou seulement les plus vendues.
+@freezed
+abstract class GroupeGenerique with _$GroupeGenerique {
+  const GroupeGenerique._();
+
+  const factory GroupeGenerique({
+    String? code,
+    String? classe,
+    @Default('toutes') String mode,
+    @JsonKey(name: 'mode_force') String? modeForce,
+    @Default(false) bool chronique,
+    @JsonKey(name: 'nombre_gardes') @Default(2) int nombreGardes,
+    @Default(<MembreGenerique>[]) List<MembreGenerique> membres,
+  }) = _GroupeGenerique;
+
+  factory GroupeGenerique.fromJson(Map<String, dynamic> json) => _$GroupeGeneriqueFromJson(json);
+
+  bool get toutes => mode == 'toutes';
+  bool get aPlusieursMarques => code != null && membres.length > 1;
 }

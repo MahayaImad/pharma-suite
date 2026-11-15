@@ -43,6 +43,9 @@ abstract class Produit with _$Produit {
     required int id,
     @Default('') String nom,
     String? dci,
+
+    /// Code DCI (« 04B044 ») : les produits de même code sont des génériques.
+    @JsonKey(name: 'de_equiv') String? codeDci,
     String? dosage,
     String? forme,
     @JsonKey(name: 'forme_abr') String? formeAbr,

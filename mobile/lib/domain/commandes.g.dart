@@ -15,6 +15,7 @@ _Raison _$RaisonFromJson(Map<String, dynamic> json) => _Raison(
   cible: (json['cible'] as num?)?.toDouble() ?? 0,
   stock: (json['stock'] as num?)?.toDouble() ?? 0,
   enCours: (json['en_cours'] as num?)?.toDouble() ?? 0,
+  reprend: (json['reprend'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const <String>[],
 );
 
 Map<String, dynamic> _$RaisonToJson(_Raison instance) => <String, dynamic>{
@@ -26,6 +27,7 @@ Map<String, dynamic> _$RaisonToJson(_Raison instance) => <String, dynamic>{
   'cible': instance.cible,
   'stock': instance.stock,
   'en_cours': instance.enCours,
+  'reprend': instance.reprend,
 };
 
 _LigneCommande _$LigneCommandeFromJson(Map<String, dynamic> json) => _LigneCommande(
@@ -213,4 +215,44 @@ Map<String, dynamic> _$CompteToJson(_Compte instance) => <String, dynamic>{
   'nom': instance.nom,
   'prenom': instance.prenom,
   'is_active': instance.actif,
+};
+
+_MembreGenerique _$MembreGeneriqueFromJson(Map<String, dynamic> json) => _MembreGenerique(
+  idNom: (json['id_nom'] as num).toInt(),
+  nom: json['nom'] as String?,
+  stock: (json['stock'] as num?)?.toInt() ?? 0,
+  ventes12m: (json['ventes_12m'] as num?)?.toDouble() ?? 0,
+  garde: json['garde'] as bool? ?? true,
+  choix: json['choix'] as String?,
+);
+
+Map<String, dynamic> _$MembreGeneriqueToJson(_MembreGenerique instance) => <String, dynamic>{
+  'id_nom': instance.idNom,
+  'nom': instance.nom,
+  'stock': instance.stock,
+  'ventes_12m': instance.ventes12m,
+  'garde': instance.garde,
+  'choix': instance.choix,
+};
+
+_GroupeGenerique _$GroupeGeneriqueFromJson(Map<String, dynamic> json) => _GroupeGenerique(
+  code: json['code'] as String?,
+  classe: json['classe'] as String?,
+  mode: json['mode'] as String? ?? 'toutes',
+  modeForce: json['mode_force'] as String?,
+  chronique: json['chronique'] as bool? ?? false,
+  nombreGardes: (json['nombre_gardes'] as num?)?.toInt() ?? 2,
+  membres:
+      (json['membres'] as List<dynamic>?)?.map((e) => MembreGenerique.fromJson(e as Map<String, dynamic>)).toList() ??
+      const <MembreGenerique>[],
+);
+
+Map<String, dynamic> _$GroupeGeneriqueToJson(_GroupeGenerique instance) => <String, dynamic>{
+  'code': instance.code,
+  'classe': instance.classe,
+  'mode': instance.mode,
+  'mode_force': instance.modeForce,
+  'chronique': instance.chronique,
+  'nombre_gardes': instance.nombreGardes,
+  'membres': instance.membres,
 };

@@ -191,7 +191,7 @@ router au passage.
 | `sms` | passerelle SMS avec file d'attente |
 | `chatbot` | question en français → SQL → réponse formatée |
 | `modules/calendrier` | gardes, Ramadan et Aïd, jours fériés — **premier module au format cible** (`app/modules/calendrier/` : router, service, repository, schemas ; réponses `{data, error}`) |
-| `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). Écran mobile `/commandes` (cartes des grossistes, panier avec barre fixe du bas). Préférences › Fournisseurs et validation : tous les fournisseurs (inactif par défaut sans commande depuis 30 jours), type, WhatsApp, employés valideurs. |
+| `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). Écran mobile `/commandes` (cartes des grossistes, panier avec barre fixe du bas). Préférences › Fournisseurs et validation : tous les fournisseurs (inactif par défaut sans commande depuis 30 jours), type, WhatsApp, employés valideurs. Génériques par code DCI (`services/prevision/generiques.py`, migration 013) : classe chronique (`classe_maladie`) → toutes les marques, sinon les plus vendues ; section « Génériques » de la fiche produit. |
 
 ## Pièges connus (ne pas se faire avoir)
 

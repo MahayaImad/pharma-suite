@@ -231,4 +231,37 @@ class FausseCommandesApi implements CommandesApi {
     Compte(username: 'karim'),
     Compte(username: 'sara', prenom: 'Sara', nom: 'B.'),
   ];
+
+  GroupeGenerique groupe = const GroupeGenerique(
+    code: '04B044',
+    classe: '04B',
+    mode: 'quelques',
+    membres: [
+      MembreGenerique(idNom: 1, nom: 'SAPOFEN 600', stock: 12, ventes12m: 420, garde: true),
+      MembreGenerique(idNom: 2, nom: 'XYDOL 600', stock: 4, ventes12m: 260, garde: true),
+      MembreGenerique(idNom: 3, nom: 'IBUPROFENE 600 X', stock: 0, ventes12m: 30, garde: false),
+    ],
+  );
+
+  @override
+  Future<GroupeGenerique> generiques(int idNom) async => groupe;
+
+  @override
+  Future<GroupeGenerique> choisirGenerique(int idNom, String? choix) async {
+    appels.add('choix $idNom $choix');
+    groupe = groupe.copyWith(
+      membres: [
+        for (final m in groupe.membres)
+          m.idNom == idNom ? m.copyWith(choix: choix, garde: choix != 'exclure' && (choix == 'garder' || m.garde)) : m,
+      ],
+    );
+    return groupe;
+  }
+
+  @override
+  Future<GroupeGenerique> modeGroupe(int idNom, String? mode) async {
+    appels.add('mode $idNom $mode');
+    groupe = groupe.copyWith(mode: mode ?? 'quelques', modeForce: mode);
+    return groupe;
+  }
 }
