@@ -30,7 +30,7 @@ JEUDI = date(2026, 11, 12)
 utilisateur = {"username": "titulaire", "role": "admin"}
 TABLES = ("commandes_lignes", "commandes", "fournisseurs_commande", "commandes_valideurs", "fournisseurs",
           "sorties_produits", "entrees_produits", "nomenclature", "familles", "sync_status",
-          "historique_stock_jour", "produits_consommables", "gardes")
+          "historique_stock_jour", "produits_consommables", "gardes", "generiques_groupes", "generiques_choix")
 
 
 @pytest_asyncio.fixture
@@ -211,3 +211,50 @@ async def test_le_vendredi_on_prepare_la_commande_du_samedi(api, monkeypatch):
     assert vue["jour"] == "2026-11-14" and not vue["ferme"] and vue["paniers"]
     r = await api.post("/commandes/preparer")
     assert r.status_code == 200 and _panier(r.json()["data"], "GROSSISTE A")["commande"]["jour"] == "2026-11-14"
+
+
+async def test_generiques_ains_une_marque_gardee_reprend_la_demande_de_l_autre(api):
+    """ALPHA (4/j) et EPSILON (1/j) : même DCI d'AINS (04B044), 1 marque
+    gardée. EPSILON épuisé n'est plus proposé ; ALPHA reprend sa demande."""
+    await api.db.execute(text("UPDATE nomenclature SET de_equiv = CASE id WHEN 1 THEN '04B044' ELSE '04 B 044' END "
+                              "WHERE id IN (1, 5)"))
+    await api.db.execute(text("UPDATE entrees_produits SET stock = 0 WHERE id_nom = 5"))
+    await api.db.execute(text("REFRESH MATERIALIZED VIEW mv_stock_produits"))
+    await api.db.execute(text("UPDATE reglages_stock SET valeur = 1 WHERE cle = 'generiques_gardes'"))
+    await api.db.commit()
+    try:
+        vue = await _jour(api)
+        lignes = {l["nom"]: l for p in vue["paniers"] for l in p["lignes"]}
+        assert "EPSILON" not in lignes
+        assert lignes["ALPHA"]["raison"]["reprend"] == ["EPSILON"]
+        assert lignes["ALPHA"]["raison"]["rythme"] == pytest.approx(5.0)
+
+        g = (await api.get("/commandes/generiques/1")).json()["data"]
+        assert (g["code"], g["classe"], g["mode"], g["chronique"]) == ("04B044", "04B", "quelques", False)
+        assert [(x["nom"], x["garde"]) for x in g["membres"]] == [("ALPHA", True), ("EPSILON", False)]
+
+        # Le titulaire force « toutes les marques » : EPSILON est de nouveau proposé.
+        r = await api.put("/commandes/generiques/1/mode", json={"mode": "toutes"})
+        assert r.status_code == 200 and r.json()["data"]["mode"] == "toutes"
+        lignes = {l["nom"] for p in (await _jour(api))["paniers"] for l in p["lignes"]}
+        assert "EPSILON" in lignes
+
+        utilisateur.update(username="karim", role="employee")
+        r = await api.put("/commandes/generiques/5/choix", json={"choix": "exclure"})
+        assert r.status_code == 403
+    finally:
+        await api.db.execute(text("UPDATE reglages_stock SET valeur = 2 WHERE cle = 'generiques_gardes'"))
+        await api.db.execute(text("TRUNCATE generiques_groupes, generiques_choix"))
+        await api.db.commit()
+
+
+async def test_generiques_classe_chronique_toutes_les_marques(api):
+    """Même chose en classe 14A (antidiabétiques, chronique) : rien n'est retiré."""
+    await api.db.execute(text("UPDATE nomenclature SET de_equiv = '14A224' WHERE id IN (1, 5)"))
+    await api.db.execute(text("UPDATE entrees_produits SET stock = 0 WHERE id_nom = 5"))
+    await api.db.execute(text("REFRESH MATERIALIZED VIEW mv_stock_produits"))
+    await api.db.commit()
+    lignes = {l["nom"]: l for p in (await _jour(api))["paniers"] for l in p["lignes"]}
+    assert "EPSILON" in lignes and "reprend" not in lignes["ALPHA"]["raison"]
+    g = (await api.get("/commandes/generiques/1")).json()["data"]
+    assert (g["mode"], g["chronique"]) == ("toutes", True)

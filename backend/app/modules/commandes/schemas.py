@@ -18,3 +18,11 @@ class FournisseurSaisie(BaseModel):
 
 class ValideurSaisie(BaseModel):
     username: str = Field(..., min_length=1, max_length=100)
+
+
+class ChoixGenerique(BaseModel):
+    choix: Optional[Literal["garder", "exclure"]] = Field(None, description="None : automatique")
+
+
+class ModeGroupe(BaseModel):
+    mode: Optional[Literal["toutes", "quelques"]] = Field(None, description="None : d'après la classe")

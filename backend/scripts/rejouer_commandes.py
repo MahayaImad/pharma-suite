@@ -32,7 +32,7 @@ from zoneinfo import ZoneInfo
 
 from app.core.database import AsyncSessionLocal
 from app.services.prevision.donnees import charger
-from app.services.prevision.rejeu import Politique, Resultat, simuler
+from app.services.prevision.rejeu import Politique, Resultat, regrouper, simuler
 
 lignes: list[str] = []
 
@@ -96,6 +96,12 @@ async def main() -> int:
     choix = [pol for pol in POLITIQUES if a.politique is None or pol.nom.startswith(a.politique)]
     resultats = {pol.nom: [simuler(pr, donnees.dates, donnees.debut_rejeu, donnees.calendrier,
                                    donnees.ouvert, pol) for pr in donnees.produits] for pol in choix}
+    # Règle des génériques (prevision/generiques.py) sur la politique retenue.
+    groupes, bilan, _ = regrouper(donnees.produits, donnees.debut_rejeu, donnees.classes_chroniques,
+                                  donnees.modes_forces, donnees.nombre_generiques)
+    resultats[f"{POLITIQUES[0].nom} + génériques"] = [
+        simuler(pr, donnees.dates, donnees.debut_rejeu, donnees.calendrier, donnees.ouvert, POLITIQUES[0])
+        for pr in groupes]
     duree = time.monotonic() - depart
 
     ecrire("# Rejeu des commandes\n")
@@ -106,6 +112,9 @@ async def main() -> int:
               or "aucune garde avant le rejeu"))
     ecrire("- profil de la semaine (lundi → dimanche) : "
            + " · ".join(f"{x:.2f}".replace(".", ",") for x in donnees.calendrier.semaine))
+    ecrire(f"- génériques : {bilan.groupes} DCI à plusieurs marques, dont {bilan.groupes_chroniques} en classe "
+           f"chronique (toutes les marques) ; {bilan.remplaces} marques non recommandées "
+           f"({donnees.nombre_generiques} gardées par DCI non chronique)")
     ecrire(f"- produits saisonniers reconnus : {sum(1 for pr in donnees.produits if pr.saison is not None)}")
     ecrire(f"- durée : {duree:.0f} s")
     ecrire("\nPolitiques : Z = taux de service par classe (A 95 %, B 90 %, C 85 %), « sobre » = Z × 0,5 ; "
@@ -125,6 +134,7 @@ async def main() -> int:
     for r in premiere:
         par_type[r.type].append(r)
     ordre_types = ["regulier", "irregulier", "intermittent", "sporadique", "lent", "nouveau"]
+    # Avec les génériques, une marque remplacée garde son type d'origine dans les tableaux par type.
     ecrire(f"\nTypes de demande : " + " · ".join(f"{t} {len(par_type[t])}" for t in ordre_types if par_type.get(t)))
     for t in ordre_types:
         if par_type.get(t):

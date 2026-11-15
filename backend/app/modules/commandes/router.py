@@ -79,6 +79,22 @@ async def bon(id_commande: int, svc: CommandesService = Depends(_service)):
     return await _repondre(svc.bon(id_commande))
 
 
+@router.get("/generiques/{id_nom}")
+async def generiques(id_nom: int, svc: CommandesService = Depends(_service)):
+    """Marques de même DCI que ce produit : lesquelles sont commandées."""
+    return await _repondre(svc.generiques(id_nom))
+
+
+@router.put("/generiques/{id_nom}/choix")
+async def choisir_generique(id_nom: int, saisie: s.ChoixGenerique, svc: CommandesService = Depends(_service)):
+    return await _repondre(svc.choisir_generique(id_nom, saisie.choix))
+
+
+@router.put("/generiques/{id_nom}/mode")
+async def mode_groupe(id_nom: int, saisie: s.ModeGroupe, svc: CommandesService = Depends(_service)):
+    return await _repondre(svc.mode_groupe(id_nom, saisie.mode))
+
+
 @router.get("/reglages/fournisseurs")
 async def fournisseurs(svc: CommandesService = Depends(_service)):
     return await _repondre(svc.fournisseurs())

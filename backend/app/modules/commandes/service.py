@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import time
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Optional
@@ -28,7 +29,8 @@ from loguru import logger
 from app.modules.commandes.repository import CommandesRepository
 from app.services import indicateurs_stock as ind
 from app.services.prevision.donnees import Donnees, charger
-from app.services.prevision.du_jour import proposer_tous
+from app.services.prevision import generiques as g
+from app.services.prevision.du_jour import appliquer_generiques, proposer_tous
 from app.services.prevision.proposition import VENDREDI, Decision, jour_de_commande_suivant
 
 ALGER = ZoneInfo("Africa/Algiers")
@@ -107,13 +109,28 @@ class CommandesService:
                         f"({len(donnees.produits)} produits)")
         return _cache[cle]
 
-    async def _propositions(self, jour: date) -> tuple[dict[int, Decision], dict[int, dict]]:
+    async def _propositions(self, jour: date) -> tuple[dict[int, Decision], dict[int, dict], dict[int, list[int]]]:
+        """Décisions du soir, infos produits, et pour chaque marque gardée les
+        marques épuisées dont elle reprend la demande (règle des génériques)."""
         donnees = await self._donnees(jour)
         ids = [p.id for p in donnees.produits]
         infos = await self.repo.produits(ids)
         stocks = {i: float(x["stock"]) for i, x in infos.items()}
-        decisions = proposer_tous(donnees, stocks, await self.repo.en_cours(jour))
-        return decisions, infos
+        produits, statuts = appliquer_generiques(donnees, stocks)
+        reprises: dict[int, list[int]] = {}
+        for id_nom, st in statuts.items():
+            if not st.garde and stocks.get(id_nom, 0) <= 0:
+                for k in st.parts:
+                    reprises.setdefault(k, []).append(id_nom)
+        decisions = proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour),
+                                  generiques=False)
+        return decisions, infos, reprises
+
+    async def _statuts_generiques(self, jour: date):
+        donnees = await self._donnees(jour)
+        infos = await self.repo.produits([p.id for p in donnees.produits])
+        stocks = {i: float(x["stock"]) for i, x in infos.items()}
+        return donnees, infos, appliquer_generiques(donnees, stocks)[1]
 
     def _ligne(self, id_nom: int, info: dict, qte: int, qte_proposee: Optional[int],
                prix: Decimal, raison_: Optional[dict]) -> dict:
@@ -144,8 +161,9 @@ class CommandesService:
 
         decisions: dict[int, Decision] = {}
         infos: dict[int, dict] = {}
+        reprises: dict[int, list[int]] = {}
         if not vue["ferme"]:
-            decisions, infos = await self._propositions(jour)
+            decisions, infos, reprises = await self._propositions(jour)
         ids_enregistres = [l["id_nom"] for ls in lignes_enregistrees.values() for l in ls]
         manquants = [i for i in ids_enregistres if i not in infos]
         if manquants:
@@ -156,8 +174,10 @@ class CommandesService:
             if dec.quantite <= 0:
                 continue
             info = infos.get(id_nom, {})
-            ligne = self._ligne(id_nom, info, dec.quantite, dec.quantite,
-                                Decimal(info.get("prix_achat") or 0), raison(dec))
+            r = raison(dec)
+            if reprises.get(id_nom):
+                r["reprend"] = sorted((infos.get(i, {}).get("nom") or f"Produit {i}") for i in reprises[id_nom])
+            ligne = self._ligne(id_nom, info, dec.quantite, dec.quantite, Decimal(info.get("prix_achat") or 0), r)
             f = fournisseurs.get(info.get("id_fournisseur"))
             ligne["id_fournisseur"] = info.get("id_fournisseur")
             ligne["fournisseur"] = f["nom"] if f else None
@@ -316,3 +336,49 @@ class CommandesService:
         if not await self.repo.retirer_valideur(username):
             raise ErreurCommandes("introuvable", "Cet employé n'est pas valideur.", 404)
         await self.repo.commit()
+
+    # ── Génériques ──
+    async def generiques(self, id_nom: int) -> dict:
+        """Groupe DCI d'un produit : mode (toutes les marques ou quelques-unes),
+        et pour chaque marque ses ventes sur 12 mois, sa disponibilité, si
+        elle est gardée et le choix forcé du titulaire."""
+        jour = jour_de_commande()
+        donnees, infos, statuts = await self._statuts_generiques(jour)
+        produit = next((p for p in donnees.produits if p.id == id_nom), None)
+        code = g.normaliser(produit.code_dci) if produit else None
+        if not code:
+            return {"code": None, "membres": []}
+        membres = [p for p in donnees.produits if g.normaliser(p.code_dci) == code]
+        n = len(donnees.dates) - 1
+        st0 = statuts.get(id_nom)
+        mode = st0.mode if st0 else g.mode_du_groupe(code, donnees.classes_chroniques, donnees.modes_forces.get(code))
+        return {
+            "code": code, "classe": g.classe(code), "mode": mode,
+            "mode_force": donnees.modes_forces.get(code),
+            "chronique": g.classe(code) in donnees.classes_chroniques,
+            "nombre_gardes": donnees.nombre_generiques,
+            "membres": sorted(({
+                "id_nom": p.id, "nom": infos.get(p.id, {}).get("nom"),
+                "stock": int(infos.get(p.id, {}).get("stock") or 0),
+                "ventes_12m": float(p.demande[max(0, n - 365):n].sum()),
+                "garde": statuts[p.id].garde if p.id in statuts else True,
+                "choix": p.choix,
+            } for p in membres), key=lambda x: (not x["garde"], -x["ventes_12m"], x["nom"] or "")),
+        }
+
+    async def choisir_generique(self, id_nom: int, choix: Optional[str]) -> dict:
+        qui = self._admin()
+        await self.repo.choix_generique(id_nom, choix, qui)
+        await self.repo.commit()
+        vider_cache()
+        return await self.generiques(id_nom)
+
+    async def mode_groupe(self, id_nom: int, mode: Optional[str]) -> dict:
+        qui = self._admin()
+        actuel = await self.generiques(id_nom)
+        if not actuel["code"]:
+            raise ErreurCommandes("sans_dci", "Ce produit n'a pas de code DCI.", 409)
+        await self.repo.mode_groupe(actuel["code"], mode, qui)
+        await self.repo.commit()
+        vider_cache()
+        return await self.generiques(id_nom)

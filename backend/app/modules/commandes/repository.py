@@ -199,3 +199,22 @@ class CommandesRepository:
             f"UPDATE commandes SET statut = :vers{champs.get(vers, '')} WHERE id = :id AND statut = :de"),
             {"id": id_commande, "de": de, "vers": vers, "qui": qui})
         return r.rowcount > 0
+
+    # ── Génériques ──
+    async def choix_generique(self, id_nom: int, choix: Optional[str], qui: str) -> None:
+        if choix is None:
+            await self.db.execute(text("DELETE FROM generiques_choix WHERE id_nom = :p"), {"p": id_nom})
+            return
+        await self.db.execute(text("""
+            INSERT INTO generiques_choix (id_nom, choix, modifie_par) VALUES (:p, :c, :qui)
+            ON CONFLICT (id_nom) DO UPDATE SET choix = :c, modifie_le = now(), modifie_par = :qui
+        """), {"p": id_nom, "c": choix, "qui": qui})
+
+    async def mode_groupe(self, code: str, mode: Optional[str], qui: str) -> None:
+        if mode is None:
+            await self.db.execute(text("DELETE FROM generiques_groupes WHERE code = :c"), {"c": code})
+            return
+        await self.db.execute(text("""
+            INSERT INTO generiques_groupes (code, mode, modifie_par) VALUES (:c, :m, :qui)
+            ON CONFLICT (code) DO UPDATE SET mode = :m, modifie_le = now(), modifie_par = :qui
+        """), {"c": code, "m": mode, "qui": qui})

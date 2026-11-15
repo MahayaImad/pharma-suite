@@ -9,7 +9,7 @@ classe ABC ; prix d'achat moyen. Les consommables confirmés sont écartés
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -32,6 +32,11 @@ class Donnees:
     prix: dict[int, Decimal]
     calendrier: m.Calendrier
     ouvert: np.ndarray
+    # Génériques : classes chroniques (« 14A »), modes forcés par groupe,
+    # nombre de marques gardées.
+    classes_chroniques: set = field(default_factory=set)
+    modes_forces: dict = field(default_factory=dict)
+    nombre_generiques: int = 2
 
 
 async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: int | None = None) -> Donnees:
@@ -45,7 +50,7 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
     if limite:
         params["limite"] = limite
     lignes = (await db.execute(text(f"""
-        SELECT n.id, n.segment_abc,
+        SELECT n.id, n.segment_abc, n.de_equiv, gc.choix,
                COALESCE(NULLIF(mv.prix_moyen_pondere, 0), (
                    SELECT e.prix_achat FROM entrees_produits e
                    WHERE e.id_nom = n.id AND e.prix_achat > 0 ORDER BY e.date_entree DESC NULLS LAST LIMIT 1
@@ -54,6 +59,7 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
                          WHERE sp.id_nom = n.id AND sp.date >= :debut_rejeu), 0) AS volume
         FROM nomenclature n
         JOIN mv_stock_produits mv ON mv.id_nom = n.id
+        LEFT JOIN generiques_choix gc ON gc.id_nom = n.id
         WHERE n.archive = false AND (mv.actif OR mv.stock_actuel > 0)
           AND NOT EXISTS (SELECT 1 FROM produits_consommables pc
                           WHERE pc.id_nom = n.id AND pc.consommable AND pc.confirme)
@@ -129,6 +135,11 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
             id=r.id, demande=demande[r.id], stock_hist=stocks[r.id], classe_abc=r.segment_abc,
             delai_ouvres=int(delais[r.id]) if delais.get(r.id) is not None else delai_defaut,
             ramadan=ramadan, saison=m.indices_saison(demande[r.id], dates, debut_rejeu),
-            lancement=lancements.get(r.id),
+            lancement=lancements.get(r.id), code_dci=r.de_equiv, choix=r.choix,
         ))
-    return Donnees(dates, debut_rejeu, produits, {r.id: Decimal(r.prix) for r in lignes}, cal, ouvert)
+    from app.services.prevision.generiques import normaliser
+    classes = {normaliser(r.prefix) for r in await db.execute(text("SELECT DISTINCT prefix FROM classe_maladie"))}
+    modes = {normaliser(r.code): r.mode for r in await db.execute(text("SELECT code, mode FROM generiques_groupes"))}
+    nombre = (await db.execute(text("SELECT valeur FROM reglages_stock WHERE cle = 'generiques_gardes'"))).scalar()
+    return Donnees(dates, debut_rejeu, produits, {r.id: Decimal(r.prix) for r in lignes}, cal, ouvert,
+                   {c for c in classes if c}, modes, int(nombre if nombre is not None else 2))
