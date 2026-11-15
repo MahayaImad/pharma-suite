@@ -31,3 +31,12 @@ class ModeGroupe(BaseModel):
 class AjoutProduit(BaseModel):
     id_nom: int
     qte: Optional[int] = Field(None, ge=1, le=100000, description="None : quantité proposée ce soir (au moins 1)")
+
+
+class Deplacement(BaseModel):
+    de: int = Field(..., description="fournisseur d'origine")
+    vers: int = Field(..., description="nouveau fournisseur")
+
+
+class Remplacement(BaseModel):
+    par: int = Field(..., description="id_nom du générique qui remplace la ligne")

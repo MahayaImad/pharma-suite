@@ -280,3 +280,38 @@ async def test_commander_depuis_le_stock(api):
     await api.post(f"/commandes/{d['id_commande']}/valider")
     r = await api.post("/commandes/ajouter", json={"id_nom": 1, "qte": 3})
     assert (r.status_code, r.json()["error"]["code"]) == (409, "statut")
+
+
+async def test_changer_de_grossiste(api):
+    """ALPHA proposé chez GROSSISTE A, déplacé chez PARA B : les deux paniers
+    deviennent des brouillons, la ligne garde sa quantité."""
+    vue = await _jour(api)
+    qte = next(l for l in _panier(vue, "GROSSISTE A")["lignes"] if l["nom"] == "ALPHA")["qte"]
+    r = await api.post("/commandes/lignes/1/deplacer", json={"de": 1, "vers": 2})
+    assert r.status_code == 200, r.text
+    vue = r.json()["data"]
+    a, b = _panier(vue, "GROSSISTE A"), _panier(vue, "PARA B")
+    assert "ALPHA" not in [l["nom"] for l in a["lignes"]]
+    alpha = next(l for l in b["lignes"] if l["nom"] == "ALPHA")
+    assert alpha["qte"] == qte and alpha["raison"]["rythme"] == pytest.approx(4.0)
+    assert (a["commande"]["statut"], b["commande"]["statut"]) == ("brouillon", "brouillon")
+    r = await api.post("/commandes/lignes/1/deplacer", json={"de": 1, "vers": 2})
+    assert r.status_code == 404                                     # plus chez A
+
+
+async def test_changer_de_generique(api):
+    await api.db.execute(text("UPDATE nomenclature SET de_equiv = '04B044' WHERE id IN (1, 5)"))
+    await api.db.execute(text("UPDATE nomenclature SET de_equiv = '06M198' WHERE id = 3"))
+    await api.db.commit()
+    vue = (await api.post("/commandes/preparer")).json()["data"]
+    a = _panier(vue, "GROSSISTE A")
+    qte = next(l for l in a["lignes"] if l["nom"] == "ALPHA")["qte"]
+    id_c = a["commande"]["id"]
+    r = await api.post(f"/commandes/{id_c}/lignes/1/remplacer", json={"par": 3})
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "dci")
+    r = await api.post(f"/commandes/{id_c}/lignes/1/remplacer", json={"par": 5})
+    assert r.status_code == 200, r.text
+    lignes = {l["nom"]: l for l in _panier(r.json()["data"], "GROSSISTE A")["lignes"]}
+    assert "ALPHA" not in lignes
+    assert lignes["EPSILON"]["qte"] == qte and lignes["EPSILON"]["raison"]["remplace"] == "ALPHA"
+    assert lignes["EPSILON"]["qte_proposee"] is None

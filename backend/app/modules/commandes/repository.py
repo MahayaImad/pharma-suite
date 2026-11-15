@@ -218,3 +218,6 @@ class CommandesRepository:
             INSERT INTO generiques_groupes (code, mode, modifie_par) VALUES (:c, :m, :qui)
             ON CONFLICT (code) DO UPDATE SET mode = :m, modifie_le = now(), modifie_par = :qui
         """), {"c": code, "m": mode, "qui": qui})
+
+    async def code_dci(self, id_nom: int) -> Optional[str]:
+        return (await self.db.execute(text("SELECT de_equiv FROM nomenclature WHERE id = :p"), {"p": id_nom})).scalar()

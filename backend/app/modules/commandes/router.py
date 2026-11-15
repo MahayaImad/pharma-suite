@@ -53,6 +53,18 @@ async def ajouter_produit(saisie: s.AjoutProduit, svc: CommandesService = Depend
     return await _repondre(svc.ajouter_produit(saisie.id_nom, saisie.qte))
 
 
+@router.post("/lignes/{id_nom}/deplacer")
+async def deplacer(id_nom: int, saisie: s.Deplacement, svc: CommandesService = Depends(_service)):
+    """Change le grossiste d'une ligne (brouillons du jour, préparés au besoin)."""
+    return await _repondre(svc.deplacer(id_nom, saisie.de, saisie.vers))
+
+
+@router.post("/{id_commande}/lignes/{id_nom}/remplacer")
+async def remplacer(id_commande: int, id_nom: int, saisie: s.Remplacement, svc: CommandesService = Depends(_service)):
+    """Change de générique (même code DCI), même quantité, même panier."""
+    return await _repondre(svc.remplacer(id_commande, id_nom, saisie.par))
+
+
 @router.put("/{id_commande}/lignes/{id_nom}")
 async def modifier_ligne(id_commande: int, id_nom: int, saisie: s.LigneSaisie,
                          svc: CommandesService = Depends(_service)):

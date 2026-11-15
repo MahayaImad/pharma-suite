@@ -236,6 +236,70 @@ class CommandesService:
                                              l["raison"], self.qui)
         return id_c
 
+    async def _brouillon(self, jour: date, id_f: int, fournisseurs: dict) -> int:
+        """Brouillon du jour d'un fournisseur ; préparé avec son panier proposé
+        s'il n'existe pas encore. Refus si la commande est déjà validée."""
+        f = fournisseurs.get(id_f)
+        if f is None:
+            raise ErreurCommandes("introuvable", "Fournisseur inconnu.", 404)
+        commande = next((c for c in await self.repo.commandes_du_jour(jour) if c["id_fournisseur"] == id_f), None)
+        if commande:
+            if commande["statut"] != "brouillon":
+                raise ErreurCommandes(
+                    "statut", f"La commande du jour chez {f['nom']} est déjà {commande['statut']} : rouvrez-la d'abord.",
+                    409)
+            return commande["id"]
+        panier = next((p for p in (await self.journee(jour))["paniers"] if p["fournisseur"]["id"] == id_f), None)
+        id_c = await self._enregistrer(jour, panier) if panier and panier["lignes"] else None
+        return id_c or await self.repo.creer_commande(jour, id_f, self._livraison(jour, f), self.qui)
+
+    async def deplacer(self, id_nom: int, de: int, vers: int) -> dict:
+        """Change le grossiste d'une ligne : elle quitte le brouillon du jour
+        de [de] pour celui de [vers], avec sa quantité et sa raison. Les deux
+        paniers sont préparés au besoin."""
+        if de == vers:
+            raise ErreurCommandes("meme_fournisseur", "C'est déjà ce fournisseur.")
+        jour = jour_de_commande()
+        fournisseurs = await self.repo.fournisseurs(jour)
+        source = await self._brouillon(jour, de, fournisseurs)
+        ligne = next((l for l in await self.repo.lignes([source]) if l["id_nom"] == id_nom), None)
+        if ligne is None:
+            raise ErreurCommandes("introuvable", "Ce produit n'est pas dans ce panier.", 404)
+        cible = await self._brouillon(jour, vers, fournisseurs)
+        existante = next((l for l in await self.repo.lignes([cible]) if l["id_nom"] == id_nom), None)
+        qte = ligne["qte"] + (existante["qte"] if existante else 0)
+        await self.repo.ecrire_ligne(cible, id_nom, qte, ligne["qte_proposee"], Decimal(ligne["prix_achat"]),
+                                     ligne["raison"], self.qui)
+        await self.repo.retirer_ligne(source, id_nom)
+        await self.repo.commit()
+        return await self.journee(jour)
+
+    async def remplacer(self, id_commande: int, id_nom: int, par: int) -> dict:
+        """Change de générique : la ligne passe à une autre marque de même code
+        DCI, même quantité, dans le même panier (au dernier prix d'achat de la
+        nouvelle marque)."""
+        await self._commande(id_commande, ("brouillon",))
+        ligne = next((l for l in await self.repo.lignes([id_commande]) if l["id_nom"] == id_nom), None)
+        if ligne is None:
+            raise ErreurCommandes("introuvable", "Ce produit n'est pas dans ce panier.", 404)
+        infos = await self.repo.produits([id_nom, par])
+        if par not in infos:
+            raise ErreurCommandes("produit", "Produit inconnu.", 404)
+        codes = {i: g.normaliser(await self.repo.code_dci(i)) for i in (id_nom, par)}
+        if not codes[id_nom] or codes[id_nom] != codes[par]:
+            raise ErreurCommandes("dci", "Ce n'est pas un générique de la même DCI.", 409)
+        if infos[par].get("psychotrope"):
+            raise ErreurCommandes("psychotrope", "Psychotrope : à commander dans EASYPHARM (bon spécial).", 409)
+        raison_ = dict(ligne["raison"] or {})
+        raison_["remplace"] = infos[id_nom].get("nom")
+        existante = next((l for l in await self.repo.lignes([id_commande]) if l["id_nom"] == par), None)
+        qte = ligne["qte"] + (existante["qte"] if existante else 0)
+        await self.repo.retirer_ligne(id_commande, id_nom)
+        await self.repo.ecrire_ligne(id_commande, par, qte, None, Decimal(infos[par].get("prix_achat") or 0), raison_,
+                                     self.qui)
+        await self.repo.commit()
+        return await self.journee(jour_de_commande())
+
     async def ajouter_produit(self, id_nom: int, qte: Optional[int] = None) -> dict:
         """« Commander » depuis le Stock : ajoute le produit au brouillon du
         jour de son fournisseur principal (créé au besoin). Sans quantité, la
