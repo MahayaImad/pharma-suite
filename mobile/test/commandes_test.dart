@@ -200,7 +200,10 @@ void main() {
     final api = FausseCommandesApi();
     await _lancer(tester, api, depart: '/preferences/fournisseurs', role: 'admin');
     expect(tester.takeException(), isNull);
-    expect(find.text('Actifs (2)'), findsOneWidget);
+    expect(find.text('Actifs (2)'), findsWidgets); // filtre et titre de la liste
+    expect(find.byKey(const ValueKey('titre-inactifs')), findsOneWidget); // les deux listes, l'une sous l'autre
+    await tester.tap(find.byKey(const ValueKey('filtre-actifs')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('fournisseur-3')), findsNothing);
     expect(find.text('Réglage automatique'), findsOneWidget); // PARA BELLA
     await tester.tap(find.byKey(const ValueKey('filtre-inactifs')));

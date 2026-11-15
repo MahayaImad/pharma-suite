@@ -28,7 +28,7 @@ class EcranFournisseurs extends ConsumerStatefulWidget {
 }
 
 class _EcranFournisseursState extends ConsumerState<EcranFournisseurs> {
-  _Filtre _filtre = _Filtre.actifs;
+  _Filtre _filtre = _Filtre.tous;
   String _recherche = '';
 
   @override
@@ -89,9 +89,9 @@ class _EcranFournisseursState extends ConsumerState<EcranFournisseurs> {
                         spacing: 8,
                         children: [
                           for (final (f, libelle) in [
+                            (_Filtre.tous, 'Tous (${tous.length})'),
                             (_Filtre.actifs, 'Actifs ($actifs)'),
                             (_Filtre.inactifs, 'Inactifs (${tous.length - actifs})'),
-                            (_Filtre.tous, 'Tous (${tous.length})'),
                           ])
                             ChoiceChip(
                               key: ValueKey('filtre-${f.name}'),
@@ -105,7 +105,30 @@ class _EcranFournisseursState extends ConsumerState<EcranFournisseurs> {
                       if (visibles.isEmpty)
                         const MessageVide(titre: 'Aucun fournisseur', texte: 'Rien ne correspond.')
                       else
-                        _Cadre(enfants: [for (final f in visibles) _LigneFournisseur(f, modifiable: modifiable)]),
+                        // Actifs puis inactifs, chacun sous son titre ; un
+                        // interrupteur fait passer un fournisseur de l'un à l'autre.
+                        for (final actif in [true, false])
+                          if (visibles.any((f) => f.actif == actif)) ...[
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+                              child: Text(
+                                '${actif ? 'Actifs' : 'Inactifs'} (${visibles.where((f) => f.actif == actif).length})',
+                                key: ValueKey('titre-${actif ? 'actifs' : 'inactifs'}'),
+                                style: TextStyle(
+                                  fontFamily: 'Sora',
+                                  fontWeight: FontWeight.w600,
+                                  color: actif ? null : context.couleurs.encre2,
+                                ),
+                              ),
+                            ),
+                            _Cadre(
+                              enfants: [
+                                for (final f in visibles)
+                                  if (f.actif == actif) _LigneFournisseur(f, modifiable: modifiable),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                          ],
                       const SizedBox(height: 28),
                       const _Valideurs(),
                     ],
@@ -235,7 +258,10 @@ class _LigneFournisseur extends ConsumerWidget {
                 const Text('Type de grossiste'),
                 const SizedBox(height: 8),
                 SegmentedButton<TypeFournisseur>(
-                  segments: [for (final t in TypeFournisseur.values) ButtonSegment(value: t, label: Text(t.libelle))],
+                  segments: [
+                    for (final t in TypeFournisseur.values)
+                      ButtonSegment(value: t, label: Text(t == TypeFournisseur.pharma ? 'Pharma' : 'Parapharma')),
+                  ],
                   selected: {type},
                   onSelectionChanged: (v) => majour(() => type = v.first),
                 ),
