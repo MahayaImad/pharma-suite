@@ -17,7 +17,8 @@ T _$identity<T>(T value) => value;
 mixin _$Raison {
 
  String get type; double get rythme;@JsonKey(name: 'jours_couverts') int get joursCouverts; double get prevu; double get securite; double get cible; double get stock;@JsonKey(name: 'en_cours') double get enCours;/// Marques remplacées (génériques) dont ce produit reprend la demande.
- List<String> get reprend;
+ List<String> get reprend;/// Générique remplacé à la main par ce produit.
+ String? get remplace;
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,20 +32,20 @@ $RaisonCopyWith<Raison> get copyWith => _$RaisonCopyWithImpl<Raison>(this as Rai
 @override
 bool operator ==(Object other) {
   final _this = this as Raison;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Raison&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.rythme, _this.rythme) || other.rythme == _this.rythme)&&(identical(other.joursCouverts, _this.joursCouverts) || other.joursCouverts == _this.joursCouverts)&&(identical(other.prevu, _this.prevu) || other.prevu == _this.prevu)&&(identical(other.securite, _this.securite) || other.securite == _this.securite)&&(identical(other.cible, _this.cible) || other.cible == _this.cible)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.enCours, _this.enCours) || other.enCours == _this.enCours)&&const DeepCollectionEquality().equals(other.reprend, _this.reprend));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Raison&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.rythme, _this.rythme) || other.rythme == _this.rythme)&&(identical(other.joursCouverts, _this.joursCouverts) || other.joursCouverts == _this.joursCouverts)&&(identical(other.prevu, _this.prevu) || other.prevu == _this.prevu)&&(identical(other.securite, _this.securite) || other.securite == _this.securite)&&(identical(other.cible, _this.cible) || other.cible == _this.cible)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.enCours, _this.enCours) || other.enCours == _this.enCours)&&const DeepCollectionEquality().equals(other.reprend, _this.reprend)&&(identical(other.remplace, _this.remplace) || other.remplace == _this.remplace));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Raison;
-  return Object.hash(runtimeType,_this.type,_this.rythme,_this.joursCouverts,_this.prevu,_this.securite,_this.cible,_this.stock,_this.enCours,const DeepCollectionEquality().hash(_this.reprend));
+  return Object.hash(runtimeType,_this.type,_this.rythme,_this.joursCouverts,_this.prevu,_this.securite,_this.cible,_this.stock,_this.enCours,const DeepCollectionEquality().hash(_this.reprend),_this.remplace);
 }
 
 @override
 String toString() {
   final _this = this as Raison;
-  return 'Raison(type: ${_this.type}, rythme: ${_this.rythme}, joursCouverts: ${_this.joursCouverts}, prevu: ${_this.prevu}, securite: ${_this.securite}, cible: ${_this.cible}, stock: ${_this.stock}, enCours: ${_this.enCours}, reprend: ${_this.reprend})';
+  return 'Raison(type: ${_this.type}, rythme: ${_this.rythme}, joursCouverts: ${_this.joursCouverts}, prevu: ${_this.prevu}, securite: ${_this.securite}, cible: ${_this.cible}, stock: ${_this.stock}, enCours: ${_this.enCours}, reprend: ${_this.reprend}, remplace: ${_this.remplace})';
 }
 
 
@@ -55,7 +56,7 @@ abstract mixin class $RaisonCopyWith<$Res>  {
   factory $RaisonCopyWith(Raison value, $Res Function(Raison) _then) = _$RaisonCopyWithImpl;
 @useResult
 $Res call({
- String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend
+ String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend, String? remplace
 });
 
 
@@ -72,7 +73,7 @@ class _$RaisonCopyWithImpl<$Res>
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,Object? remplace = freezed,}) {
   return _then(Raison(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
@@ -83,7 +84,8 @@ as double,cible: null == cible ? _self.cible : cible // ignore: cast_nullable_to
 as double,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as double,enCours: null == enCours ? _self.enCours : enCours // ignore: cast_nullable_to_non_nullable
 as double,reprend: null == reprend ? _self.reprend : reprend // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,remplace: freezed == remplace ? _self.remplace : remplace // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -168,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Raison() when $default != null:
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace);case _:
   return orElse();
 
 }
@@ -189,10 +191,10 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace)  $default,) {final _that = this;
 switch (_that) {
 case _Raison():
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +211,10 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace)?  $default,) {final _that = this;
 switch (_that) {
 case _Raison() when $default != null:
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace);case _:
   return null;
 
 }
@@ -224,7 +226,7 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 @JsonSerializable()
 
 class _Raison implements Raison {
-  const _Raison({this.type = '', this.rythme = 0, @JsonKey(name: 'jours_couverts') this.joursCouverts = 0, this.prevu = 0, this.securite = 0, this.cible = 0, this.stock = 0, @JsonKey(name: 'en_cours') this.enCours = 0,  List<String> reprend = const <String>[]}): _reprend = reprend;
+  const _Raison({this.type = '', this.rythme = 0, @JsonKey(name: 'jours_couverts') this.joursCouverts = 0, this.prevu = 0, this.securite = 0, this.cible = 0, this.stock = 0, @JsonKey(name: 'en_cours') this.enCours = 0,  List<String> reprend = const <String>[], this.remplace}): _reprend = reprend;
   factory _Raison.fromJson(Map<String, dynamic> json) => _$RaisonFromJson(json);
 
 @override@JsonKey() final  String type;
@@ -244,6 +246,8 @@ class _Raison implements Raison {
   return EqualUnmodifiableListView(_reprend);
 }
 
+/// Générique remplacé à la main par ce produit.
+@override final  String? remplace;
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
@@ -258,18 +262,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Raison&&(identical(other.type, type) || other.type == type)&&(identical(other.rythme, rythme) || other.rythme == rythme)&&(identical(other.joursCouverts, joursCouverts) || other.joursCouverts == joursCouverts)&&(identical(other.prevu, prevu) || other.prevu == prevu)&&(identical(other.securite, securite) || other.securite == securite)&&(identical(other.cible, cible) || other.cible == cible)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.enCours, enCours) || other.enCours == enCours)&&const DeepCollectionEquality().equals(other.reprend, _reprend));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Raison&&(identical(other.type, type) || other.type == type)&&(identical(other.rythme, rythme) || other.rythme == rythme)&&(identical(other.joursCouverts, joursCouverts) || other.joursCouverts == joursCouverts)&&(identical(other.prevu, prevu) || other.prevu == prevu)&&(identical(other.securite, securite) || other.securite == securite)&&(identical(other.cible, cible) || other.cible == cible)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.enCours, enCours) || other.enCours == enCours)&&const DeepCollectionEquality().equals(other.reprend, _reprend)&&(identical(other.remplace, remplace) || other.remplace == remplace));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,type,rythme,joursCouverts,prevu,securite,cible,stock,enCours,const DeepCollectionEquality().hash(_reprend));
+    return Object.hash(runtimeType,type,rythme,joursCouverts,prevu,securite,cible,stock,enCours,const DeepCollectionEquality().hash(_reprend),remplace);
 }
 
 @override
 String toString() {
-    return 'Raison(type: $type, rythme: $rythme, joursCouverts: $joursCouverts, prevu: $prevu, securite: $securite, cible: $cible, stock: $stock, enCours: $enCours, reprend: $reprend)';
+    return 'Raison(type: $type, rythme: $rythme, joursCouverts: $joursCouverts, prevu: $prevu, securite: $securite, cible: $cible, stock: $stock, enCours: $enCours, reprend: $reprend, remplace: $remplace)';
 }
 
 
@@ -280,7 +284,7 @@ abstract mixin class _$RaisonCopyWith<$Res> implements $RaisonCopyWith<$Res> {
   factory _$RaisonCopyWith(_Raison value, $Res Function(_Raison) _then) = __$RaisonCopyWithImpl;
 @override @useResult
 $Res call({
- String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend
+ String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend, String? remplace
 });
 
 
@@ -297,7 +301,7 @@ class __$RaisonCopyWithImpl<$Res>
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,Object? remplace = freezed,}) {
   return _then(_Raison(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
@@ -308,7 +312,8 @@ as double,cible: null == cible ? _self.cible : cible // ignore: cast_nullable_to
 as double,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as double,enCours: null == enCours ? _self.enCours : enCours // ignore: cast_nullable_to_non_nullable
 as double,reprend: null == reprend ? _self._reprend : reprend // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,remplace: freezed == remplace ? _self.remplace : remplace // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -319,7 +324,8 @@ as List<String>,
 /// @nodoc
 mixin _$LigneCommande {
 
-@JsonKey(name: 'id_nom') int get idNom; String? get nom; String? get famille;@JsonKey(name: 'classe_abc') String? get classeAbc; int get stock; int get qte;@JsonKey(name: 'qte_proposee') int? get qteProposee;@JsonKey(name: 'prix_achat') double get prixAchat; double get montant; Raison? get raison; String? get fournisseur;
+@JsonKey(name: 'id_nom') int get idNom; String? get nom; String? get famille;@JsonKey(name: 'classe_abc') String? get classeAbc; int get stock; int get qte;@JsonKey(name: 'qte_proposee') int? get qteProposee;@JsonKey(name: 'prix_achat') double get prixAchat; double get montant; Raison? get raison; String? get fournisseur;/// Code DCI : présent si le produit peut avoir des génériques.
+@JsonKey(name: 'code_dci') String? get codeDci;
 /// Create a copy of LigneCommande
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -333,20 +339,20 @@ $LigneCommandeCopyWith<LigneCommande> get copyWith => _$LigneCommandeCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as LigneCommande;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LigneCommande&&(identical(other.idNom, _this.idNom) || other.idNom == _this.idNom)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.famille, _this.famille) || other.famille == _this.famille)&&(identical(other.classeAbc, _this.classeAbc) || other.classeAbc == _this.classeAbc)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.qte, _this.qte) || other.qte == _this.qte)&&(identical(other.qteProposee, _this.qteProposee) || other.qteProposee == _this.qteProposee)&&(identical(other.prixAchat, _this.prixAchat) || other.prixAchat == _this.prixAchat)&&(identical(other.montant, _this.montant) || other.montant == _this.montant)&&(identical(other.raison, _this.raison) || other.raison == _this.raison)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LigneCommande&&(identical(other.idNom, _this.idNom) || other.idNom == _this.idNom)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.famille, _this.famille) || other.famille == _this.famille)&&(identical(other.classeAbc, _this.classeAbc) || other.classeAbc == _this.classeAbc)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.qte, _this.qte) || other.qte == _this.qte)&&(identical(other.qteProposee, _this.qteProposee) || other.qteProposee == _this.qteProposee)&&(identical(other.prixAchat, _this.prixAchat) || other.prixAchat == _this.prixAchat)&&(identical(other.montant, _this.montant) || other.montant == _this.montant)&&(identical(other.raison, _this.raison) || other.raison == _this.raison)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur)&&(identical(other.codeDci, _this.codeDci) || other.codeDci == _this.codeDci));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as LigneCommande;
-  return Object.hash(runtimeType,_this.idNom,_this.nom,_this.famille,_this.classeAbc,_this.stock,_this.qte,_this.qteProposee,_this.prixAchat,_this.montant,_this.raison,_this.fournisseur);
+  return Object.hash(runtimeType,_this.idNom,_this.nom,_this.famille,_this.classeAbc,_this.stock,_this.qte,_this.qteProposee,_this.prixAchat,_this.montant,_this.raison,_this.fournisseur,_this.codeDci);
 }
 
 @override
 String toString() {
   final _this = this as LigneCommande;
-  return 'LigneCommande(idNom: ${_this.idNom}, nom: ${_this.nom}, famille: ${_this.famille}, classeAbc: ${_this.classeAbc}, stock: ${_this.stock}, qte: ${_this.qte}, qteProposee: ${_this.qteProposee}, prixAchat: ${_this.prixAchat}, montant: ${_this.montant}, raison: ${_this.raison}, fournisseur: ${_this.fournisseur})';
+  return 'LigneCommande(idNom: ${_this.idNom}, nom: ${_this.nom}, famille: ${_this.famille}, classeAbc: ${_this.classeAbc}, stock: ${_this.stock}, qte: ${_this.qte}, qteProposee: ${_this.qteProposee}, prixAchat: ${_this.prixAchat}, montant: ${_this.montant}, raison: ${_this.raison}, fournisseur: ${_this.fournisseur}, codeDci: ${_this.codeDci})';
 }
 
 
@@ -357,7 +363,7 @@ abstract mixin class $LigneCommandeCopyWith<$Res>  {
   factory $LigneCommandeCopyWith(LigneCommande value, $Res Function(LigneCommande) _then) = _$LigneCommandeCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'id_nom') int idNom, String? nom, String? famille,@JsonKey(name: 'classe_abc') String? classeAbc, int stock, int qte,@JsonKey(name: 'qte_proposee') int? qteProposee,@JsonKey(name: 'prix_achat') double prixAchat, double montant, Raison? raison, String? fournisseur
+@JsonKey(name: 'id_nom') int idNom, String? nom, String? famille,@JsonKey(name: 'classe_abc') String? classeAbc, int stock, int qte,@JsonKey(name: 'qte_proposee') int? qteProposee,@JsonKey(name: 'prix_achat') double prixAchat, double montant, Raison? raison, String? fournisseur,@JsonKey(name: 'code_dci') String? codeDci
 });
 
 
@@ -374,7 +380,7 @@ class _$LigneCommandeCopyWithImpl<$Res>
 
 /// Create a copy of LigneCommande
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? idNom = null,Object? nom = freezed,Object? famille = freezed,Object? classeAbc = freezed,Object? stock = null,Object? qte = null,Object? qteProposee = freezed,Object? prixAchat = null,Object? montant = null,Object? raison = freezed,Object? fournisseur = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? idNom = null,Object? nom = freezed,Object? famille = freezed,Object? classeAbc = freezed,Object? stock = null,Object? qte = null,Object? qteProposee = freezed,Object? prixAchat = null,Object? montant = null,Object? raison = freezed,Object? fournisseur = freezed,Object? codeDci = freezed,}) {
   return _then(LigneCommande(
 idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
 as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -387,6 +393,7 @@ as int?,prixAchat: null == prixAchat ? _self.prixAchat : prixAchat // ignore: ca
 as double,montant: null == montant ? _self.montant : montant // ignore: cast_nullable_to_non_nullable
 as double,raison: freezed == raison ? _self.raison : raison // ignore: cast_nullable_to_non_nullable
 as Raison?,fournisseur: freezed == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
+as String?,codeDci: freezed == codeDci ? _self.codeDci : codeDci // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -484,10 +491,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String? famille, @JsonKey(name: 'classe_abc')  String? classeAbc,  int stock,  int qte, @JsonKey(name: 'qte_proposee')  int? qteProposee, @JsonKey(name: 'prix_achat')  double prixAchat,  double montant,  Raison? raison,  String? fournisseur)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String? famille, @JsonKey(name: 'classe_abc')  String? classeAbc,  int stock,  int qte, @JsonKey(name: 'qte_proposee')  int? qteProposee, @JsonKey(name: 'prix_achat')  double prixAchat,  double montant,  Raison? raison,  String? fournisseur, @JsonKey(name: 'code_dci')  String? codeDci)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LigneCommande() when $default != null:
-return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,_that.qte,_that.qteProposee,_that.prixAchat,_that.montant,_that.raison,_that.fournisseur);case _:
+return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,_that.qte,_that.qteProposee,_that.prixAchat,_that.montant,_that.raison,_that.fournisseur,_that.codeDci);case _:
   return orElse();
 
 }
@@ -505,10 +512,10 @@ return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String? famille, @JsonKey(name: 'classe_abc')  String? classeAbc,  int stock,  int qte, @JsonKey(name: 'qte_proposee')  int? qteProposee, @JsonKey(name: 'prix_achat')  double prixAchat,  double montant,  Raison? raison,  String? fournisseur)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String? famille, @JsonKey(name: 'classe_abc')  String? classeAbc,  int stock,  int qte, @JsonKey(name: 'qte_proposee')  int? qteProposee, @JsonKey(name: 'prix_achat')  double prixAchat,  double montant,  Raison? raison,  String? fournisseur, @JsonKey(name: 'code_dci')  String? codeDci)  $default,) {final _that = this;
 switch (_that) {
 case _LigneCommande():
-return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,_that.qte,_that.qteProposee,_that.prixAchat,_that.montant,_that.raison,_that.fournisseur);case _:
+return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,_that.qte,_that.qteProposee,_that.prixAchat,_that.montant,_that.raison,_that.fournisseur,_that.codeDci);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -525,10 +532,10 @@ return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String? famille, @JsonKey(name: 'classe_abc')  String? classeAbc,  int stock,  int qte, @JsonKey(name: 'qte_proposee')  int? qteProposee, @JsonKey(name: 'prix_achat')  double prixAchat,  double montant,  Raison? raison,  String? fournisseur)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String? famille, @JsonKey(name: 'classe_abc')  String? classeAbc,  int stock,  int qte, @JsonKey(name: 'qte_proposee')  int? qteProposee, @JsonKey(name: 'prix_achat')  double prixAchat,  double montant,  Raison? raison,  String? fournisseur, @JsonKey(name: 'code_dci')  String? codeDci)?  $default,) {final _that = this;
 switch (_that) {
 case _LigneCommande() when $default != null:
-return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,_that.qte,_that.qteProposee,_that.prixAchat,_that.montant,_that.raison,_that.fournisseur);case _:
+return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,_that.qte,_that.qteProposee,_that.prixAchat,_that.montant,_that.raison,_that.fournisseur,_that.codeDci);case _:
   return null;
 
 }
@@ -540,7 +547,7 @@ return $default(_that.idNom,_that.nom,_that.famille,_that.classeAbc,_that.stock,
 @JsonSerializable()
 
 class _LigneCommande extends LigneCommande {
-  const _LigneCommande({@JsonKey(name: 'id_nom') required this.idNom, this.nom, this.famille, @JsonKey(name: 'classe_abc') this.classeAbc, this.stock = 0, required this.qte, @JsonKey(name: 'qte_proposee') this.qteProposee, @JsonKey(name: 'prix_achat') this.prixAchat = 0, this.montant = 0, this.raison, this.fournisseur}): super._();
+  const _LigneCommande({@JsonKey(name: 'id_nom') required this.idNom, this.nom, this.famille, @JsonKey(name: 'classe_abc') this.classeAbc, this.stock = 0, required this.qte, @JsonKey(name: 'qte_proposee') this.qteProposee, @JsonKey(name: 'prix_achat') this.prixAchat = 0, this.montant = 0, this.raison, this.fournisseur, @JsonKey(name: 'code_dci') this.codeDci}): super._();
   factory _LigneCommande.fromJson(Map<String, dynamic> json) => _$LigneCommandeFromJson(json);
 
 @override@JsonKey(name: 'id_nom') final  int idNom;
@@ -554,6 +561,8 @@ class _LigneCommande extends LigneCommande {
 @override@JsonKey() final  double montant;
 @override final  Raison? raison;
 @override final  String? fournisseur;
+/// Code DCI : présent si le produit peut avoir des génériques.
+@override@JsonKey(name: 'code_dci') final  String? codeDci;
 
 /// Create a copy of LigneCommande
 /// with the given fields replaced by the non-null parameter values.
@@ -568,18 +577,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LigneCommande&&(identical(other.idNom, idNom) || other.idNom == idNom)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.famille, famille) || other.famille == famille)&&(identical(other.classeAbc, classeAbc) || other.classeAbc == classeAbc)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.qte, qte) || other.qte == qte)&&(identical(other.qteProposee, qteProposee) || other.qteProposee == qteProposee)&&(identical(other.prixAchat, prixAchat) || other.prixAchat == prixAchat)&&(identical(other.montant, montant) || other.montant == montant)&&(identical(other.raison, raison) || other.raison == raison)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LigneCommande&&(identical(other.idNom, idNom) || other.idNom == idNom)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.famille, famille) || other.famille == famille)&&(identical(other.classeAbc, classeAbc) || other.classeAbc == classeAbc)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.qte, qte) || other.qte == qte)&&(identical(other.qteProposee, qteProposee) || other.qteProposee == qteProposee)&&(identical(other.prixAchat, prixAchat) || other.prixAchat == prixAchat)&&(identical(other.montant, montant) || other.montant == montant)&&(identical(other.raison, raison) || other.raison == raison)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur)&&(identical(other.codeDci, codeDci) || other.codeDci == codeDci));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,idNom,nom,famille,classeAbc,stock,qte,qteProposee,prixAchat,montant,raison,fournisseur);
+    return Object.hash(runtimeType,idNom,nom,famille,classeAbc,stock,qte,qteProposee,prixAchat,montant,raison,fournisseur,codeDci);
 }
 
 @override
 String toString() {
-    return 'LigneCommande(idNom: $idNom, nom: $nom, famille: $famille, classeAbc: $classeAbc, stock: $stock, qte: $qte, qteProposee: $qteProposee, prixAchat: $prixAchat, montant: $montant, raison: $raison, fournisseur: $fournisseur)';
+    return 'LigneCommande(idNom: $idNom, nom: $nom, famille: $famille, classeAbc: $classeAbc, stock: $stock, qte: $qte, qteProposee: $qteProposee, prixAchat: $prixAchat, montant: $montant, raison: $raison, fournisseur: $fournisseur, codeDci: $codeDci)';
 }
 
 
@@ -590,7 +599,7 @@ abstract mixin class _$LigneCommandeCopyWith<$Res> implements $LigneCommandeCopy
   factory _$LigneCommandeCopyWith(_LigneCommande value, $Res Function(_LigneCommande) _then) = __$LigneCommandeCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'id_nom') int idNom, String? nom, String? famille,@JsonKey(name: 'classe_abc') String? classeAbc, int stock, int qte,@JsonKey(name: 'qte_proposee') int? qteProposee,@JsonKey(name: 'prix_achat') double prixAchat, double montant, Raison? raison, String? fournisseur
+@JsonKey(name: 'id_nom') int idNom, String? nom, String? famille,@JsonKey(name: 'classe_abc') String? classeAbc, int stock, int qte,@JsonKey(name: 'qte_proposee') int? qteProposee,@JsonKey(name: 'prix_achat') double prixAchat, double montant, Raison? raison, String? fournisseur,@JsonKey(name: 'code_dci') String? codeDci
 });
 
 
@@ -607,7 +616,7 @@ class __$LigneCommandeCopyWithImpl<$Res>
 
 /// Create a copy of LigneCommande
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? idNom = null,Object? nom = freezed,Object? famille = freezed,Object? classeAbc = freezed,Object? stock = null,Object? qte = null,Object? qteProposee = freezed,Object? prixAchat = null,Object? montant = null,Object? raison = freezed,Object? fournisseur = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? idNom = null,Object? nom = freezed,Object? famille = freezed,Object? classeAbc = freezed,Object? stock = null,Object? qte = null,Object? qteProposee = freezed,Object? prixAchat = null,Object? montant = null,Object? raison = freezed,Object? fournisseur = freezed,Object? codeDci = freezed,}) {
   return _then(_LigneCommande(
 idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
 as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -620,6 +629,7 @@ as int?,prixAchat: null == prixAchat ? _self.prixAchat : prixAchat // ignore: ca
 as double,montant: null == montant ? _self.montant : montant // ignore: cast_nullable_to_non_nullable
 as double,raison: freezed == raison ? _self.raison : raison // ignore: cast_nullable_to_non_nullable
 as Raison?,fournisseur: freezed == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
+as String?,codeDci: freezed == codeDci ? _self.codeDci : codeDci // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

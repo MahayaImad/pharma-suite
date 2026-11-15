@@ -271,4 +271,48 @@ class FausseCommandesApi implements CommandesApi {
     if (panne) throw const ErreurApi('Psychotrope : à commander dans EASYPHARM (bon spécial).');
     return AjoutCommande(idCommande: 100, idFournisseur: 1, fournisseur: 'GROSSISTE ATLAS', qte: 4);
   }
+
+  @override
+  Future<JourneeCommandes> deplacer(int idNom, int de, int vers) async {
+    appels.add('deplacer $idNom $de $vers');
+    final source = paniers.firstWhere((p) => p.fournisseur.id == de);
+    final ligne = source.lignes.firstWhere((l) => l.idNom == idNom);
+    paniers = [
+      for (final p in paniers)
+        if (p.fournisseur.id == de)
+          p.copyWith(
+            lignes: [
+              for (final l in p.lignes)
+                if (l.idNom != idNom) l,
+            ],
+          )
+        else if (p.fournisseur.id == vers)
+          p.copyWith(lignes: [...p.lignes, ligne])
+        else
+          p,
+    ];
+    return _journee;
+  }
+
+  @override
+  Future<JourneeCommandes> remplacer(int idCommande, int idNom, int par) async {
+    appels.add('remplacer $idCommande $idNom $par');
+    final p = _parCommande(idCommande);
+    _remplacer(
+      p,
+      p.copyWith(
+        lignes: [
+          for (final l in p.lignes)
+            l.idNom == idNom
+                ? l.copyWith(
+                    idNom: par,
+                    nom: 'XYDOL 600',
+                    raison: const Raison(remplace: 'SAPOFEN 600'),
+                  )
+                : l,
+        ],
+      ),
+    );
+    return _journee;
+  }
 }

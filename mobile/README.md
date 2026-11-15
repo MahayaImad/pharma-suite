@@ -25,7 +25,10 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   Aïd par année (« à vérifier » jusqu'à validation), jours fériés, et les
   constantes du calcul des commandes, dont le budget mensuel. Lecture pour
   tous, modification par le titulaire.
-- **Commandes** (`/commandes`, `/commandes/:fournisseur`) : le budget du mois
+- **Commandes** (`/commandes`, `/commandes/:fournisseur`), design « épuré,
+  deux volets » : ⇄ change une ligne de générique (même DCI) ; sur PC, la
+  poignée ⋮⋮ glisse une ligne sur un autre grossiste ; sur portable, un appui
+  sur la ligne ouvre changer de générique / de grossiste / retirer. Le budget du mois
   (dépensé, proposé ce soir, reste après), « Préparer toutes les commandes »,
   puis une carte par grossiste, pharmaceutiques puis parapharmaceutiques
   (montant, lignes, étape, ruptures) ; psychotropes et produits sans

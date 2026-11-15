@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/themes.dart';
-import '../../../core/widgets/pastille_etat.dart';
 import '../../../data/api/client_api.dart';
 import '../../../data/api/commandes_api.dart';
 import '../../../data/api/stock_api.dart';
@@ -15,13 +14,15 @@ import '../../../domain/commandes.dart';
 import '../../../domain/format.dart';
 import '../../../domain/stock.dart';
 import '../../stock/presentation/ecran_stock.dart' show nomLisible;
-import '../../stock/presentation/elements_stock.dart' show MessageErreur, MessageVide, Etiquette;
+import '../../stock/presentation/elements_stock.dart' show MessageErreur, MessageVide;
 import '../application/commandes_providers.dart';
 import 'ecran_commandes.dart';
 
-/// Panier d'un fournisseur : les lignes (quantité modifiable en brouillon,
-/// avec la raison du calcul), et en bas une barre fixe avec le total et
-/// l'action de l'étape : préparer, valider, envoyer par WhatsApp.
+/// Panier d'un fournisseur (design « épuré », 2026-11-15) : en-tête avec le
+/// total, filtres rapides, une ligne par produit (raison du calcul, jauge,
+/// − / +, montant, ⇄ génériques, poignée pour glisser vers un autre
+/// grossiste sur PC), et en bas une barre fixe avec le total et l'action de
+/// l'étape. Une proposition devient brouillon au premier geste.
 class PanierFournisseur extends ConsumerWidget {
   const PanierFournisseur({super.key, required this.idFournisseur, this.enPanneau = false});
 
@@ -35,16 +36,17 @@ class PanierFournisseur extends ConsumerWidget {
     final journee = ref.watch(journeeProvider);
     final panier = journee.value?.panier(idFournisseur);
     return Scaffold(
-      backgroundColor: enPanneau ? context.schema.surface : null,
+      backgroundColor: context.schema.surface,
       appBar: enPanneau
           ? null
           : AppBar(
+              backgroundColor: context.schema.surface,
               leading: IconButton(
                 tooltip: 'Retour',
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go('/commandes'),
               ),
-              title: Text(panier?.fournisseur.nom ?? 'Panier'),
+              title: Text(libelleProduit(panier?.fournisseur.nom ?? 'Panier')),
               actions: [if (panier != null) _MenuPanier(panier: panier)],
             ),
       body: journee.when(
@@ -57,7 +59,7 @@ class PanierFournisseur extends ConsumerWidget {
                 texte: 'Aucune ligne à commander chez lui ce soir.',
                 action: OutlinedButton(onPressed: () => context.go('/commandes'), child: const Text('Retour')),
               )
-            : _Contenu(panier: panier, journee: j, enPanneau: enPanneau),
+            : _Contenu(key: ValueKey(idFournisseur), panier: panier, enPanneau: enPanneau),
       ),
       bottomNavigationBar: panier == null || journee.value == null
           ? null
@@ -66,142 +68,181 @@ class PanierFournisseur extends ConsumerWidget {
   }
 }
 
-class _Contenu extends ConsumerWidget {
-  const _Contenu({required this.panier, required this.journee, required this.enPanneau});
+enum _Filtre {
+  tout('Tout'),
+  ruptures('Ruptures'),
+  modifiees('Modifiées'),
+  generiques('Génériques');
+
+  const _Filtre(this.libelle);
+  final String libelle;
+
+  bool garde(LigneCommande l) => switch (this) {
+    _Filtre.tout => true,
+    _Filtre.ruptures => l.rupture,
+    _Filtre.modifiees => l.modifiee,
+    _Filtre.generiques => l.codeDci != null,
+  };
+}
+
+class _Contenu extends ConsumerStatefulWidget {
+  const _Contenu({super.key, required this.panier, required this.enPanneau});
   final Panier panier;
-  final JourneeCommandes journee;
   final bool enPanneau;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final p = panier;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      children: [
-        Row(
-          children: [
-            InitialeFournisseur(fournisseur: p.fournisseur, taille: 46),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (enPanneau)
-                    Text(
-                      p.fournisseur.nom ?? 'Fournisseur ${p.fournisseur.id}',
-                      style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 20),
-                    ),
-                  Text(
-                    [
-                      p.fournisseur.type.libelle,
-                      if (p.livraisonPrevue != null) 'livraison ${jourEtDate(p.livraisonPrevue!)}',
-                    ].join(' · '),
-                    style: TextStyle(color: context.couleurs.encre3, fontSize: 13),
-                  ),
-                  const SizedBox(height: 6),
-                  PastilleEtape(p.etape),
-                ],
-              ),
-            ),
-            if (enPanneau) _MenuPanier(panier: p),
-          ],
-        ),
-        const SizedBox(height: 14),
-        _Chiffres(panier: p),
-        if (p.etape == EtapePanier.propose && p.lignes.isNotEmpty)
-          _Bandeau(
-            icone: Icons.info_outline_rounded,
-            texte:
-                'Proposition calculée ce soir. « Préparer » l\'enregistre en brouillon : '
-                'vous pourrez alors changer les quantités.',
-          ),
-        if (p.etape == EtapePanier.validee)
-          _Bandeau(
-            icone: Icons.verified_outlined,
-            texte:
-                'Validée${p.commande?.validePar != null ? ' par ${p.commande!.validePar}' : ''}. '
-                'Pour la corriger, rouvrez-la (menu ⋮).',
-          ),
-        const SizedBox(height: 6),
-        for (final l in p.lignes) LigneDuPanier(panier: p, ligne: l),
-        if (p.modifiable) ...[
-          const SizedBox(height: 14),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              key: const ValueKey('bouton-ajouter-produit'),
-              onPressed: () => _ajouterProduit(context, ref, p),
-              icon: const Icon(Icons.add),
-              label: const Text('Ajouter un produit'),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
+  ConsumerState<_Contenu> createState() => _ContenuState();
 }
 
-class _Chiffres extends StatelessWidget {
-  const _Chiffres({required this.panier});
-  final Panier panier;
+class _ContenuState extends ConsumerState<_Contenu> {
+  _Filtre _filtre = _Filtre.tout;
 
   @override
   Widget build(BuildContext context) {
-    Widget case_(String titre, String valeur, {bool dernier = false}) => Expanded(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
-        decoration: BoxDecoration(
-          border: dernier ? null : Border(right: BorderSide(color: context.couleurs.bord)),
+    final p = widget.panier;
+    final large = widget.enPanneau;
+    final lignes = [
+      for (final l in p.lignes)
+        if (_filtre.garde(l)) l,
+    ];
+    final marge = large ? 28.0 : 16.0;
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(marge, large ? 20 : 6, large ? 16 : marge, 12),
+          child: Row(
+            children: [
+              if (large) ...[InitialeFournisseur(fournisseur: p.fournisseur, taille: 44), const SizedBox(width: 14)],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (large)
+                      Text(
+                        libelleProduit(p.fournisseur.nom ?? 'Fournisseur ${p.fournisseur.id}'),
+                        style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 21),
+                      ),
+                    const SizedBox(height: 2),
+                    Wrap(
+                      spacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        PastilleEtape(p.etape),
+                        if (p.livraisonPrevue != null)
+                          Text(
+                            'livraison ${jourEtDate(p.livraisonPrevue!)}',
+                            style: TextStyle(color: context.couleurs.encre3, fontSize: 13),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      dinars(p.montant.round()),
+                      style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: large ? 22 : 18),
+                    ),
+                    Text(
+                      [
+                        '${p.nbLignes} ligne${p.nbLignes > 1 ? 's' : ''}',
+                        '${entier(p.boites)} boîtes',
+                        if (p.ruptures > 0) '${p.ruptures} rupture${p.ruptures > 1 ? 's' : ''}',
+                      ].join(' · '),
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+                    ),
+                  ],
+                ),
+              ),
+              if (large) _MenuPanier(panier: p),
+            ],
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(titre, style: TextStyle(fontSize: 11, color: context.couleurs.encre3)),
-            Text(
-              valeur,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
+        Divider(height: 1, color: context.couleurs.bord),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.fromLTRB(marge, 12, marge, 6),
+          child: Row(
+            children: [
+              for (final f in _Filtre.values)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: _Puce(
+                    cle: 'filtre-${f.name}',
+                    texte: '${f.libelle} (${p.lignes.where(f.garde).length})',
+                    choisie: _filtre == f,
+                    surAppui: () => setState(() => _filtre = f),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (p.etape == EtapePanier.validee)
+          Padding(
+            padding: EdgeInsets.fromLTRB(marge, 6, marge, 0),
+            child: Text(
+              'Validée${p.commande?.validePar != null ? ' par ${p.commande!.validePar}' : ''}. '
+              'Pour la corriger, rouvrez-la (menu ⋮).',
+              style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
             ),
-          ],
-        ),
-      ),
-    );
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: context.couleurs.bord),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          case_('Lignes', entier(panier.nbLignes)),
-          case_('Boîtes', entier(panier.boites)),
-          case_('Ruptures', entier(panier.ruptures), dernier: true),
-        ],
-      ),
+          ),
+        if (lignes.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(28),
+            child: Center(
+              child: Text('Aucune ligne.', style: TextStyle(color: context.couleurs.encre3)),
+            ),
+          ),
+        for (final l in lignes) LigneDuPanier(panier: p, ligne: l, large: large),
+        if (p.modifiable)
+          Padding(
+            padding: EdgeInsets.fromLTRB(marge - 8, 10, marge, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const ValueKey('bouton-ajouter-produit'),
+                onPressed: () => _ajouterProduit(context, ref, p),
+                icon: const Icon(Icons.add),
+                label: const Text('Ajouter un produit'),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _Bandeau extends StatelessWidget {
-  const _Bandeau({required this.icone, required this.texte});
-  final IconData icone;
-  final String texte;
+class _Puce extends StatelessWidget {
+  const _Puce({required this.cle, required this.texte, required this.choisie, required this.surAppui});
+  final String cle, texte;
+  final bool choisie;
+  final VoidCallback surAppui;
 
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(top: 12),
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(color: context.schema.primaryContainer, borderRadius: BorderRadius.circular(12)),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icone, size: 18, color: context.schema.onPrimaryContainer),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(texte, style: TextStyle(fontSize: 13, color: context.schema.onPrimaryContainer)),
+  Widget build(BuildContext context) => Material(
+    color: choisie ? context.schema.onSurface : context.couleurs.neutreDoux,
+    borderRadius: BorderRadius.circular(999),
+    child: InkWell(
+      key: ValueKey(cle),
+      borderRadius: BorderRadius.circular(999),
+      onTap: surAppui,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        child: Text(
+          texte,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: choisie ? context.schema.surface : context.couleurs.encre2,
+          ),
         ),
-      ],
+      ),
     ),
   );
 }
@@ -209,9 +250,10 @@ class _Bandeau extends StatelessWidget {
 // ── Une ligne ───────────────────────────────────────────────────────────────
 
 class LigneDuPanier extends ConsumerWidget {
-  const LigneDuPanier({super.key, required this.panier, required this.ligne});
+  const LigneDuPanier({super.key, required this.panier, required this.ligne, this.large = false});
   final Panier panier;
   final LigneCommande ligne;
+  final bool large;
 
   Future<void> _changer(BuildContext context, WidgetRef ref, int qte) async {
     try {
@@ -224,83 +266,414 @@ class LigneDuPanier extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = ligne;
-    final type = l.raison?.type;
-    return Container(
-      key: ValueKey('ligne-${l.idNom}'),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: context.couleurs.bord)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final modifiable = panier.modifiable;
+    final nom = Row(
+      children: [
+        if (l.rupture)
+          Padding(
+            padding: const EdgeInsets.only(right: 7),
+            child: Tooltip(
+              message: 'Rupture',
+              child: Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(color: context.etats.critique, shape: BoxShape.circle),
+              ),
+            ),
+          ),
+        Flexible(
+          child: Text(
+            libelleProduit(l.nom ?? 'Produit ${l.idNom}'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+    final raison = Text.rich(
+      TextSpan(
+        text: l.explication,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      libelleProduit(l.nom ?? 'Produit ${l.idNom}'),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                    ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        if (l.rupture) const PastilleEtat(niveau: NiveauEtat.critique, libelle: 'Rupture'),
-                        if (l.classeAbc != null && l.classeAbc!.isNotEmpty)
-                          Etiquette(l.classeAbc!, accent: l.classeAbc == 'A'),
-                        if (type != null && type.isNotEmpty) Etiquette(libelleTypeDemande(type)),
-                        if (!l.rupture) Etiquette('stock ${entier(l.stock)}'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              panier.modifiable
-                  ? Pas(cle: 'pas-${l.idNom}', valeur: l.qte, surChangement: (q) => _changer(context, ref, q))
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        '${l.qte}',
-                        key: ValueKey('qte-${l.idNom}'),
-                        style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 20),
-                      ),
-                    ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    text: l.explication,
-                    children: [
-                      if (l.modifiee && !l.ajoutManuel)
-                        TextSpan(
-                          text: '  · modifié (proposé ${l.qteProposee})',
-                          style: TextStyle(color: context.etats.alerte, fontWeight: FontWeight.w700),
-                        ),
-                    ],
-                  ),
-                  style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
-                ),
-              ),
-              Text(dinars(l.montant.round()), style: TextStyle(fontSize: 12, color: context.couleurs.encre2)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          JaugeCommande(ligne: l),
+          if (l.modifiee && !l.ajoutManuel)
+            TextSpan(
+              text: ' · modifié (proposé ${l.qteProposee})',
+              style: TextStyle(color: context.etats.alerte, fontWeight: FontWeight.w700),
+            ),
         ],
+      ),
+      maxLines: large ? 1 : 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+    );
+    final quantite = modifiable
+        ? Pas(cle: 'pas-${l.idNom}', valeur: l.qte, surChangement: (q) => _changer(context, ref, q))
+        : SizedBox(
+            width: 40,
+            child: Text(
+              '${l.qte}',
+              key: ValueKey('qte-${l.idNom}'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
+            ),
+          );
+
+    final rangee = InkWell(
+      key: ValueKey('ligne-${l.idNom}'),
+      onTap: () => _actionsLigne(context, ref, panier, l),
+      child: Container(
+        padding: EdgeInsets.fromLTRB(large ? 14 : 16, 10, large ? 18 : 16, 10),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: context.couleurs.neutreDoux)),
+        ),
+        child: Row(
+          children: [
+            if (large)
+              SizedBox(
+                width: 22,
+                child: modifiable ? _Poignee(panier: panier, ligne: l) : null,
+              ),
+            if (large) const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [nom, const SizedBox(height: 2), raison],
+              ),
+            ),
+            if (large) ...[const SizedBox(width: 12), SizedBox(width: 80, child: JaugeCommande(ligne: l))],
+            const SizedBox(width: 12),
+            quantite,
+            if (large) ...[
+              SizedBox(
+                width: 92,
+                child: Text(
+                  dinars(l.montant.round()),
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 13, color: context.couleurs.encre2),
+                ),
+              ),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 34,
+                child: l.codeDci != null && modifiable ? BoutonGeneriques(panier: panier, ligne: l) : null,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+    return rangee;
+  }
+}
+
+/// Poignée ⋮⋮ : glisser la ligne sur un autre grossiste de la colonne de gauche.
+class _Poignee extends StatelessWidget {
+  const _Poignee({required this.panier, required this.ligne});
+  final Panier panier;
+  final LigneCommande ligne;
+
+  @override
+  Widget build(BuildContext context) {
+    final fantome = Material(
+      elevation: 8,
+      borderRadius: BorderRadius.circular(12),
+      color: context.schema.surface,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.schema.primary, width: 1.5),
+        ),
+        child: Text(
+          '${libelleProduit(ligne.nom ?? '')} · ${ligne.qte}',
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+        ),
+      ),
+    );
+    return Draggable<LigneTiree>(
+      key: ValueKey('poignee-${ligne.idNom}'),
+      data: (ligne: ligne, de: panier.fournisseur.id),
+      feedback: fantome,
+      childWhenDragging: Icon(Icons.drag_indicator, size: 18, color: context.schema.primary),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.grab,
+        child: Tooltip(
+          message: 'Glisser vers un autre grossiste',
+          child: Icon(Icons.drag_indicator, size: 18, color: context.couleurs.encre3),
+        ),
       ),
     );
   }
+}
+
+/// Remplace [ligne] par le générique [m], avec un message (ou l'erreur).
+Future<void> _remplacerPar(
+  BuildContext context,
+  WidgetRef ref,
+  Panier panier,
+  LigneCommande ligne,
+  MembreGenerique m,
+) async {
+  try {
+    await ref.read(journeeProvider.notifier).remplacer(panier, ligne, m.idNom);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('${libelleProduit(ligne.nom ?? '')} remplacé par ${libelleProduit(m.nom ?? '')}.')),
+        );
+    }
+  } catch (e) {
+    if (context.mounted) montrerErreur(context, e);
+  }
+}
+
+/// ⇄ : les autres génériques de la même DCI, pour remplacer la ligne.
+class BoutonGeneriques extends ConsumerStatefulWidget {
+  const BoutonGeneriques({super.key, required this.panier, required this.ligne});
+  final Panier panier;
+  final LigneCommande ligne;
+
+  @override
+  ConsumerState<BoutonGeneriques> createState() => _BoutonGeneriquesState();
+}
+
+class _BoutonGeneriquesState extends ConsumerState<BoutonGeneriques> {
+  final _menu = MenuController();
+
+  @override
+  Widget build(BuildContext context) {
+    final ligne = widget.ligne;
+    return MenuAnchor(
+      controller: _menu,
+      alignmentOffset: const Offset(-280, 4),
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(context.schema.surface),
+        shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+      ),
+      menuChildren: [
+        SizedBox(
+          width: 320,
+          child: Consumer(
+            builder: (_, ref, _) => _GeneriquesDe(
+              ligne: ligne,
+              surChoix: (m) {
+                _menu.close();
+                _remplacerPar(context, ref, widget.panier, ligne, m);
+              },
+            ),
+          ),
+        ),
+      ],
+      builder: (context, menu, _) => IconButton(
+        key: ValueKey('generiques-${ligne.idNom}'),
+        tooltip: 'Changer de générique',
+        visualDensity: VisualDensity.compact,
+        isSelected: menu.isOpen,
+        icon: Icon(Icons.swap_horiz_rounded, size: 20, color: context.couleurs.encre3),
+        selectedIcon: Icon(Icons.swap_horiz_rounded, size: 20, color: context.schema.primary),
+        onPressed: () => menu.isOpen ? menu.close() : menu.open(),
+      ),
+    );
+  }
+}
+
+/// Liste des autres génériques de la DCI de [ligne] (chargée à l'ouverture).
+class _GeneriquesDe extends ConsumerWidget {
+  const _GeneriquesDe({required this.ligne, required this.surChoix});
+  final LigneCommande ligne;
+  final ValueChanged<MembreGenerique> surChoix;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref
+        .watch(generiquesProvider(ligne.idNom))
+        .when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(18),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+          ),
+          error: (e, _) => Padding(padding: const EdgeInsets.all(14), child: Text(ErreurApi.depuis(e).message)),
+          data: (g) {
+            final autres = [
+              for (final m in g.membres)
+                if (m.idNom != ligne.idNom) m,
+            ];
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+                  child: Text(
+                    'AUTRES GÉNÉRIQUES${g.code != null ? ' · ${g.code}' : ''}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: context.couleurs.encre3,
+                    ),
+                  ),
+                ),
+                if (autres.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
+                    child: Text('Aucun autre générique actif.', style: TextStyle(color: context.couleurs.encre2)),
+                  ),
+                for (final m in autres)
+                  InkWell(
+                    key: ValueKey('remplacer-par-${m.idNom}'),
+                    onTap: () => surChoix(m),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            libelleProduit(m.nom ?? 'Produit ${m.idNom}'),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            [
+                              m.garde ? 'gardé' : 'non recommandé',
+                              '${entier(m.ventes12m)} vendus / an',
+                              'stock ${entier(m.stock)}',
+                            ].join(' · '),
+                            style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 6),
+              ],
+            );
+          },
+        );
+  }
+}
+
+/// Actions d'une ligne (appui sur la ligne ; seul accès sur portable) :
+/// changer de générique, changer de grossiste, retirer.
+Future<void> _actionsLigne(BuildContext context, WidgetRef ref, Panier panier, LigneCommande ligne) async {
+  if (!panier.modifiable) return;
+  final choix = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    builder: (c) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 2),
+            child: Text(
+              libelleProduit(ligne.nom ?? ''),
+              style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text(
+              '${ligne.qte} boîte${ligne.qte > 1 ? 's' : ''} · ${libelleProduit(panier.fournisseur.nom ?? '')}',
+              style: TextStyle(fontSize: 12, color: c.couleurs.encre3),
+            ),
+          ),
+          if (ligne.codeDci != null)
+            ListTile(
+              key: const ValueKey('action-ligne-generique'),
+              leading: const Icon(Icons.swap_horiz_rounded),
+              title: const Text('Changer de générique'),
+              onTap: () => Navigator.pop(c, 'generique'),
+            ),
+          ListTile(
+            key: const ValueKey('action-ligne-grossiste'),
+            leading: const Icon(Icons.local_shipping_outlined),
+            title: const Text('Changer de grossiste'),
+            onTap: () => Navigator.pop(c, 'grossiste'),
+          ),
+          ListTile(
+            key: const ValueKey('action-ligne-retirer'),
+            leading: const Icon(Icons.delete_outline),
+            title: const Text('Retirer de la commande'),
+            onTap: () => Navigator.pop(c, 'retirer'),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+  if (!context.mounted || choix == null) return;
+  switch (choix) {
+    case 'generique':
+      final m = await showModalBottomSheet<MembreGenerique>(
+        context: context,
+        showDragHandle: true,
+        builder: (c) => SafeArea(
+          child: _GeneriquesDe(ligne: ligne, surChoix: (m) => Navigator.pop(c, m)),
+        ),
+      );
+      if (m != null && context.mounted) await _remplacerPar(context, ref, panier, ligne, m);
+    case 'grossiste':
+      final vers = await showModalBottomSheet<int>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (c) => _ChoixGrossiste(actuel: panier.fournisseur.id),
+      );
+      if (vers == null) return;
+      try {
+        await ref.read(journeeProvider.notifier).deplacer(ligne, panier.fournisseur.id, vers);
+      } catch (e) {
+        if (context.mounted) montrerErreur(context, e);
+      }
+    case 'retirer':
+      try {
+        await ref.read(journeeProvider.notifier).modifier(panier, ligne, 0);
+      } catch (e) {
+        if (context.mounted) montrerErreur(context, e);
+      }
+  }
+}
+
+/// Grossistes actifs, pour y déplacer une ligne.
+class _ChoixGrossiste extends ConsumerWidget {
+  const _ChoixGrossiste({required this.actuel});
+  final int actuel;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => DraggableScrollableSheet(
+    expand: false,
+    initialChildSize: 0.6,
+    maxChildSize: 0.92,
+    builder: (context, defilement) => ref
+        .watch(fournisseursCommandeProvider)
+        .when(
+          loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+          error: (e, _) => Center(child: Text(ErreurApi.depuis(e).message)),
+          data: (tous) => ListView(
+            controller: defilement,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Text(
+                  'Changer de grossiste',
+                  style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ),
+              for (final f in tous)
+                if (f.actif && f.id != actuel)
+                  ListTile(
+                    key: ValueKey('vers-${f.id}'),
+                    leading: InitialeFournisseur(fournisseur: f.commePanier, taille: 34),
+                    title: Text(libelleProduit(f.nom ?? 'Fournisseur ${f.id}')),
+                    subtitle: Text(f.type.libelle),
+                    onTap: () => Navigator.pop(context, f.id),
+                  ),
+            ],
+          ),
+        ),
+  );
 }
 
 /// Stock actuel (plein), quantité commandée (clair), et repère du stock de
@@ -378,48 +751,41 @@ class Pas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bouton(IconData icone, String suffixe, String aide, VoidCallback action) => SizedBox(
-      width: 36,
-      height: 36,
-      child: Material(
-        color: context.schema.primaryContainer,
-        child: InkWell(
-          key: ValueKey('$cle-$suffixe'),
-          onTap: action,
-          child: Tooltip(
-            message: aide,
-            child: Icon(icone, size: 18, color: context.schema.onPrimaryContainer),
-          ),
+      width: 30,
+      height: 30,
+      child: InkWell(
+        key: ValueKey('$cle-$suffixe'),
+        borderRadius: BorderRadius.circular(8),
+        onTap: action,
+        child: Tooltip(
+          message: aide,
+          child: Icon(icone, size: 16, color: context.couleurs.encre2),
         ),
       ),
     );
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border.all(color: context.couleurs.bord),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            bouton(
-              valeur <= 1 ? Icons.delete_outline : Icons.remove,
-              'moins',
-              valeur <= 1 ? 'Retirer' : 'Une boîte de moins',
-              () => surChangement(valeur - 1),
+    return Material(
+      color: context.couleurs.neutreDoux,
+      borderRadius: BorderRadius.circular(9),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          bouton(
+            valeur <= 1 ? Icons.delete_outline : Icons.remove,
+            'moins',
+            valeur <= 1 ? 'Retirer' : 'Une boîte de moins',
+            () => surChangement(valeur - 1),
+          ),
+          SizedBox(
+            width: 30,
+            child: Text(
+              '$valeur',
+              key: ValueKey('$cle-valeur'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 14),
             ),
-            SizedBox(
-              width: 40,
-              child: Text(
-                '$valeur',
-                key: ValueKey('$cle-valeur'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
-              ),
-            ),
-            bouton(Icons.add, 'plus', 'Une boîte de plus', () => surChangement(valeur + 1)),
-          ],
-        ),
+          ),
+          bouton(Icons.add, 'plus', 'Une boîte de plus', () => surChangement(valeur + 1)),
+        ],
       ),
     );
   }
@@ -469,6 +835,14 @@ class _BarreTotalState extends ConsumerState<_BarreTotal> {
     final p = widget.panier;
     final id = p.commande?.id;
     final Widget action = switch (p.etape) {
+      EtapePanier.propose when widget.journee.peutValider => FilledButton.icon(
+        key: const ValueKey('action-valider'),
+        onPressed: _enCours || p.lignes.isEmpty
+            ? null
+            : () => _faire((c) async => c.valider((await c.brouillonDe(p)).commande!.id)),
+        icon: const Icon(Icons.check_rounded),
+        label: const Text('Valider'),
+      ),
       EtapePanier.propose => FilledButton.icon(
         key: const ValueKey('action-preparer'),
         onPressed: _enCours || p.lignes.isEmpty ? null : () => _faire((c) => c.preparer()),
@@ -671,12 +1045,12 @@ Future<void> afficherBon(BuildContext context, BonCommande bon, {bool? whatsappO
 // ── Ajout manuel ────────────────────────────────────────────────────────────
 
 Future<void> _ajouterProduit(BuildContext context, WidgetRef ref, Panier panier) async {
-  final id = panier.commande?.id;
-  if (id == null) return;
   final choisi = await showDialog<Produit>(context: context, builder: (_) => const _ChoixProduit());
   if (choisi == null) return;
   try {
-    await ref.read(journeeProvider.notifier).ajouter(id, choisi.id, 1);
+    final ctrl = ref.read(journeeProvider.notifier);
+    final brouillon = await ctrl.brouillonDe(panier);
+    await ctrl.ajouter(brouillon.commande!.id, choisi.id, 1);
   } catch (e) {
     if (context.mounted) montrerErreur(context, e);
   }

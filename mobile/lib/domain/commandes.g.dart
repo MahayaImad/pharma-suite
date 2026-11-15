@@ -16,6 +16,7 @@ _Raison _$RaisonFromJson(Map<String, dynamic> json) => _Raison(
   stock: (json['stock'] as num?)?.toDouble() ?? 0,
   enCours: (json['en_cours'] as num?)?.toDouble() ?? 0,
   reprend: (json['reprend'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const <String>[],
+  remplace: json['remplace'] as String?,
 );
 
 Map<String, dynamic> _$RaisonToJson(_Raison instance) => <String, dynamic>{
@@ -28,6 +29,7 @@ Map<String, dynamic> _$RaisonToJson(_Raison instance) => <String, dynamic>{
   'stock': instance.stock,
   'en_cours': instance.enCours,
   'reprend': instance.reprend,
+  'remplace': instance.remplace,
 };
 
 _LigneCommande _$LigneCommandeFromJson(Map<String, dynamic> json) => _LigneCommande(
@@ -42,6 +44,7 @@ _LigneCommande _$LigneCommandeFromJson(Map<String, dynamic> json) => _LigneComma
   montant: (json['montant'] as num?)?.toDouble() ?? 0,
   raison: json['raison'] == null ? null : Raison.fromJson(json['raison'] as Map<String, dynamic>),
   fournisseur: json['fournisseur'] as String?,
+  codeDci: json['code_dci'] as String?,
 );
 
 Map<String, dynamic> _$LigneCommandeToJson(_LigneCommande instance) => <String, dynamic>{
@@ -56,6 +59,7 @@ Map<String, dynamic> _$LigneCommandeToJson(_LigneCommande instance) => <String, 
   'montant': instance.montant,
   'raison': instance.raison,
   'fournisseur': instance.fournisseur,
+  'code_dci': instance.codeDci,
 };
 
 _FournisseurPanier _$FournisseurPanierFromJson(Map<String, dynamic> json) => _FournisseurPanier(

@@ -6,6 +6,7 @@ import 'package:pharmasuite/core/router/routeur.dart';
 import 'package:pharmasuite/data/api/commandes_api.dart';
 import 'package:pharmasuite/data/api/stock_api.dart';
 import 'package:pharmasuite/domain/stock.dart';
+import 'package:pharmasuite/features/commandes/application/commandes_providers.dart';
 import 'package:pharmasuite/domain/commandes.dart';
 import 'package:pharmasuite/domain/format.dart';
 import 'package:pharmasuite/domain/session.dart';
@@ -81,7 +82,7 @@ void main() {
       expect(const LigneCommande(idNom: 2, qte: 1).explication, 'Ajouté à la main');
       expect(l.avecQuantite(3).modifiee, isTrue);
       final reprise = l.copyWith(raison: l.raison!.copyWith(reprend: ['XYDOL 600']));
-      expect(reprise.explication, '3,1/j × 2 j + sécurité 2 − stock 0 · reprend XYDOL 600');
+      expect(reprise.explication, '3,1/j × 2 j + sécurité 2 − stock 0 · reprend Xydol 600');
     });
 
     test('numéro WhatsApp et lien du bon', () {
@@ -121,11 +122,11 @@ void main() {
     await _lancer(tester, FausseCommandesApi());
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('bande-budget')), findsOneWidget);
-    expect(find.textContaining('Commande du samedi 14/11'), findsOneWidget);
+    expect(find.textContaining('samedi 14/11'), findsOneWidget);
     expect(find.text('PHARMACEUTIQUE'), findsOneWidget);
     expect(find.byKey(const ValueKey('carte-fournisseur-1')), findsOneWidget);
     expect(find.text(dinars(2640)), findsOneWidget);
-    expect(find.text('1 rupture'), findsOneWidget);
+    expect(find.textContaining('1 rupt.'), findsOneWidget);
     expect(find.text('Proposé'), findsNWidgets(2));
     await tester.scrollUntilVisible(find.byKey(const ValueKey('avertissement-psychotropes')), 200);
     await tester.tap(find.byKey(const ValueKey('avertissement-psychotropes')));
@@ -137,16 +138,14 @@ void main() {
     final api = FausseCommandesApi();
     await _lancer(tester, api);
     await _toucher(tester, find.byKey(const ValueKey('carte-fournisseur-1')));
-    expect(find.text('3,1/j × 2 j + sécurité 2 − stock 0'), findsOneWidget);
+    expect(find.textContaining('3,1/j × 2 j + sécurité 2 − stock 0'), findsOneWidget);
     expect(find.byKey(const ValueKey('total-panier')), findsOneWidget);
     expect(tester.widget<Text>(find.byKey(const ValueKey('total-panier'))).data, dinars(2640));
 
-    await _toucher(tester, find.byKey(const ValueKey('action-preparer')));
-    expect(api.appels, contains('preparer'));
-    expect(find.text('Brouillon'), findsOneWidget);
-
+    // Proposé : le premier geste prépare les brouillons, puis enregistre la quantité.
     await _toucher(tester, find.byKey(const ValueKey('pas-11-plus')));
-    expect(api.appels.last, 'ligne 100 11 9');
+    expect(api.appels, containsAllInOrder(['preparer', 'ligne 100 11 9']));
+    expect(find.text('Brouillon'), findsOneWidget);
     expect(tester.widget<Text>(find.byKey(const ValueKey('total-panier'))).data, dinars(2736));
     expect(find.textContaining('modifié (proposé 8)'), findsOneWidget);
 
@@ -164,6 +163,62 @@ void main() {
     await tester.tap(find.text('Fermer'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('action-revoir')), findsOneWidget);
+  });
+
+  testWidgets('proposé : « Valider » prépare puis valide', (tester) async {
+    final api = FausseCommandesApi();
+    await _lancer(tester, api, depart: '/commandes/1');
+    await _toucher(tester, find.byKey(const ValueKey('action-valider')));
+    expect(api.appels, containsAllInOrder(['preparer', 'valider 100']));
+    expect(find.byKey(const ValueKey('action-envoyer')), findsOneWidget);
+  });
+
+  testWidgets('portable : une ligne change de générique puis de grossiste', (tester) async {
+    final api = FausseCommandesApi();
+    await api.preparer();
+    await _lancer(tester, api, depart: '/commandes/1');
+    await _toucher(tester, find.byKey(const ValueKey('ligne-12')));
+    expect(find.byKey(const ValueKey('action-ligne-generique')), findsNothing); // pas de code DCI
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    api.paniers = [
+      for (final p in api.paniers)
+        p.copyWith(lignes: [for (final l in p.lignes) l.idNom == 11 ? l.copyWith(codeDci: '04B044') : l]),
+    ];
+    await tester.tap(find.byTooltip('Retour'));
+    await tester.pumpAndSettle();
+    await _toucher(tester, find.byKey(const ValueKey('carte-fournisseur-1')));
+    // Le panier relu : la ligne 11 a maintenant un code DCI.
+    final ctx = tester.element(find.byKey(const ValueKey('ligne-11')));
+    ProviderScope.containerOf(ctx).invalidate(journeeProvider);
+    await tester.pumpAndSettle();
+    await _toucher(tester, find.byKey(const ValueKey('ligne-11')));
+    await _toucher(tester, find.byKey(const ValueKey('action-ligne-generique')));
+    await _toucher(tester, find.byKey(const ValueKey('remplacer-par-2')));
+    expect(api.appels.last, 'remplacer 100 11 2');
+    expect(find.textContaining('remplacé par'), findsOneWidget);
+
+    await _toucher(tester, find.byKey(const ValueKey('ligne-12')));
+    await _toucher(tester, find.byKey(const ValueKey('action-ligne-grossiste')));
+    await _toucher(tester, find.byKey(const ValueKey('vers-2')));
+    expect(api.appels.last, 'deplacer 12 1 2');
+    expect(find.byKey(const ValueKey('ligne-12')), findsNothing);
+  });
+
+  testWidgets('PC : glisser une ligne sur un autre grossiste', (tester) async {
+    final api = FausseCommandesApi();
+    await _lancer(tester, api, taille: _pc, depart: '/commandes/1');
+    final poignee = find.byKey(const ValueKey('poignee-12'));
+    final cible = find.byKey(const ValueKey('carte-fournisseur-2'));
+    final geste = await tester.startGesture(tester.getCenter(poignee));
+    await tester.pump(const Duration(milliseconds: 50));
+    await geste.moveTo(tester.getCenter(cible));
+    await tester.pump();
+    expect(find.text('Déposer ici'), findsOneWidget);
+    await geste.up();
+    await tester.pumpAndSettle();
+    expect(api.appels.last, 'deplacer 12 1 2');
+    expect(find.byKey(const ValueKey('ligne-12')), findsNothing);
   });
 
   testWidgets('employé non désigné : pas de bouton « Valider »', (tester) async {

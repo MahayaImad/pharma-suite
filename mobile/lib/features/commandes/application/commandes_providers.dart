@@ -16,9 +16,18 @@ class JourneeController extends AsyncNotifier<JourneeCommandes> {
 
   Future<void> preparer() async => state = AsyncData(await _api.preparer());
 
+  /// Le panier en brouillon : une proposition est d'abord préparée.
+  Future<Panier> brouillonDe(Panier panier) async {
+    if (panier.commande != null) return panier;
+    await preparer();
+    return state.value!.panier(panier.fournisseur.id)!;
+  }
+
   /// Change une quantité : affichée tout de suite, enregistrée ensuite ; en
-  /// cas d'échec, la journée est relue et l'erreur remonte.
+  /// cas d'échec, la journée est relue et l'erreur remonte. Une proposition
+  /// est d'abord préparée en brouillons.
   Future<void> modifier(Panier panier, LigneCommande ligne, int qte) async {
+    panier = await brouillonDe(panier);
     final commande = panier.commande;
     final actuelle = state.value;
     if (commande == null || actuelle == null) return;
@@ -29,6 +38,16 @@ class JourneeController extends AsyncNotifier<JourneeCommandes> {
       await _relire();
       rethrow;
     }
+  }
+
+  /// Change le grossiste d'une ligne.
+  Future<void> deplacer(LigneCommande ligne, int de, int vers) async =>
+      state = AsyncData(await _api.deplacer(ligne.idNom, de, vers));
+
+  /// Remplace une ligne par un autre générique de la même DCI.
+  Future<void> remplacer(Panier panier, LigneCommande ligne, int par) async {
+    panier = await brouillonDe(panier);
+    state = AsyncData(await _api.remplacer(panier.commande!.id, ligne.idNom, par));
   }
 
   /// Ajoute un produit à la main dans un brouillon (ou change sa quantité).

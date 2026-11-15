@@ -47,6 +47,9 @@ abstract class Raison with _$Raison {
 
     /// Marques remplacées (génériques) dont ce produit reprend la demande.
     @Default(<String>[]) List<String> reprend,
+
+    /// Générique remplacé à la main par ce produit.
+    String? remplace,
   }) = _Raison;
 
   factory Raison.fromJson(Map<String, dynamic> json) => _$RaisonFromJson(json);
@@ -68,6 +71,9 @@ abstract class LigneCommande with _$LigneCommande {
     @Default(0) double montant,
     Raison? raison,
     String? fournisseur,
+
+    /// Code DCI : présent si le produit peut avoir des génériques.
+    @JsonKey(name: 'code_dci') String? codeDci,
   }) = _LigneCommande;
 
   factory LigneCommande.fromJson(Map<String, dynamic> json) => _$LigneCommandeFromJson(json);
@@ -93,8 +99,9 @@ abstract class LigneCommande with _$LigneCommande {
       '− stock ${entier(r.stock)}',
       if (r.enCours > 0) '− en cours ${entier(r.enCours)}',
     ];
-    final reprise = r.reprend.isEmpty ? '' : ' · reprend ${r.reprend.join(', ')}';
-    return morceaux.join(' ') + reprise;
+    final reprise = r.reprend.isEmpty ? '' : ' · reprend ${r.reprend.map(libelleProduit).join(', ')}';
+    final remplace = r.remplace == null ? '' : ' · à la place de ${libelleProduit(r.remplace!)}';
+    return morceaux.join(' ') + reprise + remplace;
   }
 }
 
@@ -171,8 +178,8 @@ abstract class Panier with _$Panier {
   double get montant => lignes.fold(0.0, (s, l) => s + l.montant);
   int get ruptures => lignes.where((l) => l.rupture).length;
 
-  /// Lignes modifiables : brouillon seulement.
-  bool get modifiable => etape == EtapePanier.brouillon;
+  /// Lignes modifiables : proposition (préparée au premier geste) ou brouillon.
+  bool get modifiable => etape == EtapePanier.propose || etape == EtapePanier.brouillon;
 }
 
 @freezed

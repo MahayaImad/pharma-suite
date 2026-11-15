@@ -136,6 +136,7 @@ class CommandesService:
                prix: Decimal, raison_: Optional[dict]) -> dict:
         return {"id_nom": id_nom, "nom": info.get("nom"), "famille": info.get("famille"),
                 "classe_abc": info.get("segment_abc"), "stock": int(info.get("stock") or 0),
+                "code_dci": g.normaliser(info.get("de_equiv")),
                 "qte": qte, "qte_proposee": qte_proposee, "prix_achat": prix,
                 "montant": (prix * qte).quantize(Decimal("0.01")), "raison": raison_}
 

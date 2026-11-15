@@ -29,7 +29,7 @@ class CommandesRepository:
         """Nom, stock, psychotrope et fournisseur principal (dernier achat hors
         avoirs et échanges) avec son dernier prix d'achat."""
         r = await self.db.execute(text(f"""
-            SELECT n.id, n.nom, COALESCE(f.famille, n.famille) AS famille, n.segment_abc,
+            SELECT n.id, n.nom, COALESCE(f.famille, n.famille) AS famille, n.segment_abc, n.de_equiv,
                    COALESCE(n.psychotrope, 0) = 1 AS psychotrope,
                    COALESCE(mv.stock_actuel, 0) AS stock,
                    der.id_fournisseur, der.prix_achat
