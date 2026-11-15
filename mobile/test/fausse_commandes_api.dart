@@ -264,4 +264,11 @@ class FausseCommandesApi implements CommandesApi {
     groupe = groupe.copyWith(mode: mode ?? 'quelques', modeForce: mode);
     return groupe;
   }
+
+  @override
+  Future<AjoutCommande> ajouter(int idNom) async {
+    appels.add('ajouter $idNom');
+    if (panne) throw const ErreurApi('Psychotrope : à commander dans EASYPHARM (bon spécial).');
+    return AjoutCommande(idCommande: 100, idFournisseur: 1, fournisseur: 'GROSSISTE ATLAS', qte: 4);
+  }
 }

@@ -17,7 +17,9 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   puis tout le stock (recherche, familles, tri), chaque ligne avec une jauge
   du stock par rapport au maximum et un repère au stock de sécurité. Fiche :
   conseil, jauge, projection du stock en FEFO, lots, réapprovisionnement,
-  prix. Les boutons qui dépendent des commandes affichent « bientôt ».
+  prix. « Commander » ajoute le produit à la commande du jour de son
+  fournisseur (lien « Voir » vers le panier) ; retour, échange et mise en
+  avant affichent encore « bientôt ».
 - **Calendrier et réglages** (Préférences) : gardes à venir et passées (les
   gardes retrouvées dans les ventes se confirment d'un geste), Ramadan et
   Aïd par année (« à vérifier » jusqu'à validation), jours fériés, et les

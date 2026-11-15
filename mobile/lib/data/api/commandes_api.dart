@@ -12,6 +12,10 @@ abstract interface class CommandesApi {
   /// Enregistre la proposition en brouillons ; renvoie la journée à jour.
   Future<JourneeCommandes> preparer();
 
+  /// « Commander » depuis le Stock : au brouillon du jour du fournisseur
+  /// principal, à la quantité proposée ce soir (au moins 1).
+  Future<AjoutCommande> ajouter(int idNom);
+
   /// Quantité d'un produit dans un brouillon ; 0 retire la ligne.
   Future<void> modifierLigne(int idCommande, int idNom, int qte);
 
@@ -72,6 +76,12 @@ class CommandesApiDio implements CommandesApi {
 
   @override
   Future<JourneeCommandes> preparer() => _appel(() => _dio.post('/commandes/preparer', options: _long), _journee);
+
+  @override
+  Future<AjoutCommande> ajouter(int idNom) => _appel(
+    () => _dio.post('/commandes/ajouter', data: {'id_nom': idNom}, options: _long),
+    (d) => AjoutCommande.fromJson(d as Map<String, dynamic>),
+  );
 
   @override
   Future<void> modifierLigne(int idCommande, int idNom, int qte) =>

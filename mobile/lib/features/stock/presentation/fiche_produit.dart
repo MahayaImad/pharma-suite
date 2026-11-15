@@ -11,6 +11,7 @@ import '../../../data/api/stock_api.dart';
 import '../../reglages/application/reglages_providers.dart' show peutModifierProvider;
 import '../../../domain/format.dart';
 import '../../../domain/stock.dart';
+import '../../commandes/presentation/commander.dart';
 import '../../commandes/presentation/generiques_fiche.dart';
 import '../application/stock_providers.dart';
 import 'ecran_stock.dart' show bientotCommandes, nomLisible;
@@ -349,13 +350,13 @@ class _JaugeFiche extends StatelessWidget {
 }
 
 /// Que faire, en une phrase, avec l'action qui va avec.
-class _Conseil extends StatelessWidget {
+class _Conseil extends ConsumerWidget {
   const _Conseil({required this.produit, required this.indicateurs});
   final Produit produit;
   final IndicateursProduit indicateurs;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = conseil(produit, indicateurs);
     final e = context.etats;
     final violet = couleursSignal(context, Signal.risque);
@@ -408,7 +409,8 @@ class _Conseil extends StatelessWidget {
                           backgroundColor: context.schema.surface,
                           side: BorderSide.none,
                           visualDensity: VisualDensity.compact,
-                          onPressed: () => bientotCommandes(context),
+                          onPressed: () =>
+                              a == 'Commander' ? commanderProduit(context, ref, produit.id) : bientotCommandes(context),
                         ),
                     ],
                   ),

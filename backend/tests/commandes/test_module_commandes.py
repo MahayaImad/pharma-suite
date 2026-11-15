@@ -258,3 +258,25 @@ async def test_generiques_classe_chronique_toutes_les_marques(api):
     assert "EPSILON" in lignes and "reprend" not in lignes["ALPHA"]["raison"]
     g = (await api.get("/commandes/generiques/1")).json()["data"]
     assert (g["mode"], g["chronique"]) == ("toutes", True)
+
+
+async def test_commander_depuis_le_stock(api):
+    # EPSILON (stock 100) : rien de proposé, ajouté quand même à 1 boîte.
+    r = await api.post("/commandes/ajouter", json={"id_nom": 5})
+    assert r.status_code == 200, r.text
+    d = r.json()["data"]
+    assert (d["fournisseur"], d["qte"], d["deja_present"], d["jour"]) == ("GROSSISTE A", 1, False, "2026-11-12")
+    # ALPHA : la quantité proposée ce soir, dans le même brouillon.
+    # Le brouillon a été préparé avec tout le panier proposé : ALPHA y est déjà.
+    alpha = (await api.post("/commandes/ajouter", json={"id_nom": 1})).json()["data"]
+    assert alpha["id_commande"] == d["id_commande"] and alpha["deja_present"] and alpha["qte"] > 1
+    a = _panier(await _jour(api), "GROSSISTE A")
+    assert a["commande"]["statut"] == "brouillon"
+    assert {l["nom"]: l["qte_proposee"] for l in a["lignes"]}["EPSILON"] is None
+    # Psychotrope : EASYPHARM.
+    r = await api.post("/commandes/ajouter", json={"id_nom": 2})
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "psychotrope")
+    # Commande validée : refus.
+    await api.post(f"/commandes/{d['id_commande']}/valider")
+    r = await api.post("/commandes/ajouter", json={"id_nom": 1, "qte": 3})
+    assert (r.status_code, r.json()["error"]["code"]) == (409, "statut")

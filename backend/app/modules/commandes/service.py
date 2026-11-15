@@ -223,15 +223,64 @@ class CommandesService:
         for panier in vue["paniers"]:
             if panier["commande"] or not panier["lignes"]:
                 continue
-            id_c = await self.repo.creer_commande(jour, panier["fournisseur"]["id"], panier["livraison_prevue"],
-                                                  self.qui)
-            if id_c is None:
-                continue
+            await self._enregistrer(jour, panier)
+        await self.repo.commit()
+        return await self.journee(jour)
+
+    async def _enregistrer(self, jour: date, panier: dict) -> Optional[int]:
+        """Crée le brouillon d'un panier proposé, avec toutes ses lignes."""
+        id_c = await self.repo.creer_commande(jour, panier["fournisseur"]["id"], panier["livraison_prevue"], self.qui)
+        if id_c is not None:
             for l in panier["lignes"]:
                 await self.repo.ecrire_ligne(id_c, l["id_nom"], l["qte"], l["qte_proposee"], l["prix_achat"],
                                              l["raison"], self.qui)
+        return id_c
+
+    async def ajouter_produit(self, id_nom: int, qte: Optional[int] = None) -> dict:
+        """« Commander » depuis le Stock : ajoute le produit au brouillon du
+        jour de son fournisseur principal (créé au besoin). Sans quantité, la
+        quantité proposée ce soir, au moins 1 ; un produit déjà dans le
+        brouillon garde sa quantité."""
+        jour = jour_de_commande()
+        info = (await self.repo.produits([id_nom])).get(id_nom)
+        if info is None:
+            raise ErreurCommandes("produit", "Produit inconnu.", 404)
+        if info.get("psychotrope"):
+            raise ErreurCommandes("psychotrope", "Psychotrope : à commander dans EASYPHARM (bon spécial).", 409)
+        id_f = info.get("id_fournisseur")
+        fournisseurs = await self.repo.fournisseurs(jour)
+        if id_f is None or id_f not in fournisseurs:
+            raise ErreurCommandes("sans_fournisseur", "Aucun achat connu : fournisseur introuvable.", 409)
+        f = fournisseurs[id_f]
+        commande = next((c for c in await self.repo.commandes_du_jour(jour) if c["id_fournisseur"] == id_f), None)
+        if commande and commande["statut"] != "brouillon":
+            raise ErreurCommandes(
+                "statut", f"La commande du jour chez {f['nom']} est déjà {commande['statut']} : rouvrez-la d'abord.", 409)
+        if commande:
+            id_c = commande["id"]
+        else:
+            # Pas encore de brouillon chez ce fournisseur : on prépare d'abord
+            # tout son panier proposé, pour ne pas perdre les autres lignes.
+            panier = next((p for p in (await self.journee(jour))["paniers"] if p["fournisseur"]["id"] == id_f), None)
+            id_c = await self._enregistrer(jour, panier) if panier and panier["lignes"] else None
+            if id_c is None:
+                id_c = await self.repo.creer_commande(jour, id_f, self._livraison(jour, f), self.qui)
+        existante = next((l for l in await self.repo.lignes([id_c]) if l["id_nom"] == id_nom), None)
+        if existante and qte is None:
+            quantite, proposee, r = existante["qte"], existante["qte_proposee"], existante["raison"]
+        else:
+            dec = None
+            if qte is None:
+                decisions, _, _ = await self._propositions(jour)
+                dec = decisions.get(id_nom)
+            quantite = qte or max(1, dec.quantite if dec else 1)
+            proposee = dec.quantite if dec and dec.quantite > 0 else None
+            r = raison(dec) if dec and dec.quantite > 0 else None
+            await self.repo.ecrire_ligne(id_c, id_nom, quantite, proposee, Decimal(info.get("prix_achat") or 0), r,
+                                         self.qui)
         await self.repo.commit()
-        return await self.journee(jour)
+        return {"id_commande": id_c, "id_fournisseur": id_f, "fournisseur": f["nom"], "qte": quantite,
+                "deja_present": existante is not None, "jour": jour}
 
     # ── Une commande ──
     async def _commande(self, id_commande: int, statuts: tuple[str, ...]) -> dict:

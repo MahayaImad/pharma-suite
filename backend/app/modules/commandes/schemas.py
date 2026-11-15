@@ -26,3 +26,8 @@ class ChoixGenerique(BaseModel):
 
 class ModeGroupe(BaseModel):
     mode: Optional[Literal["toutes", "quelques"]] = Field(None, description="None : d'après la classe")
+
+
+class AjoutProduit(BaseModel):
+    id_nom: int
+    qte: Optional[int] = Field(None, ge=1, le=100000, description="None : quantité proposée ce soir (au moins 1)")

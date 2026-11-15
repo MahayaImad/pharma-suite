@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pharmasuite/app.dart';
 import 'package:pharmasuite/core/router/routeur.dart';
+import 'package:pharmasuite/data/api/commandes_api.dart';
 import 'package:pharmasuite/data/api/stock_api.dart';
 import 'package:pharmasuite/domain/session.dart';
 import 'package:pharmasuite/domain/stock.dart';
@@ -10,6 +11,7 @@ import 'package:pharmasuite/features/connexion/application/session_controller.da
 import 'package:pharmasuite/features/preferences/application/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'fausse_commandes_api.dart';
 import 'fausse_stock_api.dart';
 
 const _pc = Size(1440, 900);
@@ -21,6 +23,7 @@ Future<void> _lancer(
   Size taille = _portable,
   String depart = '/stock',
   String? role,
+  FausseCommandesApi? commandes,
 }) async {
   tester.view.physicalSize = taille;
   tester.view.devicePixelRatio = 1;
@@ -32,6 +35,7 @@ Future<void> _lancer(
       overrides: [
         preferencesLocalesProvider.overrideWithValue(prefs),
         stockApiProvider.overrideWithValue(api),
+        commandesApiProvider.overrideWithValue(commandes ?? FausseCommandesApi()),
         routeurProvider.overrideWithValue(construireRouteur(depart: depart)),
         if (role != null)
           sessionProvider.overrideWithBuild(
@@ -88,12 +92,22 @@ void main() {
     expect(api.demandes.last.etat, isNull);
   });
 
-  testWidgets('« Tout voir » ouvre le groupe entier ; « Commander » prévient', (tester) async {
+  testWidgets('« Tout voir » ouvre le groupe entier ; « Commander » ajoute à la commande du jour', (tester) async {
     final api = FausseStockApi();
-    await _lancer(tester, api);
+    final commandes = FausseCommandesApi();
+    await _lancer(tester, api, commandes: commandes);
     await tester.tap(find.text('Commander').first);
-    await tester.pump();
-    expect(find.text('Le module Commandes arrive bientôt.'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(commandes.appels.last, 'ajouter 3');
+    expect(find.text('Ajouté à la commande de GROSSISTE ATLAS : 4 boîtes.'), findsOneWidget);
+    expect(find.text('Voir'), findsOneWidget);
+    await tester.tap(find.text('Voir'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('total-panier')), findsOneWidget);
+    await tester.tap(find.byTooltip('Retour'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Stock').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Tout voir').first);
     await tester.pumpAndSettle();
     expect(api.demandes.last.etat, FiltreEtat.aCommander);

@@ -362,3 +362,17 @@ abstract class GroupeGenerique with _$GroupeGenerique {
   bool get toutes => mode == 'toutes';
   bool get aPlusieursMarques => code != null && membres.length > 1;
 }
+
+/// Produit ajouté depuis le Stock au brouillon du jour (`POST /commandes/ajouter`).
+@freezed
+abstract class AjoutCommande with _$AjoutCommande {
+  const factory AjoutCommande({
+    @JsonKey(name: 'id_commande') required int idCommande,
+    @JsonKey(name: 'id_fournisseur') required int idFournisseur,
+    String? fournisseur,
+    required int qte,
+    @JsonKey(name: 'deja_present') @Default(false) bool dejaPresent,
+  }) = _AjoutCommande;
+
+  factory AjoutCommande.fromJson(Map<String, dynamic> json) => _$AjoutCommandeFromJson(json);
+}

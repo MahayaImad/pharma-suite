@@ -256,3 +256,19 @@ Map<String, dynamic> _$GroupeGeneriqueToJson(_GroupeGenerique instance) => <Stri
   'nombre_gardes': instance.nombreGardes,
   'membres': instance.membres,
 };
+
+_AjoutCommande _$AjoutCommandeFromJson(Map<String, dynamic> json) => _AjoutCommande(
+  idCommande: (json['id_commande'] as num).toInt(),
+  idFournisseur: (json['id_fournisseur'] as num).toInt(),
+  fournisseur: json['fournisseur'] as String?,
+  qte: (json['qte'] as num).toInt(),
+  dejaPresent: json['deja_present'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$AjoutCommandeToJson(_AjoutCommande instance) => <String, dynamic>{
+  'id_commande': instance.idCommande,
+  'id_fournisseur': instance.idFournisseur,
+  'fournisseur': instance.fournisseur,
+  'qte': instance.qte,
+  'deja_present': instance.dejaPresent,
+};

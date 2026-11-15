@@ -8,6 +8,7 @@ import '../../../core/theme/themes.dart';
 import '../../../core/widgets/coquille.dart';
 import '../../../domain/format.dart';
 import '../../../domain/stock.dart';
+import '../../commandes/presentation/commander.dart';
 import '../application/stock_providers.dart';
 import 'elements_stock.dart';
 import 'fiche_produit.dart';
@@ -72,10 +73,10 @@ class _AucuneSelection extends StatelessWidget {
   );
 }
 
-/// Message des actions qui dépendent du module Commandes, pas encore là.
+/// Message des actions pas encore construites (retour, échange, mise en avant).
 void bientotCommandes(BuildContext context) => ScaffoldMessenger.of(context)
   ..hideCurrentSnackBar()
-  ..showSnackBar(const SnackBar(content: Text('Le module Commandes arrive bientôt.')));
+  ..showSnackBar(const SnackBar(content: Text('Bientôt disponible.')));
 
 class _Liste extends ConsumerStatefulWidget {
   const _Liste({this.selection});
@@ -464,7 +465,8 @@ class _Groupes extends ConsumerWidget {
                       ? 'Rupture · ${decimal(p.cmm)} vendus par mois'
                       : '${entier(p.stock)} en stock, seuil ${entier(p.seuil ?? 0)}'
                             '${p.couverture == null ? '' : ' · ${p.couverture} j de couverture'}',
-                  action: (p) => _BoutonAction('Commander', plein: true, surAppui: () => bientotCommandes(context)),
+                  action: (p) =>
+                      _BoutonAction('Commander', plein: true, surAppui: () => commanderProduit(context, ref, p.id)),
                 ),
               if (a.aRisque.isNotEmpty)
                 _Groupe(
