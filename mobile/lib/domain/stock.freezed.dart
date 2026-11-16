@@ -589,7 +589,7 @@ as List<FamilleStock>,
 mixin _$Produit {
 
  int get id; String get nom; String? get dci;/// Code DCI (« 04B044 ») : les produits de même code sont des génériques.
-@JsonKey(name: 'de_equiv') String? get codeDci; String? get dosage; String? get forme;@JsonKey(name: 'forme_abr') String? get formeAbr;@JsonKey(name: 'id_famille') int? get idFamille; String? get famille; String? get labo;@JsonKey(name: 'code_barre_original') String? get codeBarre; String? get conditionnement; double get stock;@JsonKey(name: 'qte_alerte') int? get seuil;@JsonKey(name: 'prix_vente') double get prixVente;@JsonKey(name: 'prix_achat_moyen') double get prixAchat;@JsonKey(name: 'valeur_achat') double get valeurAchat;@JsonKey(name: 'valeur_vente') double get valeurVente;@JsonKey(name: 'qte_vendue_12m') int? get vendu12Mois;@JsonKey(name: 'derniere_vente') DateTime? get derniereVente; bool get actif;@JsonKey(name: 'segment_abc') String? get classeAbc;@JsonKey(name: 'segment_xyz') String? get classeXyz; String? get categorie; String? get disponibilite; int? get psychotrope;@JsonKey(name: 'remb_cvm') int? get remboursable; double get cmm;@JsonKey(name: 'stock_securite') int get stockSecurite;@JsonKey(name: 'stock_maximum') int get stockMaximum;@JsonKey(name: 'couverture_jours') int? get couverture;@JsonKey(name: 'qte_a_risque') int get qteARisque;@JsonKey(name: 'valeur_a_risque') double get valeurARisque;@JsonKey(name: 'qte_surstock') int get qteSurstock;@JsonKey(name: 'valeur_surstock') double get valeurSurstock; bool get consommable;@JsonKey(name: 'consommable_propose') bool get consommablePropose;
+@JsonKey(name: 'de_equiv') String? get codeDci; String? get dosage; String? get forme;@JsonKey(name: 'forme_abr') String? get formeAbr;@JsonKey(name: 'id_famille') int? get idFamille; String? get famille; String? get labo;@JsonKey(name: 'code_barre_original') String? get codeBarre; String? get conditionnement; double get stock;@JsonKey(name: 'qte_alerte') int? get seuil;@JsonKey(name: 'prix_vente') double get prixVente;@JsonKey(name: 'prix_achat_moyen') double get prixAchat;@JsonKey(name: 'valeur_achat') double get valeurAchat;@JsonKey(name: 'valeur_vente') double get valeurVente;@JsonKey(name: 'qte_vendue_12m') int? get vendu12Mois;@JsonKey(name: 'derniere_vente') DateTime? get derniereVente; bool get actif;@JsonKey(name: 'segment_abc') String? get classeAbc;@JsonKey(name: 'segment_xyz') String? get classeXyz; String? get categorie; String? get disponibilite; int? get psychotrope;@JsonKey(name: 'remb_cvm') int? get remboursable; double get cmm;@JsonKey(name: 'stock_securite') int get stockSecurite;@JsonKey(name: 'stock_maximum') int get stockMaximum;@JsonKey(name: 'point_commande') int? get pointCommande;@JsonKey(name: 'qte_a_commander') int? get qteACommander;@JsonKey(name: 'sur_demande') bool get surDemande;@JsonKey(name: 'couverture_jours') int? get couverture;@JsonKey(name: 'qte_a_risque') int get qteARisque;@JsonKey(name: 'valeur_a_risque') double get valeurARisque;@JsonKey(name: 'qte_surstock') int get qteSurstock;@JsonKey(name: 'valeur_surstock') double get valeurSurstock; bool get consommable;@JsonKey(name: 'consommable_propose') bool get consommablePropose;
 /// Create a copy of Produit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -603,20 +603,20 @@ $ProduitCopyWith<Produit> get copyWith => _$ProduitCopyWithImpl<Produit>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as Produit;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Produit&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.dci, _this.dci) || other.dci == _this.dci)&&(identical(other.codeDci, _this.codeDci) || other.codeDci == _this.codeDci)&&(identical(other.dosage, _this.dosage) || other.dosage == _this.dosage)&&(identical(other.forme, _this.forme) || other.forme == _this.forme)&&(identical(other.formeAbr, _this.formeAbr) || other.formeAbr == _this.formeAbr)&&(identical(other.idFamille, _this.idFamille) || other.idFamille == _this.idFamille)&&(identical(other.famille, _this.famille) || other.famille == _this.famille)&&(identical(other.labo, _this.labo) || other.labo == _this.labo)&&(identical(other.codeBarre, _this.codeBarre) || other.codeBarre == _this.codeBarre)&&(identical(other.conditionnement, _this.conditionnement) || other.conditionnement == _this.conditionnement)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.seuil, _this.seuil) || other.seuil == _this.seuil)&&(identical(other.prixVente, _this.prixVente) || other.prixVente == _this.prixVente)&&(identical(other.prixAchat, _this.prixAchat) || other.prixAchat == _this.prixAchat)&&(identical(other.valeurAchat, _this.valeurAchat) || other.valeurAchat == _this.valeurAchat)&&(identical(other.valeurVente, _this.valeurVente) || other.valeurVente == _this.valeurVente)&&(identical(other.vendu12Mois, _this.vendu12Mois) || other.vendu12Mois == _this.vendu12Mois)&&(identical(other.derniereVente, _this.derniereVente) || other.derniereVente == _this.derniereVente)&&(identical(other.actif, _this.actif) || other.actif == _this.actif)&&(identical(other.classeAbc, _this.classeAbc) || other.classeAbc == _this.classeAbc)&&(identical(other.classeXyz, _this.classeXyz) || other.classeXyz == _this.classeXyz)&&(identical(other.categorie, _this.categorie) || other.categorie == _this.categorie)&&(identical(other.disponibilite, _this.disponibilite) || other.disponibilite == _this.disponibilite)&&(identical(other.psychotrope, _this.psychotrope) || other.psychotrope == _this.psychotrope)&&(identical(other.remboursable, _this.remboursable) || other.remboursable == _this.remboursable)&&(identical(other.cmm, _this.cmm) || other.cmm == _this.cmm)&&(identical(other.stockSecurite, _this.stockSecurite) || other.stockSecurite == _this.stockSecurite)&&(identical(other.stockMaximum, _this.stockMaximum) || other.stockMaximum == _this.stockMaximum)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.qteARisque, _this.qteARisque) || other.qteARisque == _this.qteARisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque)&&(identical(other.qteSurstock, _this.qteSurstock) || other.qteSurstock == _this.qteSurstock)&&(identical(other.valeurSurstock, _this.valeurSurstock) || other.valeurSurstock == _this.valeurSurstock)&&(identical(other.consommable, _this.consommable) || other.consommable == _this.consommable)&&(identical(other.consommablePropose, _this.consommablePropose) || other.consommablePropose == _this.consommablePropose));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Produit&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.dci, _this.dci) || other.dci == _this.dci)&&(identical(other.codeDci, _this.codeDci) || other.codeDci == _this.codeDci)&&(identical(other.dosage, _this.dosage) || other.dosage == _this.dosage)&&(identical(other.forme, _this.forme) || other.forme == _this.forme)&&(identical(other.formeAbr, _this.formeAbr) || other.formeAbr == _this.formeAbr)&&(identical(other.idFamille, _this.idFamille) || other.idFamille == _this.idFamille)&&(identical(other.famille, _this.famille) || other.famille == _this.famille)&&(identical(other.labo, _this.labo) || other.labo == _this.labo)&&(identical(other.codeBarre, _this.codeBarre) || other.codeBarre == _this.codeBarre)&&(identical(other.conditionnement, _this.conditionnement) || other.conditionnement == _this.conditionnement)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.seuil, _this.seuil) || other.seuil == _this.seuil)&&(identical(other.prixVente, _this.prixVente) || other.prixVente == _this.prixVente)&&(identical(other.prixAchat, _this.prixAchat) || other.prixAchat == _this.prixAchat)&&(identical(other.valeurAchat, _this.valeurAchat) || other.valeurAchat == _this.valeurAchat)&&(identical(other.valeurVente, _this.valeurVente) || other.valeurVente == _this.valeurVente)&&(identical(other.vendu12Mois, _this.vendu12Mois) || other.vendu12Mois == _this.vendu12Mois)&&(identical(other.derniereVente, _this.derniereVente) || other.derniereVente == _this.derniereVente)&&(identical(other.actif, _this.actif) || other.actif == _this.actif)&&(identical(other.classeAbc, _this.classeAbc) || other.classeAbc == _this.classeAbc)&&(identical(other.classeXyz, _this.classeXyz) || other.classeXyz == _this.classeXyz)&&(identical(other.categorie, _this.categorie) || other.categorie == _this.categorie)&&(identical(other.disponibilite, _this.disponibilite) || other.disponibilite == _this.disponibilite)&&(identical(other.psychotrope, _this.psychotrope) || other.psychotrope == _this.psychotrope)&&(identical(other.remboursable, _this.remboursable) || other.remboursable == _this.remboursable)&&(identical(other.cmm, _this.cmm) || other.cmm == _this.cmm)&&(identical(other.stockSecurite, _this.stockSecurite) || other.stockSecurite == _this.stockSecurite)&&(identical(other.stockMaximum, _this.stockMaximum) || other.stockMaximum == _this.stockMaximum)&&(identical(other.pointCommande, _this.pointCommande) || other.pointCommande == _this.pointCommande)&&(identical(other.qteACommander, _this.qteACommander) || other.qteACommander == _this.qteACommander)&&(identical(other.surDemande, _this.surDemande) || other.surDemande == _this.surDemande)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.qteARisque, _this.qteARisque) || other.qteARisque == _this.qteARisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque)&&(identical(other.qteSurstock, _this.qteSurstock) || other.qteSurstock == _this.qteSurstock)&&(identical(other.valeurSurstock, _this.valeurSurstock) || other.valeurSurstock == _this.valeurSurstock)&&(identical(other.consommable, _this.consommable) || other.consommable == _this.consommable)&&(identical(other.consommablePropose, _this.consommablePropose) || other.consommablePropose == _this.consommablePropose));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Produit;
-  return Object.hashAll([runtimeType,_this.id,_this.nom,_this.dci,_this.codeDci,_this.dosage,_this.forme,_this.formeAbr,_this.idFamille,_this.famille,_this.labo,_this.codeBarre,_this.conditionnement,_this.stock,_this.seuil,_this.prixVente,_this.prixAchat,_this.valeurAchat,_this.valeurVente,_this.vendu12Mois,_this.derniereVente,_this.actif,_this.classeAbc,_this.classeXyz,_this.categorie,_this.disponibilite,_this.psychotrope,_this.remboursable,_this.cmm,_this.stockSecurite,_this.stockMaximum,_this.couverture,_this.qteARisque,_this.valeurARisque,_this.qteSurstock,_this.valeurSurstock,_this.consommable,_this.consommablePropose]);
+  return Object.hashAll([runtimeType,_this.id,_this.nom,_this.dci,_this.codeDci,_this.dosage,_this.forme,_this.formeAbr,_this.idFamille,_this.famille,_this.labo,_this.codeBarre,_this.conditionnement,_this.stock,_this.seuil,_this.prixVente,_this.prixAchat,_this.valeurAchat,_this.valeurVente,_this.vendu12Mois,_this.derniereVente,_this.actif,_this.classeAbc,_this.classeXyz,_this.categorie,_this.disponibilite,_this.psychotrope,_this.remboursable,_this.cmm,_this.stockSecurite,_this.stockMaximum,_this.pointCommande,_this.qteACommander,_this.surDemande,_this.couverture,_this.qteARisque,_this.valeurARisque,_this.qteSurstock,_this.valeurSurstock,_this.consommable,_this.consommablePropose]);
 }
 
 @override
 String toString() {
   final _this = this as Produit;
-  return 'Produit(id: ${_this.id}, nom: ${_this.nom}, dci: ${_this.dci}, codeDci: ${_this.codeDci}, dosage: ${_this.dosage}, forme: ${_this.forme}, formeAbr: ${_this.formeAbr}, idFamille: ${_this.idFamille}, famille: ${_this.famille}, labo: ${_this.labo}, codeBarre: ${_this.codeBarre}, conditionnement: ${_this.conditionnement}, stock: ${_this.stock}, seuil: ${_this.seuil}, prixVente: ${_this.prixVente}, prixAchat: ${_this.prixAchat}, valeurAchat: ${_this.valeurAchat}, valeurVente: ${_this.valeurVente}, vendu12Mois: ${_this.vendu12Mois}, derniereVente: ${_this.derniereVente}, actif: ${_this.actif}, classeAbc: ${_this.classeAbc}, classeXyz: ${_this.classeXyz}, categorie: ${_this.categorie}, disponibilite: ${_this.disponibilite}, psychotrope: ${_this.psychotrope}, remboursable: ${_this.remboursable}, cmm: ${_this.cmm}, stockSecurite: ${_this.stockSecurite}, stockMaximum: ${_this.stockMaximum}, couverture: ${_this.couverture}, qteARisque: ${_this.qteARisque}, valeurARisque: ${_this.valeurARisque}, qteSurstock: ${_this.qteSurstock}, valeurSurstock: ${_this.valeurSurstock}, consommable: ${_this.consommable}, consommablePropose: ${_this.consommablePropose})';
+  return 'Produit(id: ${_this.id}, nom: ${_this.nom}, dci: ${_this.dci}, codeDci: ${_this.codeDci}, dosage: ${_this.dosage}, forme: ${_this.forme}, formeAbr: ${_this.formeAbr}, idFamille: ${_this.idFamille}, famille: ${_this.famille}, labo: ${_this.labo}, codeBarre: ${_this.codeBarre}, conditionnement: ${_this.conditionnement}, stock: ${_this.stock}, seuil: ${_this.seuil}, prixVente: ${_this.prixVente}, prixAchat: ${_this.prixAchat}, valeurAchat: ${_this.valeurAchat}, valeurVente: ${_this.valeurVente}, vendu12Mois: ${_this.vendu12Mois}, derniereVente: ${_this.derniereVente}, actif: ${_this.actif}, classeAbc: ${_this.classeAbc}, classeXyz: ${_this.classeXyz}, categorie: ${_this.categorie}, disponibilite: ${_this.disponibilite}, psychotrope: ${_this.psychotrope}, remboursable: ${_this.remboursable}, cmm: ${_this.cmm}, stockSecurite: ${_this.stockSecurite}, stockMaximum: ${_this.stockMaximum}, pointCommande: ${_this.pointCommande}, qteACommander: ${_this.qteACommander}, surDemande: ${_this.surDemande}, couverture: ${_this.couverture}, qteARisque: ${_this.qteARisque}, valeurARisque: ${_this.valeurARisque}, qteSurstock: ${_this.qteSurstock}, valeurSurstock: ${_this.valeurSurstock}, consommable: ${_this.consommable}, consommablePropose: ${_this.consommablePropose})';
 }
 
 
@@ -627,7 +627,7 @@ abstract mixin class $ProduitCopyWith<$Res>  {
   factory $ProduitCopyWith(Produit value, $Res Function(Produit) _then) = _$ProduitCopyWithImpl;
 @useResult
 $Res call({
- int id, String nom, String? dci,@JsonKey(name: 'de_equiv') String? codeDci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable, double cmm,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque,@JsonKey(name: 'qte_surstock') int qteSurstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock, bool consommable,@JsonKey(name: 'consommable_propose') bool consommablePropose
+ int id, String nom, String? dci,@JsonKey(name: 'de_equiv') String? codeDci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable, double cmm,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'point_commande') int? pointCommande,@JsonKey(name: 'qte_a_commander') int? qteACommander,@JsonKey(name: 'sur_demande') bool surDemande,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque,@JsonKey(name: 'qte_surstock') int qteSurstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock, bool consommable,@JsonKey(name: 'consommable_propose') bool consommablePropose
 });
 
 
@@ -644,7 +644,7 @@ class _$ProduitCopyWithImpl<$Res>
 
 /// Create a copy of Produit
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? codeDci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,Object? cmm = null,Object? stockSecurite = null,Object? stockMaximum = null,Object? couverture = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? qteSurstock = null,Object? valeurSurstock = null,Object? consommable = null,Object? consommablePropose = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? codeDci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,Object? cmm = null,Object? stockSecurite = null,Object? stockMaximum = null,Object? pointCommande = freezed,Object? qteACommander = freezed,Object? surDemande = null,Object? couverture = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? qteSurstock = null,Object? valeurSurstock = null,Object? consommable = null,Object? consommablePropose = null,}) {
   return _then(Produit(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -676,7 +676,10 @@ as int?,remboursable: freezed == remboursable ? _self.remboursable : remboursabl
 as int?,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
 as double,stockSecurite: null == stockSecurite ? _self.stockSecurite : stockSecurite // ignore: cast_nullable_to_non_nullable
 as int,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
-as int,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
+as int,pointCommande: freezed == pointCommande ? _self.pointCommande : pointCommande // ignore: cast_nullable_to_non_nullable
+as int?,qteACommander: freezed == qteACommander ? _self.qteACommander : qteACommander // ignore: cast_nullable_to_non_nullable
+as int?,surDemande: null == surDemande ? _self.surDemande : surDemande // ignore: cast_nullable_to_non_nullable
+as bool,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
 as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
 as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
 as double,qteSurstock: null == qteSurstock ? _self.qteSurstock : qteSurstock // ignore: cast_nullable_to_non_nullable
@@ -768,10 +771,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci, @JsonKey(name: 'de_equiv')  String? codeDci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock,  bool consommable, @JsonKey(name: 'consommable_propose')  bool consommablePropose)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci, @JsonKey(name: 'de_equiv')  String? codeDci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'point_commande')  int? pointCommande, @JsonKey(name: 'qte_a_commander')  int? qteACommander, @JsonKey(name: 'sur_demande')  bool surDemande, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock,  bool consommable, @JsonKey(name: 'consommable_propose')  bool consommablePropose)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Produit() when $default != null:
-return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock,_that.consommable,_that.consommablePropose);case _:
+return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.pointCommande,_that.qteACommander,_that.surDemande,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock,_that.consommable,_that.consommablePropose);case _:
   return orElse();
 
 }
@@ -789,10 +792,10 @@ return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.fo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci, @JsonKey(name: 'de_equiv')  String? codeDci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock,  bool consommable, @JsonKey(name: 'consommable_propose')  bool consommablePropose)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nom,  String? dci, @JsonKey(name: 'de_equiv')  String? codeDci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'point_commande')  int? pointCommande, @JsonKey(name: 'qte_a_commander')  int? qteACommander, @JsonKey(name: 'sur_demande')  bool surDemande, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock,  bool consommable, @JsonKey(name: 'consommable_propose')  bool consommablePropose)  $default,) {final _that = this;
 switch (_that) {
 case _Produit():
-return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock,_that.consommable,_that.consommablePropose);case _:
+return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.pointCommande,_that.qteACommander,_that.surDemande,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock,_that.consommable,_that.consommablePropose);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -809,10 +812,10 @@ return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.fo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nom,  String? dci, @JsonKey(name: 'de_equiv')  String? codeDci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock,  bool consommable, @JsonKey(name: 'consommable_propose')  bool consommablePropose)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nom,  String? dci, @JsonKey(name: 'de_equiv')  String? codeDci,  String? dosage,  String? forme, @JsonKey(name: 'forme_abr')  String? formeAbr, @JsonKey(name: 'id_famille')  int? idFamille,  String? famille,  String? labo, @JsonKey(name: 'code_barre_original')  String? codeBarre,  String? conditionnement,  double stock, @JsonKey(name: 'qte_alerte')  int? seuil, @JsonKey(name: 'prix_vente')  double prixVente, @JsonKey(name: 'prix_achat_moyen')  double prixAchat, @JsonKey(name: 'valeur_achat')  double valeurAchat, @JsonKey(name: 'valeur_vente')  double valeurVente, @JsonKey(name: 'qte_vendue_12m')  int? vendu12Mois, @JsonKey(name: 'derniere_vente')  DateTime? derniereVente,  bool actif, @JsonKey(name: 'segment_abc')  String? classeAbc, @JsonKey(name: 'segment_xyz')  String? classeXyz,  String? categorie,  String? disponibilite,  int? psychotrope, @JsonKey(name: 'remb_cvm')  int? remboursable,  double cmm, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'point_commande')  int? pointCommande, @JsonKey(name: 'qte_a_commander')  int? qteACommander, @JsonKey(name: 'sur_demande')  bool surDemande, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque, @JsonKey(name: 'qte_surstock')  int qteSurstock, @JsonKey(name: 'valeur_surstock')  double valeurSurstock,  bool consommable, @JsonKey(name: 'consommable_propose')  bool consommablePropose)?  $default,) {final _that = this;
 switch (_that) {
 case _Produit() when $default != null:
-return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock,_that.consommable,_that.consommablePropose);case _:
+return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.forme,_that.formeAbr,_that.idFamille,_that.famille,_that.labo,_that.codeBarre,_that.conditionnement,_that.stock,_that.seuil,_that.prixVente,_that.prixAchat,_that.valeurAchat,_that.valeurVente,_that.vendu12Mois,_that.derniereVente,_that.actif,_that.classeAbc,_that.classeXyz,_that.categorie,_that.disponibilite,_that.psychotrope,_that.remboursable,_that.cmm,_that.stockSecurite,_that.stockMaximum,_that.pointCommande,_that.qteACommander,_that.surDemande,_that.couverture,_that.qteARisque,_that.valeurARisque,_that.qteSurstock,_that.valeurSurstock,_that.consommable,_that.consommablePropose);case _:
   return null;
 
 }
@@ -824,7 +827,7 @@ return $default(_that.id,_that.nom,_that.dci,_that.codeDci,_that.dosage,_that.fo
 @JsonSerializable()
 
 class _Produit extends Produit {
-  const _Produit({required this.id, this.nom = '', this.dci, @JsonKey(name: 'de_equiv') this.codeDci, this.dosage, this.forme, @JsonKey(name: 'forme_abr') this.formeAbr, @JsonKey(name: 'id_famille') this.idFamille, this.famille, this.labo, @JsonKey(name: 'code_barre_original') this.codeBarre, this.conditionnement, this.stock = 0, @JsonKey(name: 'qte_alerte') this.seuil, @JsonKey(name: 'prix_vente') this.prixVente = 0, @JsonKey(name: 'prix_achat_moyen') this.prixAchat = 0, @JsonKey(name: 'valeur_achat') this.valeurAchat = 0, @JsonKey(name: 'valeur_vente') this.valeurVente = 0, @JsonKey(name: 'qte_vendue_12m') this.vendu12Mois, @JsonKey(name: 'derniere_vente') this.derniereVente, this.actif = false, @JsonKey(name: 'segment_abc') this.classeAbc, @JsonKey(name: 'segment_xyz') this.classeXyz, this.categorie, this.disponibilite, this.psychotrope, @JsonKey(name: 'remb_cvm') this.remboursable, this.cmm = 0, @JsonKey(name: 'stock_securite') this.stockSecurite = 0, @JsonKey(name: 'stock_maximum') this.stockMaximum = 0, @JsonKey(name: 'couverture_jours') this.couverture, @JsonKey(name: 'qte_a_risque') this.qteARisque = 0, @JsonKey(name: 'valeur_a_risque') this.valeurARisque = 0, @JsonKey(name: 'qte_surstock') this.qteSurstock = 0, @JsonKey(name: 'valeur_surstock') this.valeurSurstock = 0, this.consommable = false, @JsonKey(name: 'consommable_propose') this.consommablePropose = false}): super._();
+  const _Produit({required this.id, this.nom = '', this.dci, @JsonKey(name: 'de_equiv') this.codeDci, this.dosage, this.forme, @JsonKey(name: 'forme_abr') this.formeAbr, @JsonKey(name: 'id_famille') this.idFamille, this.famille, this.labo, @JsonKey(name: 'code_barre_original') this.codeBarre, this.conditionnement, this.stock = 0, @JsonKey(name: 'qte_alerte') this.seuil, @JsonKey(name: 'prix_vente') this.prixVente = 0, @JsonKey(name: 'prix_achat_moyen') this.prixAchat = 0, @JsonKey(name: 'valeur_achat') this.valeurAchat = 0, @JsonKey(name: 'valeur_vente') this.valeurVente = 0, @JsonKey(name: 'qte_vendue_12m') this.vendu12Mois, @JsonKey(name: 'derniere_vente') this.derniereVente, this.actif = false, @JsonKey(name: 'segment_abc') this.classeAbc, @JsonKey(name: 'segment_xyz') this.classeXyz, this.categorie, this.disponibilite, this.psychotrope, @JsonKey(name: 'remb_cvm') this.remboursable, this.cmm = 0, @JsonKey(name: 'stock_securite') this.stockSecurite = 0, @JsonKey(name: 'stock_maximum') this.stockMaximum = 0, @JsonKey(name: 'point_commande') this.pointCommande, @JsonKey(name: 'qte_a_commander') this.qteACommander, @JsonKey(name: 'sur_demande') this.surDemande = false, @JsonKey(name: 'couverture_jours') this.couverture, @JsonKey(name: 'qte_a_risque') this.qteARisque = 0, @JsonKey(name: 'valeur_a_risque') this.valeurARisque = 0, @JsonKey(name: 'qte_surstock') this.qteSurstock = 0, @JsonKey(name: 'valeur_surstock') this.valeurSurstock = 0, this.consommable = false, @JsonKey(name: 'consommable_propose') this.consommablePropose = false}): super._();
   factory _Produit.fromJson(Map<String, dynamic> json) => _$ProduitFromJson(json);
 
 @override final  int id;
@@ -858,6 +861,9 @@ class _Produit extends Produit {
 @override@JsonKey() final  double cmm;
 @override@JsonKey(name: 'stock_securite') final  int stockSecurite;
 @override@JsonKey(name: 'stock_maximum') final  int stockMaximum;
+@override@JsonKey(name: 'point_commande') final  int? pointCommande;
+@override@JsonKey(name: 'qte_a_commander') final  int? qteACommander;
+@override@JsonKey(name: 'sur_demande') final  bool surDemande;
 @override@JsonKey(name: 'couverture_jours') final  int? couverture;
 @override@JsonKey(name: 'qte_a_risque') final  int qteARisque;
 @override@JsonKey(name: 'valeur_a_risque') final  double valeurARisque;
@@ -879,18 +885,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Produit&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.dci, dci) || other.dci == dci)&&(identical(other.codeDci, codeDci) || other.codeDci == codeDci)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.forme, forme) || other.forme == forme)&&(identical(other.formeAbr, formeAbr) || other.formeAbr == formeAbr)&&(identical(other.idFamille, idFamille) || other.idFamille == idFamille)&&(identical(other.famille, famille) || other.famille == famille)&&(identical(other.labo, labo) || other.labo == labo)&&(identical(other.codeBarre, codeBarre) || other.codeBarre == codeBarre)&&(identical(other.conditionnement, conditionnement) || other.conditionnement == conditionnement)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.seuil, seuil) || other.seuil == seuil)&&(identical(other.prixVente, prixVente) || other.prixVente == prixVente)&&(identical(other.prixAchat, prixAchat) || other.prixAchat == prixAchat)&&(identical(other.valeurAchat, valeurAchat) || other.valeurAchat == valeurAchat)&&(identical(other.valeurVente, valeurVente) || other.valeurVente == valeurVente)&&(identical(other.vendu12Mois, vendu12Mois) || other.vendu12Mois == vendu12Mois)&&(identical(other.derniereVente, derniereVente) || other.derniereVente == derniereVente)&&(identical(other.actif, actif) || other.actif == actif)&&(identical(other.classeAbc, classeAbc) || other.classeAbc == classeAbc)&&(identical(other.classeXyz, classeXyz) || other.classeXyz == classeXyz)&&(identical(other.categorie, categorie) || other.categorie == categorie)&&(identical(other.disponibilite, disponibilite) || other.disponibilite == disponibilite)&&(identical(other.psychotrope, psychotrope) || other.psychotrope == psychotrope)&&(identical(other.remboursable, remboursable) || other.remboursable == remboursable)&&(identical(other.cmm, cmm) || other.cmm == cmm)&&(identical(other.stockSecurite, stockSecurite) || other.stockSecurite == stockSecurite)&&(identical(other.stockMaximum, stockMaximum) || other.stockMaximum == stockMaximum)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.qteARisque, qteARisque) || other.qteARisque == qteARisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque)&&(identical(other.qteSurstock, qteSurstock) || other.qteSurstock == qteSurstock)&&(identical(other.valeurSurstock, valeurSurstock) || other.valeurSurstock == valeurSurstock)&&(identical(other.consommable, consommable) || other.consommable == consommable)&&(identical(other.consommablePropose, consommablePropose) || other.consommablePropose == consommablePropose));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Produit&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.dci, dci) || other.dci == dci)&&(identical(other.codeDci, codeDci) || other.codeDci == codeDci)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.forme, forme) || other.forme == forme)&&(identical(other.formeAbr, formeAbr) || other.formeAbr == formeAbr)&&(identical(other.idFamille, idFamille) || other.idFamille == idFamille)&&(identical(other.famille, famille) || other.famille == famille)&&(identical(other.labo, labo) || other.labo == labo)&&(identical(other.codeBarre, codeBarre) || other.codeBarre == codeBarre)&&(identical(other.conditionnement, conditionnement) || other.conditionnement == conditionnement)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.seuil, seuil) || other.seuil == seuil)&&(identical(other.prixVente, prixVente) || other.prixVente == prixVente)&&(identical(other.prixAchat, prixAchat) || other.prixAchat == prixAchat)&&(identical(other.valeurAchat, valeurAchat) || other.valeurAchat == valeurAchat)&&(identical(other.valeurVente, valeurVente) || other.valeurVente == valeurVente)&&(identical(other.vendu12Mois, vendu12Mois) || other.vendu12Mois == vendu12Mois)&&(identical(other.derniereVente, derniereVente) || other.derniereVente == derniereVente)&&(identical(other.actif, actif) || other.actif == actif)&&(identical(other.classeAbc, classeAbc) || other.classeAbc == classeAbc)&&(identical(other.classeXyz, classeXyz) || other.classeXyz == classeXyz)&&(identical(other.categorie, categorie) || other.categorie == categorie)&&(identical(other.disponibilite, disponibilite) || other.disponibilite == disponibilite)&&(identical(other.psychotrope, psychotrope) || other.psychotrope == psychotrope)&&(identical(other.remboursable, remboursable) || other.remboursable == remboursable)&&(identical(other.cmm, cmm) || other.cmm == cmm)&&(identical(other.stockSecurite, stockSecurite) || other.stockSecurite == stockSecurite)&&(identical(other.stockMaximum, stockMaximum) || other.stockMaximum == stockMaximum)&&(identical(other.pointCommande, pointCommande) || other.pointCommande == pointCommande)&&(identical(other.qteACommander, qteACommander) || other.qteACommander == qteACommander)&&(identical(other.surDemande, surDemande) || other.surDemande == surDemande)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.qteARisque, qteARisque) || other.qteARisque == qteARisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque)&&(identical(other.qteSurstock, qteSurstock) || other.qteSurstock == qteSurstock)&&(identical(other.valeurSurstock, valeurSurstock) || other.valeurSurstock == valeurSurstock)&&(identical(other.consommable, consommable) || other.consommable == consommable)&&(identical(other.consommablePropose, consommablePropose) || other.consommablePropose == consommablePropose));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,id,nom,dci,codeDci,dosage,forme,formeAbr,idFamille,famille,labo,codeBarre,conditionnement,stock,seuil,prixVente,prixAchat,valeurAchat,valeurVente,vendu12Mois,derniereVente,actif,classeAbc,classeXyz,categorie,disponibilite,psychotrope,remboursable,cmm,stockSecurite,stockMaximum,couverture,qteARisque,valeurARisque,qteSurstock,valeurSurstock,consommable,consommablePropose]);
+    return Object.hashAll([runtimeType,id,nom,dci,codeDci,dosage,forme,formeAbr,idFamille,famille,labo,codeBarre,conditionnement,stock,seuil,prixVente,prixAchat,valeurAchat,valeurVente,vendu12Mois,derniereVente,actif,classeAbc,classeXyz,categorie,disponibilite,psychotrope,remboursable,cmm,stockSecurite,stockMaximum,pointCommande,qteACommander,surDemande,couverture,qteARisque,valeurARisque,qteSurstock,valeurSurstock,consommable,consommablePropose]);
 }
 
 @override
 String toString() {
-    return 'Produit(id: $id, nom: $nom, dci: $dci, codeDci: $codeDci, dosage: $dosage, forme: $forme, formeAbr: $formeAbr, idFamille: $idFamille, famille: $famille, labo: $labo, codeBarre: $codeBarre, conditionnement: $conditionnement, stock: $stock, seuil: $seuil, prixVente: $prixVente, prixAchat: $prixAchat, valeurAchat: $valeurAchat, valeurVente: $valeurVente, vendu12Mois: $vendu12Mois, derniereVente: $derniereVente, actif: $actif, classeAbc: $classeAbc, classeXyz: $classeXyz, categorie: $categorie, disponibilite: $disponibilite, psychotrope: $psychotrope, remboursable: $remboursable, cmm: $cmm, stockSecurite: $stockSecurite, stockMaximum: $stockMaximum, couverture: $couverture, qteARisque: $qteARisque, valeurARisque: $valeurARisque, qteSurstock: $qteSurstock, valeurSurstock: $valeurSurstock, consommable: $consommable, consommablePropose: $consommablePropose)';
+    return 'Produit(id: $id, nom: $nom, dci: $dci, codeDci: $codeDci, dosage: $dosage, forme: $forme, formeAbr: $formeAbr, idFamille: $idFamille, famille: $famille, labo: $labo, codeBarre: $codeBarre, conditionnement: $conditionnement, stock: $stock, seuil: $seuil, prixVente: $prixVente, prixAchat: $prixAchat, valeurAchat: $valeurAchat, valeurVente: $valeurVente, vendu12Mois: $vendu12Mois, derniereVente: $derniereVente, actif: $actif, classeAbc: $classeAbc, classeXyz: $classeXyz, categorie: $categorie, disponibilite: $disponibilite, psychotrope: $psychotrope, remboursable: $remboursable, cmm: $cmm, stockSecurite: $stockSecurite, stockMaximum: $stockMaximum, pointCommande: $pointCommande, qteACommander: $qteACommander, surDemande: $surDemande, couverture: $couverture, qteARisque: $qteARisque, valeurARisque: $valeurARisque, qteSurstock: $qteSurstock, valeurSurstock: $valeurSurstock, consommable: $consommable, consommablePropose: $consommablePropose)';
 }
 
 
@@ -901,7 +907,7 @@ abstract mixin class _$ProduitCopyWith<$Res> implements $ProduitCopyWith<$Res> {
   factory _$ProduitCopyWith(_Produit value, $Res Function(_Produit) _then) = __$ProduitCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String nom, String? dci,@JsonKey(name: 'de_equiv') String? codeDci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable, double cmm,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque,@JsonKey(name: 'qte_surstock') int qteSurstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock, bool consommable,@JsonKey(name: 'consommable_propose') bool consommablePropose
+ int id, String nom, String? dci,@JsonKey(name: 'de_equiv') String? codeDci, String? dosage, String? forme,@JsonKey(name: 'forme_abr') String? formeAbr,@JsonKey(name: 'id_famille') int? idFamille, String? famille, String? labo,@JsonKey(name: 'code_barre_original') String? codeBarre, String? conditionnement, double stock,@JsonKey(name: 'qte_alerte') int? seuil,@JsonKey(name: 'prix_vente') double prixVente,@JsonKey(name: 'prix_achat_moyen') double prixAchat,@JsonKey(name: 'valeur_achat') double valeurAchat,@JsonKey(name: 'valeur_vente') double valeurVente,@JsonKey(name: 'qte_vendue_12m') int? vendu12Mois,@JsonKey(name: 'derniere_vente') DateTime? derniereVente, bool actif,@JsonKey(name: 'segment_abc') String? classeAbc,@JsonKey(name: 'segment_xyz') String? classeXyz, String? categorie, String? disponibilite, int? psychotrope,@JsonKey(name: 'remb_cvm') int? remboursable, double cmm,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'point_commande') int? pointCommande,@JsonKey(name: 'qte_a_commander') int? qteACommander,@JsonKey(name: 'sur_demande') bool surDemande,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque,@JsonKey(name: 'qte_surstock') int qteSurstock,@JsonKey(name: 'valeur_surstock') double valeurSurstock, bool consommable,@JsonKey(name: 'consommable_propose') bool consommablePropose
 });
 
 
@@ -918,7 +924,7 @@ class __$ProduitCopyWithImpl<$Res>
 
 /// Create a copy of Produit
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? codeDci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,Object? cmm = null,Object? stockSecurite = null,Object? stockMaximum = null,Object? couverture = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? qteSurstock = null,Object? valeurSurstock = null,Object? consommable = null,Object? consommablePropose = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = null,Object? dci = freezed,Object? codeDci = freezed,Object? dosage = freezed,Object? forme = freezed,Object? formeAbr = freezed,Object? idFamille = freezed,Object? famille = freezed,Object? labo = freezed,Object? codeBarre = freezed,Object? conditionnement = freezed,Object? stock = null,Object? seuil = freezed,Object? prixVente = null,Object? prixAchat = null,Object? valeurAchat = null,Object? valeurVente = null,Object? vendu12Mois = freezed,Object? derniereVente = freezed,Object? actif = null,Object? classeAbc = freezed,Object? classeXyz = freezed,Object? categorie = freezed,Object? disponibilite = freezed,Object? psychotrope = freezed,Object? remboursable = freezed,Object? cmm = null,Object? stockSecurite = null,Object? stockMaximum = null,Object? pointCommande = freezed,Object? qteACommander = freezed,Object? surDemande = null,Object? couverture = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? qteSurstock = null,Object? valeurSurstock = null,Object? consommable = null,Object? consommablePropose = null,}) {
   return _then(_Produit(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -950,7 +956,10 @@ as int?,remboursable: freezed == remboursable ? _self.remboursable : remboursabl
 as int?,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
 as double,stockSecurite: null == stockSecurite ? _self.stockSecurite : stockSecurite // ignore: cast_nullable_to_non_nullable
 as int,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
-as int,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
+as int,pointCommande: freezed == pointCommande ? _self.pointCommande : pointCommande // ignore: cast_nullable_to_non_nullable
+as int?,qteACommander: freezed == qteACommander ? _self.qteACommander : qteACommander // ignore: cast_nullable_to_non_nullable
+as int?,surDemande: null == surDemande ? _self.surDemande : surDemande // ignore: cast_nullable_to_non_nullable
+as bool,couverture: freezed == couverture ? _self.couverture : couverture // ignore: cast_nullable_to_non_nullable
 as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
 as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
 as double,qteSurstock: null == qteSurstock ? _self.qteSurstock : qteSurstock // ignore: cast_nullable_to_non_nullable
@@ -1845,7 +1854,8 @@ as bool,
 /// @nodoc
 mixin _$IndicateursProduit {
 
-@JsonKey(name: 'ventes_12_mois') double get ventes12Mois;@JsonKey(name: 'mois_historique') int get moisHistorique; double get cmm; double get cmj; FournisseurPrincipal? get fournisseur;@JsonKey(name: 'delai_livraison_jours') int get delaiLivraison;@JsonKey(name: 'date_livraison') DateTime? get dateLivraison;@JsonKey(name: 'stock_securite') int get stockSecurite;@JsonKey(name: 'stock_securite_simple') int get stockSecuriteSimple;@JsonKey(name: 'delai_securite_jours') double get delaiSecurite;@JsonKey(name: 'periode_commande_jours') double get periodeCommande;@JsonKey(name: 'stock_maximum') int get stockMaximum;@JsonKey(name: 'couverture_jours') int? get couverture;@JsonKey(name: 'dvr_max') int? get dvrMax;@JsonKey(name: 'qte_a_risque') int get qteARisque;@JsonKey(name: 'valeur_a_risque') double get valeurARisque; List<RisqueLot> get lots;
+@JsonKey(name: 'ventes_12_mois') double get ventes12Mois;@JsonKey(name: 'mois_historique') int get moisHistorique; double get cmm; double get cmj; FournisseurPrincipal? get fournisseur;@JsonKey(name: 'delai_livraison_jours') int get delaiLivraison;@JsonKey(name: 'date_livraison') DateTime? get dateLivraison;@JsonKey(name: 'stock_securite') int get stockSecurite;@JsonKey(name: 'stock_securite_simple') int get stockSecuriteSimple;@JsonKey(name: 'delai_securite_jours') double get delaiSecurite;@JsonKey(name: 'periode_commande_jours') double get periodeCommande;@JsonKey(name: 'stock_maximum') int get stockMaximum;@JsonKey(name: 'couverture_jours') int? get couverture;@JsonKey(name: 'dvr_max') int? get dvrMax;@JsonKey(name: 'qte_a_risque') int get qteARisque;@JsonKey(name: 'valeur_a_risque') double get valeurARisque; List<RisqueLot> get lots;/// Seuils du module Commandes ; null : calcul pas prêt, ou produit hors calcul.
+ SeuilsCommande? get commande;
 /// Create a copy of IndicateursProduit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1859,20 +1869,20 @@ $IndicateursProduitCopyWith<IndicateursProduit> get copyWith => _$IndicateursPro
 @override
 bool operator ==(Object other) {
   final _this = this as IndicateursProduit;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IndicateursProduit&&(identical(other.ventes12Mois, _this.ventes12Mois) || other.ventes12Mois == _this.ventes12Mois)&&(identical(other.moisHistorique, _this.moisHistorique) || other.moisHistorique == _this.moisHistorique)&&(identical(other.cmm, _this.cmm) || other.cmm == _this.cmm)&&(identical(other.cmj, _this.cmj) || other.cmj == _this.cmj)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur)&&(identical(other.delaiLivraison, _this.delaiLivraison) || other.delaiLivraison == _this.delaiLivraison)&&(identical(other.dateLivraison, _this.dateLivraison) || other.dateLivraison == _this.dateLivraison)&&(identical(other.stockSecurite, _this.stockSecurite) || other.stockSecurite == _this.stockSecurite)&&(identical(other.stockSecuriteSimple, _this.stockSecuriteSimple) || other.stockSecuriteSimple == _this.stockSecuriteSimple)&&(identical(other.delaiSecurite, _this.delaiSecurite) || other.delaiSecurite == _this.delaiSecurite)&&(identical(other.periodeCommande, _this.periodeCommande) || other.periodeCommande == _this.periodeCommande)&&(identical(other.stockMaximum, _this.stockMaximum) || other.stockMaximum == _this.stockMaximum)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.dvrMax, _this.dvrMax) || other.dvrMax == _this.dvrMax)&&(identical(other.qteARisque, _this.qteARisque) || other.qteARisque == _this.qteARisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque)&&const DeepCollectionEquality().equals(other.lots, _this.lots));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IndicateursProduit&&(identical(other.ventes12Mois, _this.ventes12Mois) || other.ventes12Mois == _this.ventes12Mois)&&(identical(other.moisHistorique, _this.moisHistorique) || other.moisHistorique == _this.moisHistorique)&&(identical(other.cmm, _this.cmm) || other.cmm == _this.cmm)&&(identical(other.cmj, _this.cmj) || other.cmj == _this.cmj)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur)&&(identical(other.delaiLivraison, _this.delaiLivraison) || other.delaiLivraison == _this.delaiLivraison)&&(identical(other.dateLivraison, _this.dateLivraison) || other.dateLivraison == _this.dateLivraison)&&(identical(other.stockSecurite, _this.stockSecurite) || other.stockSecurite == _this.stockSecurite)&&(identical(other.stockSecuriteSimple, _this.stockSecuriteSimple) || other.stockSecuriteSimple == _this.stockSecuriteSimple)&&(identical(other.delaiSecurite, _this.delaiSecurite) || other.delaiSecurite == _this.delaiSecurite)&&(identical(other.periodeCommande, _this.periodeCommande) || other.periodeCommande == _this.periodeCommande)&&(identical(other.stockMaximum, _this.stockMaximum) || other.stockMaximum == _this.stockMaximum)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.dvrMax, _this.dvrMax) || other.dvrMax == _this.dvrMax)&&(identical(other.qteARisque, _this.qteARisque) || other.qteARisque == _this.qteARisque)&&(identical(other.valeurARisque, _this.valeurARisque) || other.valeurARisque == _this.valeurARisque)&&const DeepCollectionEquality().equals(other.lots, _this.lots)&&(identical(other.commande, _this.commande) || other.commande == _this.commande));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as IndicateursProduit;
-  return Object.hash(runtimeType,_this.ventes12Mois,_this.moisHistorique,_this.cmm,_this.cmj,_this.fournisseur,_this.delaiLivraison,_this.dateLivraison,_this.stockSecurite,_this.stockSecuriteSimple,_this.delaiSecurite,_this.periodeCommande,_this.stockMaximum,_this.couverture,_this.dvrMax,_this.qteARisque,_this.valeurARisque,const DeepCollectionEquality().hash(_this.lots));
+  return Object.hash(runtimeType,_this.ventes12Mois,_this.moisHistorique,_this.cmm,_this.cmj,_this.fournisseur,_this.delaiLivraison,_this.dateLivraison,_this.stockSecurite,_this.stockSecuriteSimple,_this.delaiSecurite,_this.periodeCommande,_this.stockMaximum,_this.couverture,_this.dvrMax,_this.qteARisque,_this.valeurARisque,const DeepCollectionEquality().hash(_this.lots),_this.commande);
 }
 
 @override
 String toString() {
   final _this = this as IndicateursProduit;
-  return 'IndicateursProduit(ventes12Mois: ${_this.ventes12Mois}, moisHistorique: ${_this.moisHistorique}, cmm: ${_this.cmm}, cmj: ${_this.cmj}, fournisseur: ${_this.fournisseur}, delaiLivraison: ${_this.delaiLivraison}, dateLivraison: ${_this.dateLivraison}, stockSecurite: ${_this.stockSecurite}, stockSecuriteSimple: ${_this.stockSecuriteSimple}, delaiSecurite: ${_this.delaiSecurite}, periodeCommande: ${_this.periodeCommande}, stockMaximum: ${_this.stockMaximum}, couverture: ${_this.couverture}, dvrMax: ${_this.dvrMax}, qteARisque: ${_this.qteARisque}, valeurARisque: ${_this.valeurARisque}, lots: ${_this.lots})';
+  return 'IndicateursProduit(ventes12Mois: ${_this.ventes12Mois}, moisHistorique: ${_this.moisHistorique}, cmm: ${_this.cmm}, cmj: ${_this.cmj}, fournisseur: ${_this.fournisseur}, delaiLivraison: ${_this.delaiLivraison}, dateLivraison: ${_this.dateLivraison}, stockSecurite: ${_this.stockSecurite}, stockSecuriteSimple: ${_this.stockSecuriteSimple}, delaiSecurite: ${_this.delaiSecurite}, periodeCommande: ${_this.periodeCommande}, stockMaximum: ${_this.stockMaximum}, couverture: ${_this.couverture}, dvrMax: ${_this.dvrMax}, qteARisque: ${_this.qteARisque}, valeurARisque: ${_this.valeurARisque}, lots: ${_this.lots}, commande: ${_this.commande})';
 }
 
 
@@ -1883,11 +1893,11 @@ abstract mixin class $IndicateursProduitCopyWith<$Res>  {
   factory $IndicateursProduitCopyWith(IndicateursProduit value, $Res Function(IndicateursProduit) _then) = _$IndicateursProduitCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'ventes_12_mois') double ventes12Mois,@JsonKey(name: 'mois_historique') int moisHistorique, double cmm, double cmj, FournisseurPrincipal? fournisseur,@JsonKey(name: 'delai_livraison_jours') int delaiLivraison,@JsonKey(name: 'date_livraison') DateTime? dateLivraison,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_securite_simple') int stockSecuriteSimple,@JsonKey(name: 'delai_securite_jours') double delaiSecurite,@JsonKey(name: 'periode_commande_jours') double periodeCommande,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'dvr_max') int? dvrMax,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, List<RisqueLot> lots
+@JsonKey(name: 'ventes_12_mois') double ventes12Mois,@JsonKey(name: 'mois_historique') int moisHistorique, double cmm, double cmj, FournisseurPrincipal? fournisseur,@JsonKey(name: 'delai_livraison_jours') int delaiLivraison,@JsonKey(name: 'date_livraison') DateTime? dateLivraison,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_securite_simple') int stockSecuriteSimple,@JsonKey(name: 'delai_securite_jours') double delaiSecurite,@JsonKey(name: 'periode_commande_jours') double periodeCommande,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'dvr_max') int? dvrMax,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, List<RisqueLot> lots, SeuilsCommande? commande
 });
 
 
-$FournisseurPrincipalCopyWith<$Res>? get fournisseur;
+$FournisseurPrincipalCopyWith<$Res>? get fournisseur;$SeuilsCommandeCopyWith<$Res>? get commande;
 
 }
 /// @nodoc
@@ -1900,7 +1910,7 @@ class _$IndicateursProduitCopyWithImpl<$Res>
 
 /// Create a copy of IndicateursProduit
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? ventes12Mois = null,Object? moisHistorique = null,Object? cmm = null,Object? cmj = null,Object? fournisseur = freezed,Object? delaiLivraison = null,Object? dateLivraison = freezed,Object? stockSecurite = null,Object? stockSecuriteSimple = null,Object? delaiSecurite = null,Object? periodeCommande = null,Object? stockMaximum = null,Object? couverture = freezed,Object? dvrMax = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? lots = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? ventes12Mois = null,Object? moisHistorique = null,Object? cmm = null,Object? cmj = null,Object? fournisseur = freezed,Object? delaiLivraison = null,Object? dateLivraison = freezed,Object? stockSecurite = null,Object? stockSecuriteSimple = null,Object? delaiSecurite = null,Object? periodeCommande = null,Object? stockMaximum = null,Object? couverture = freezed,Object? dvrMax = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? lots = null,Object? commande = freezed,}) {
   return _then(IndicateursProduit(
 ventes12Mois: null == ventes12Mois ? _self.ventes12Mois : ventes12Mois // ignore: cast_nullable_to_non_nullable
 as double,moisHistorique: null == moisHistorique ? _self.moisHistorique : moisHistorique // ignore: cast_nullable_to_non_nullable
@@ -1919,7 +1929,8 @@ as int?,dvrMax: freezed == dvrMax ? _self.dvrMax : dvrMax // ignore: cast_nullab
 as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
 as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
 as double,lots: null == lots ? _self.lots : lots // ignore: cast_nullable_to_non_nullable
-as List<RisqueLot>,
+as List<RisqueLot>,commande: freezed == commande ? _self.commande : commande // ignore: cast_nullable_to_non_nullable
+as SeuilsCommande?,
   ));
 }
 /// Create a copy of IndicateursProduit
@@ -1933,6 +1944,18 @@ $FournisseurPrincipalCopyWith<$Res>? get fournisseur {
 
   return $FournisseurPrincipalCopyWith<$Res>(_self.fournisseur!, (value) {
     return _then(_self.copyWith(fournisseur: value));
+  });
+}/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SeuilsCommandeCopyWith<$Res>? get commande {
+    if (_self.commande == null) {
+    return null;
+  }
+
+  return $SeuilsCommandeCopyWith<$Res>(_self.commande!, (value) {
+    return _then(_self.copyWith(commande: value));
   });
 }
 }
@@ -2016,10 +2039,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots,  SeuilsCommande? commande)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IndicateursProduit() when $default != null:
-return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots);case _:
+return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots,_that.commande);case _:
   return orElse();
 
 }
@@ -2037,10 +2060,10 @@ return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots,  SeuilsCommande? commande)  $default,) {final _that = this;
 switch (_that) {
 case _IndicateursProduit():
-return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots);case _:
+return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots,_that.commande);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2057,10 +2080,10 @@ return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ventes_12_mois')  double ventes12Mois, @JsonKey(name: 'mois_historique')  int moisHistorique,  double cmm,  double cmj,  FournisseurPrincipal? fournisseur, @JsonKey(name: 'delai_livraison_jours')  int delaiLivraison, @JsonKey(name: 'date_livraison')  DateTime? dateLivraison, @JsonKey(name: 'stock_securite')  int stockSecurite, @JsonKey(name: 'stock_securite_simple')  int stockSecuriteSimple, @JsonKey(name: 'delai_securite_jours')  double delaiSecurite, @JsonKey(name: 'periode_commande_jours')  double periodeCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum, @JsonKey(name: 'couverture_jours')  int? couverture, @JsonKey(name: 'dvr_max')  int? dvrMax, @JsonKey(name: 'qte_a_risque')  int qteARisque, @JsonKey(name: 'valeur_a_risque')  double valeurARisque,  List<RisqueLot> lots,  SeuilsCommande? commande)?  $default,) {final _that = this;
 switch (_that) {
 case _IndicateursProduit() when $default != null:
-return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots);case _:
+return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_that.fournisseur,_that.delaiLivraison,_that.dateLivraison,_that.stockSecurite,_that.stockSecuriteSimple,_that.delaiSecurite,_that.periodeCommande,_that.stockMaximum,_that.couverture,_that.dvrMax,_that.qteARisque,_that.valeurARisque,_that.lots,_that.commande);case _:
   return null;
 
 }
@@ -2072,7 +2095,7 @@ return $default(_that.ventes12Mois,_that.moisHistorique,_that.cmm,_that.cmj,_tha
 @JsonSerializable()
 
 class _IndicateursProduit extends IndicateursProduit {
-  const _IndicateursProduit({@JsonKey(name: 'ventes_12_mois') this.ventes12Mois = 0, @JsonKey(name: 'mois_historique') this.moisHistorique = 12, this.cmm = 0, this.cmj = 0, this.fournisseur, @JsonKey(name: 'delai_livraison_jours') this.delaiLivraison = 1, @JsonKey(name: 'date_livraison') this.dateLivraison, @JsonKey(name: 'stock_securite') this.stockSecurite = 0, @JsonKey(name: 'stock_securite_simple') this.stockSecuriteSimple = 0, @JsonKey(name: 'delai_securite_jours') this.delaiSecurite = 0, @JsonKey(name: 'periode_commande_jours') this.periodeCommande = 0, @JsonKey(name: 'stock_maximum') this.stockMaximum = 0, @JsonKey(name: 'couverture_jours') this.couverture, @JsonKey(name: 'dvr_max') this.dvrMax, @JsonKey(name: 'qte_a_risque') this.qteARisque = 0, @JsonKey(name: 'valeur_a_risque') this.valeurARisque = 0,  List<RisqueLot> lots = const <RisqueLot>[]}): _lots = lots,super._();
+  const _IndicateursProduit({@JsonKey(name: 'ventes_12_mois') this.ventes12Mois = 0, @JsonKey(name: 'mois_historique') this.moisHistorique = 12, this.cmm = 0, this.cmj = 0, this.fournisseur, @JsonKey(name: 'delai_livraison_jours') this.delaiLivraison = 1, @JsonKey(name: 'date_livraison') this.dateLivraison, @JsonKey(name: 'stock_securite') this.stockSecurite = 0, @JsonKey(name: 'stock_securite_simple') this.stockSecuriteSimple = 0, @JsonKey(name: 'delai_securite_jours') this.delaiSecurite = 0, @JsonKey(name: 'periode_commande_jours') this.periodeCommande = 0, @JsonKey(name: 'stock_maximum') this.stockMaximum = 0, @JsonKey(name: 'couverture_jours') this.couverture, @JsonKey(name: 'dvr_max') this.dvrMax, @JsonKey(name: 'qte_a_risque') this.qteARisque = 0, @JsonKey(name: 'valeur_a_risque') this.valeurARisque = 0,  List<RisqueLot> lots = const <RisqueLot>[], this.commande}): _lots = lots,super._();
   factory _IndicateursProduit.fromJson(Map<String, dynamic> json) => _$IndicateursProduitFromJson(json);
 
 @override@JsonKey(name: 'ventes_12_mois') final  double ventes12Mois;
@@ -2098,6 +2121,8 @@ class _IndicateursProduit extends IndicateursProduit {
   return EqualUnmodifiableListView(_lots);
 }
 
+/// Seuils du module Commandes ; null : calcul pas prêt, ou produit hors calcul.
+@override final  SeuilsCommande? commande;
 
 /// Create a copy of IndicateursProduit
 /// with the given fields replaced by the non-null parameter values.
@@ -2112,18 +2137,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IndicateursProduit&&(identical(other.ventes12Mois, ventes12Mois) || other.ventes12Mois == ventes12Mois)&&(identical(other.moisHistorique, moisHistorique) || other.moisHistorique == moisHistorique)&&(identical(other.cmm, cmm) || other.cmm == cmm)&&(identical(other.cmj, cmj) || other.cmj == cmj)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur)&&(identical(other.delaiLivraison, delaiLivraison) || other.delaiLivraison == delaiLivraison)&&(identical(other.dateLivraison, dateLivraison) || other.dateLivraison == dateLivraison)&&(identical(other.stockSecurite, stockSecurite) || other.stockSecurite == stockSecurite)&&(identical(other.stockSecuriteSimple, stockSecuriteSimple) || other.stockSecuriteSimple == stockSecuriteSimple)&&(identical(other.delaiSecurite, delaiSecurite) || other.delaiSecurite == delaiSecurite)&&(identical(other.periodeCommande, periodeCommande) || other.periodeCommande == periodeCommande)&&(identical(other.stockMaximum, stockMaximum) || other.stockMaximum == stockMaximum)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.dvrMax, dvrMax) || other.dvrMax == dvrMax)&&(identical(other.qteARisque, qteARisque) || other.qteARisque == qteARisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque)&&const DeepCollectionEquality().equals(other.lots, _lots));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IndicateursProduit&&(identical(other.ventes12Mois, ventes12Mois) || other.ventes12Mois == ventes12Mois)&&(identical(other.moisHistorique, moisHistorique) || other.moisHistorique == moisHistorique)&&(identical(other.cmm, cmm) || other.cmm == cmm)&&(identical(other.cmj, cmj) || other.cmj == cmj)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur)&&(identical(other.delaiLivraison, delaiLivraison) || other.delaiLivraison == delaiLivraison)&&(identical(other.dateLivraison, dateLivraison) || other.dateLivraison == dateLivraison)&&(identical(other.stockSecurite, stockSecurite) || other.stockSecurite == stockSecurite)&&(identical(other.stockSecuriteSimple, stockSecuriteSimple) || other.stockSecuriteSimple == stockSecuriteSimple)&&(identical(other.delaiSecurite, delaiSecurite) || other.delaiSecurite == delaiSecurite)&&(identical(other.periodeCommande, periodeCommande) || other.periodeCommande == periodeCommande)&&(identical(other.stockMaximum, stockMaximum) || other.stockMaximum == stockMaximum)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.dvrMax, dvrMax) || other.dvrMax == dvrMax)&&(identical(other.qteARisque, qteARisque) || other.qteARisque == qteARisque)&&(identical(other.valeurARisque, valeurARisque) || other.valeurARisque == valeurARisque)&&const DeepCollectionEquality().equals(other.lots, _lots)&&(identical(other.commande, commande) || other.commande == commande));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,ventes12Mois,moisHistorique,cmm,cmj,fournisseur,delaiLivraison,dateLivraison,stockSecurite,stockSecuriteSimple,delaiSecurite,periodeCommande,stockMaximum,couverture,dvrMax,qteARisque,valeurARisque,const DeepCollectionEquality().hash(_lots));
+    return Object.hash(runtimeType,ventes12Mois,moisHistorique,cmm,cmj,fournisseur,delaiLivraison,dateLivraison,stockSecurite,stockSecuriteSimple,delaiSecurite,periodeCommande,stockMaximum,couverture,dvrMax,qteARisque,valeurARisque,const DeepCollectionEquality().hash(_lots),commande);
 }
 
 @override
 String toString() {
-    return 'IndicateursProduit(ventes12Mois: $ventes12Mois, moisHistorique: $moisHistorique, cmm: $cmm, cmj: $cmj, fournisseur: $fournisseur, delaiLivraison: $delaiLivraison, dateLivraison: $dateLivraison, stockSecurite: $stockSecurite, stockSecuriteSimple: $stockSecuriteSimple, delaiSecurite: $delaiSecurite, periodeCommande: $periodeCommande, stockMaximum: $stockMaximum, couverture: $couverture, dvrMax: $dvrMax, qteARisque: $qteARisque, valeurARisque: $valeurARisque, lots: $lots)';
+    return 'IndicateursProduit(ventes12Mois: $ventes12Mois, moisHistorique: $moisHistorique, cmm: $cmm, cmj: $cmj, fournisseur: $fournisseur, delaiLivraison: $delaiLivraison, dateLivraison: $dateLivraison, stockSecurite: $stockSecurite, stockSecuriteSimple: $stockSecuriteSimple, delaiSecurite: $delaiSecurite, periodeCommande: $periodeCommande, stockMaximum: $stockMaximum, couverture: $couverture, dvrMax: $dvrMax, qteARisque: $qteARisque, valeurARisque: $valeurARisque, lots: $lots, commande: $commande)';
 }
 
 
@@ -2134,11 +2159,11 @@ abstract mixin class _$IndicateursProduitCopyWith<$Res> implements $IndicateursP
   factory _$IndicateursProduitCopyWith(_IndicateursProduit value, $Res Function(_IndicateursProduit) _then) = __$IndicateursProduitCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'ventes_12_mois') double ventes12Mois,@JsonKey(name: 'mois_historique') int moisHistorique, double cmm, double cmj, FournisseurPrincipal? fournisseur,@JsonKey(name: 'delai_livraison_jours') int delaiLivraison,@JsonKey(name: 'date_livraison') DateTime? dateLivraison,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_securite_simple') int stockSecuriteSimple,@JsonKey(name: 'delai_securite_jours') double delaiSecurite,@JsonKey(name: 'periode_commande_jours') double periodeCommande,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'dvr_max') int? dvrMax,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, List<RisqueLot> lots
+@JsonKey(name: 'ventes_12_mois') double ventes12Mois,@JsonKey(name: 'mois_historique') int moisHistorique, double cmm, double cmj, FournisseurPrincipal? fournisseur,@JsonKey(name: 'delai_livraison_jours') int delaiLivraison,@JsonKey(name: 'date_livraison') DateTime? dateLivraison,@JsonKey(name: 'stock_securite') int stockSecurite,@JsonKey(name: 'stock_securite_simple') int stockSecuriteSimple,@JsonKey(name: 'delai_securite_jours') double delaiSecurite,@JsonKey(name: 'periode_commande_jours') double periodeCommande,@JsonKey(name: 'stock_maximum') int stockMaximum,@JsonKey(name: 'couverture_jours') int? couverture,@JsonKey(name: 'dvr_max') int? dvrMax,@JsonKey(name: 'qte_a_risque') int qteARisque,@JsonKey(name: 'valeur_a_risque') double valeurARisque, List<RisqueLot> lots, SeuilsCommande? commande
 });
 
 
-@override $FournisseurPrincipalCopyWith<$Res>? get fournisseur;
+@override $FournisseurPrincipalCopyWith<$Res>? get fournisseur;@override $SeuilsCommandeCopyWith<$Res>? get commande;
 
 }
 /// @nodoc
@@ -2151,7 +2176,7 @@ class __$IndicateursProduitCopyWithImpl<$Res>
 
 /// Create a copy of IndicateursProduit
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? ventes12Mois = null,Object? moisHistorique = null,Object? cmm = null,Object? cmj = null,Object? fournisseur = freezed,Object? delaiLivraison = null,Object? dateLivraison = freezed,Object? stockSecurite = null,Object? stockSecuriteSimple = null,Object? delaiSecurite = null,Object? periodeCommande = null,Object? stockMaximum = null,Object? couverture = freezed,Object? dvrMax = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? lots = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? ventes12Mois = null,Object? moisHistorique = null,Object? cmm = null,Object? cmj = null,Object? fournisseur = freezed,Object? delaiLivraison = null,Object? dateLivraison = freezed,Object? stockSecurite = null,Object? stockSecuriteSimple = null,Object? delaiSecurite = null,Object? periodeCommande = null,Object? stockMaximum = null,Object? couverture = freezed,Object? dvrMax = freezed,Object? qteARisque = null,Object? valeurARisque = null,Object? lots = null,Object? commande = freezed,}) {
   return _then(_IndicateursProduit(
 ventes12Mois: null == ventes12Mois ? _self.ventes12Mois : ventes12Mois // ignore: cast_nullable_to_non_nullable
 as double,moisHistorique: null == moisHistorique ? _self.moisHistorique : moisHistorique // ignore: cast_nullable_to_non_nullable
@@ -2170,7 +2195,8 @@ as int?,dvrMax: freezed == dvrMax ? _self.dvrMax : dvrMax // ignore: cast_nullab
 as int?,qteARisque: null == qteARisque ? _self.qteARisque : qteARisque // ignore: cast_nullable_to_non_nullable
 as int,valeurARisque: null == valeurARisque ? _self.valeurARisque : valeurARisque // ignore: cast_nullable_to_non_nullable
 as double,lots: null == lots ? _self._lots : lots // ignore: cast_nullable_to_non_nullable
-as List<RisqueLot>,
+as List<RisqueLot>,commande: freezed == commande ? _self.commande : commande // ignore: cast_nullable_to_non_nullable
+as SeuilsCommande?,
   ));
 }
 
@@ -2186,7 +2212,319 @@ $FournisseurPrincipalCopyWith<$Res>? get fournisseur {
   return $FournisseurPrincipalCopyWith<$Res>(_self.fournisseur!, (value) {
     return _then(_self.copyWith(fournisseur: value));
   });
+}/// Create a copy of IndicateursProduit
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$SeuilsCommandeCopyWith<$Res>? get commande {
+    if (_self.commande == null) {
+    return null;
+  }
+
+  return $SeuilsCommandeCopyWith<$Res>(_self.commande!, (value) {
+    return _then(_self.copyWith(commande: value));
+  });
 }
+}
+
+
+/// @nodoc
+mixin _$SeuilsCommande {
+
+@JsonKey(name: 'point_commande') int get pointCommande;@JsonKey(name: 'stock_maximum') int get stockMaximum; int get quantite;@JsonKey(name: 'couverture_visee_jours') int get couvertureVisee; int get ordonnance;@JsonKey(name: 'lot_habituel') int get lotHabituel; bool get tension;@JsonKey(name: 'sur_demande') bool get surDemande; String? get motif; String get type; String? get groupe;
+/// Create a copy of SeuilsCommande
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SeuilsCommandeCopyWith<SeuilsCommande> get copyWith => _$SeuilsCommandeCopyWithImpl<SeuilsCommande>(this as SeuilsCommande, _$identity);
+
+  /// Serializes this SeuilsCommande to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as SeuilsCommande;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeuilsCommande&&(identical(other.pointCommande, _this.pointCommande) || other.pointCommande == _this.pointCommande)&&(identical(other.stockMaximum, _this.stockMaximum) || other.stockMaximum == _this.stockMaximum)&&(identical(other.quantite, _this.quantite) || other.quantite == _this.quantite)&&(identical(other.couvertureVisee, _this.couvertureVisee) || other.couvertureVisee == _this.couvertureVisee)&&(identical(other.ordonnance, _this.ordonnance) || other.ordonnance == _this.ordonnance)&&(identical(other.lotHabituel, _this.lotHabituel) || other.lotHabituel == _this.lotHabituel)&&(identical(other.tension, _this.tension) || other.tension == _this.tension)&&(identical(other.surDemande, _this.surDemande) || other.surDemande == _this.surDemande)&&(identical(other.motif, _this.motif) || other.motif == _this.motif)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.groupe, _this.groupe) || other.groupe == _this.groupe));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as SeuilsCommande;
+  return Object.hash(runtimeType,_this.pointCommande,_this.stockMaximum,_this.quantite,_this.couvertureVisee,_this.ordonnance,_this.lotHabituel,_this.tension,_this.surDemande,_this.motif,_this.type,_this.groupe);
+}
+
+@override
+String toString() {
+  final _this = this as SeuilsCommande;
+  return 'SeuilsCommande(pointCommande: ${_this.pointCommande}, stockMaximum: ${_this.stockMaximum}, quantite: ${_this.quantite}, couvertureVisee: ${_this.couvertureVisee}, ordonnance: ${_this.ordonnance}, lotHabituel: ${_this.lotHabituel}, tension: ${_this.tension}, surDemande: ${_this.surDemande}, motif: ${_this.motif}, type: ${_this.type}, groupe: ${_this.groupe})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SeuilsCommandeCopyWith<$Res>  {
+  factory $SeuilsCommandeCopyWith(SeuilsCommande value, $Res Function(SeuilsCommande) _then) = _$SeuilsCommandeCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'point_commande') int pointCommande,@JsonKey(name: 'stock_maximum') int stockMaximum, int quantite,@JsonKey(name: 'couverture_visee_jours') int couvertureVisee, int ordonnance,@JsonKey(name: 'lot_habituel') int lotHabituel, bool tension,@JsonKey(name: 'sur_demande') bool surDemande, String? motif, String type, String? groupe
+});
+
+
+
+
+}
+/// @nodoc
+class _$SeuilsCommandeCopyWithImpl<$Res>
+    implements $SeuilsCommandeCopyWith<$Res> {
+  _$SeuilsCommandeCopyWithImpl(this._self, this._then);
+
+  final SeuilsCommande _self;
+  final $Res Function(SeuilsCommande) _then;
+
+/// Create a copy of SeuilsCommande
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? pointCommande = null,Object? stockMaximum = null,Object? quantite = null,Object? couvertureVisee = null,Object? ordonnance = null,Object? lotHabituel = null,Object? tension = null,Object? surDemande = null,Object? motif = freezed,Object? type = null,Object? groupe = freezed,}) {
+  return _then(SeuilsCommande(
+pointCommande: null == pointCommande ? _self.pointCommande : pointCommande // ignore: cast_nullable_to_non_nullable
+as int,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
+as int,quantite: null == quantite ? _self.quantite : quantite // ignore: cast_nullable_to_non_nullable
+as int,couvertureVisee: null == couvertureVisee ? _self.couvertureVisee : couvertureVisee // ignore: cast_nullable_to_non_nullable
+as int,ordonnance: null == ordonnance ? _self.ordonnance : ordonnance // ignore: cast_nullable_to_non_nullable
+as int,lotHabituel: null == lotHabituel ? _self.lotHabituel : lotHabituel // ignore: cast_nullable_to_non_nullable
+as int,tension: null == tension ? _self.tension : tension // ignore: cast_nullable_to_non_nullable
+as bool,surDemande: null == surDemande ? _self.surDemande : surDemande // ignore: cast_nullable_to_non_nullable
+as bool,motif: freezed == motif ? _self.motif : motif // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,groupe: freezed == groupe ? _self.groupe : groupe // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SeuilsCommande].
+extension SeuilsCommandePatterns on SeuilsCommande {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SeuilsCommande value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SeuilsCommande() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SeuilsCommande value)  $default,){
+final _that = this;
+switch (_that) {
+case _SeuilsCommande():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SeuilsCommande value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SeuilsCommande() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'point_commande')  int pointCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum,  int quantite, @JsonKey(name: 'couverture_visee_jours')  int couvertureVisee,  int ordonnance, @JsonKey(name: 'lot_habituel')  int lotHabituel,  bool tension, @JsonKey(name: 'sur_demande')  bool surDemande,  String? motif,  String type,  String? groupe)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SeuilsCommande() when $default != null:
+return $default(_that.pointCommande,_that.stockMaximum,_that.quantite,_that.couvertureVisee,_that.ordonnance,_that.lotHabituel,_that.tension,_that.surDemande,_that.motif,_that.type,_that.groupe);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'point_commande')  int pointCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum,  int quantite, @JsonKey(name: 'couverture_visee_jours')  int couvertureVisee,  int ordonnance, @JsonKey(name: 'lot_habituel')  int lotHabituel,  bool tension, @JsonKey(name: 'sur_demande')  bool surDemande,  String? motif,  String type,  String? groupe)  $default,) {final _that = this;
+switch (_that) {
+case _SeuilsCommande():
+return $default(_that.pointCommande,_that.stockMaximum,_that.quantite,_that.couvertureVisee,_that.ordonnance,_that.lotHabituel,_that.tension,_that.surDemande,_that.motif,_that.type,_that.groupe);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'point_commande')  int pointCommande, @JsonKey(name: 'stock_maximum')  int stockMaximum,  int quantite, @JsonKey(name: 'couverture_visee_jours')  int couvertureVisee,  int ordonnance, @JsonKey(name: 'lot_habituel')  int lotHabituel,  bool tension, @JsonKey(name: 'sur_demande')  bool surDemande,  String? motif,  String type,  String? groupe)?  $default,) {final _that = this;
+switch (_that) {
+case _SeuilsCommande() when $default != null:
+return $default(_that.pointCommande,_that.stockMaximum,_that.quantite,_that.couvertureVisee,_that.ordonnance,_that.lotHabituel,_that.tension,_that.surDemande,_that.motif,_that.type,_that.groupe);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _SeuilsCommande implements SeuilsCommande {
+  const _SeuilsCommande({@JsonKey(name: 'point_commande') this.pointCommande = 0, @JsonKey(name: 'stock_maximum') this.stockMaximum = 0, this.quantite = 0, @JsonKey(name: 'couverture_visee_jours') this.couvertureVisee = 0, this.ordonnance = 0, @JsonKey(name: 'lot_habituel') this.lotHabituel = 0, this.tension = false, @JsonKey(name: 'sur_demande') this.surDemande = false, this.motif, this.type = '', this.groupe});
+  factory _SeuilsCommande.fromJson(Map<String, dynamic> json) => _$SeuilsCommandeFromJson(json);
+
+@override@JsonKey(name: 'point_commande') final  int pointCommande;
+@override@JsonKey(name: 'stock_maximum') final  int stockMaximum;
+@override@JsonKey() final  int quantite;
+@override@JsonKey(name: 'couverture_visee_jours') final  int couvertureVisee;
+@override@JsonKey() final  int ordonnance;
+@override@JsonKey(name: 'lot_habituel') final  int lotHabituel;
+@override@JsonKey() final  bool tension;
+@override@JsonKey(name: 'sur_demande') final  bool surDemande;
+@override final  String? motif;
+@override@JsonKey() final  String type;
+@override final  String? groupe;
+
+/// Create a copy of SeuilsCommande
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SeuilsCommandeCopyWith<_SeuilsCommande> get copyWith => __$SeuilsCommandeCopyWithImpl<_SeuilsCommande>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$SeuilsCommandeToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SeuilsCommande&&(identical(other.pointCommande, pointCommande) || other.pointCommande == pointCommande)&&(identical(other.stockMaximum, stockMaximum) || other.stockMaximum == stockMaximum)&&(identical(other.quantite, quantite) || other.quantite == quantite)&&(identical(other.couvertureVisee, couvertureVisee) || other.couvertureVisee == couvertureVisee)&&(identical(other.ordonnance, ordonnance) || other.ordonnance == ordonnance)&&(identical(other.lotHabituel, lotHabituel) || other.lotHabituel == lotHabituel)&&(identical(other.tension, tension) || other.tension == tension)&&(identical(other.surDemande, surDemande) || other.surDemande == surDemande)&&(identical(other.motif, motif) || other.motif == motif)&&(identical(other.type, type) || other.type == type)&&(identical(other.groupe, groupe) || other.groupe == groupe));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,pointCommande,stockMaximum,quantite,couvertureVisee,ordonnance,lotHabituel,tension,surDemande,motif,type,groupe);
+}
+
+@override
+String toString() {
+    return 'SeuilsCommande(pointCommande: $pointCommande, stockMaximum: $stockMaximum, quantite: $quantite, couvertureVisee: $couvertureVisee, ordonnance: $ordonnance, lotHabituel: $lotHabituel, tension: $tension, surDemande: $surDemande, motif: $motif, type: $type, groupe: $groupe)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SeuilsCommandeCopyWith<$Res> implements $SeuilsCommandeCopyWith<$Res> {
+  factory _$SeuilsCommandeCopyWith(_SeuilsCommande value, $Res Function(_SeuilsCommande) _then) = __$SeuilsCommandeCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'point_commande') int pointCommande,@JsonKey(name: 'stock_maximum') int stockMaximum, int quantite,@JsonKey(name: 'couverture_visee_jours') int couvertureVisee, int ordonnance,@JsonKey(name: 'lot_habituel') int lotHabituel, bool tension,@JsonKey(name: 'sur_demande') bool surDemande, String? motif, String type, String? groupe
+});
+
+
+
+
+}
+/// @nodoc
+class __$SeuilsCommandeCopyWithImpl<$Res>
+    implements _$SeuilsCommandeCopyWith<$Res> {
+  __$SeuilsCommandeCopyWithImpl(this._self, this._then);
+
+  final _SeuilsCommande _self;
+  final $Res Function(_SeuilsCommande) _then;
+
+/// Create a copy of SeuilsCommande
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? pointCommande = null,Object? stockMaximum = null,Object? quantite = null,Object? couvertureVisee = null,Object? ordonnance = null,Object? lotHabituel = null,Object? tension = null,Object? surDemande = null,Object? motif = freezed,Object? type = null,Object? groupe = freezed,}) {
+  return _then(_SeuilsCommande(
+pointCommande: null == pointCommande ? _self.pointCommande : pointCommande // ignore: cast_nullable_to_non_nullable
+as int,stockMaximum: null == stockMaximum ? _self.stockMaximum : stockMaximum // ignore: cast_nullable_to_non_nullable
+as int,quantite: null == quantite ? _self.quantite : quantite // ignore: cast_nullable_to_non_nullable
+as int,couvertureVisee: null == couvertureVisee ? _self.couvertureVisee : couvertureVisee // ignore: cast_nullable_to_non_nullable
+as int,ordonnance: null == ordonnance ? _self.ordonnance : ordonnance // ignore: cast_nullable_to_non_nullable
+as int,lotHabituel: null == lotHabituel ? _self.lotHabituel : lotHabituel // ignore: cast_nullable_to_non_nullable
+as int,tension: null == tension ? _self.tension : tension // ignore: cast_nullable_to_non_nullable
+as bool,surDemande: null == surDemande ? _self.surDemande : surDemande // ignore: cast_nullable_to_non_nullable
+as bool,motif: freezed == motif ? _self.motif : motif // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,groupe: freezed == groupe ? _self.groupe : groupe // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
 }
 
 
@@ -3036,7 +3374,8 @@ as double,
 /// @nodoc
 mixin _$ATraiter {
 
- Compteurs get compteurs;@JsonKey(name: 'a_commander') List<Produit> get aCommander;@JsonKey(name: 'a_risque') List<Produit> get aRisque; List<Produit> get surstock;
+/// « À commander » et le surstock suivent le mini / maxi des commandes.
+@JsonKey(name: 'aligne_commandes') bool get aligneCommandes; Compteurs get compteurs;@JsonKey(name: 'a_commander') List<Produit> get aCommander;@JsonKey(name: 'a_risque') List<Produit> get aRisque; List<Produit> get surstock;
 /// Create a copy of ATraiter
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3050,20 +3389,20 @@ $ATraiterCopyWith<ATraiter> get copyWith => _$ATraiterCopyWithImpl<ATraiter>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as ATraiter;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ATraiter&&(identical(other.compteurs, _this.compteurs) || other.compteurs == _this.compteurs)&&const DeepCollectionEquality().equals(other.aCommander, _this.aCommander)&&const DeepCollectionEquality().equals(other.aRisque, _this.aRisque)&&const DeepCollectionEquality().equals(other.surstock, _this.surstock));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ATraiter&&(identical(other.aligneCommandes, _this.aligneCommandes) || other.aligneCommandes == _this.aligneCommandes)&&(identical(other.compteurs, _this.compteurs) || other.compteurs == _this.compteurs)&&const DeepCollectionEquality().equals(other.aCommander, _this.aCommander)&&const DeepCollectionEquality().equals(other.aRisque, _this.aRisque)&&const DeepCollectionEquality().equals(other.surstock, _this.surstock));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ATraiter;
-  return Object.hash(runtimeType,_this.compteurs,const DeepCollectionEquality().hash(_this.aCommander),const DeepCollectionEquality().hash(_this.aRisque),const DeepCollectionEquality().hash(_this.surstock));
+  return Object.hash(runtimeType,_this.aligneCommandes,_this.compteurs,const DeepCollectionEquality().hash(_this.aCommander),const DeepCollectionEquality().hash(_this.aRisque),const DeepCollectionEquality().hash(_this.surstock));
 }
 
 @override
 String toString() {
   final _this = this as ATraiter;
-  return 'ATraiter(compteurs: ${_this.compteurs}, aCommander: ${_this.aCommander}, aRisque: ${_this.aRisque}, surstock: ${_this.surstock})';
+  return 'ATraiter(aligneCommandes: ${_this.aligneCommandes}, compteurs: ${_this.compteurs}, aCommander: ${_this.aCommander}, aRisque: ${_this.aRisque}, surstock: ${_this.surstock})';
 }
 
 
@@ -3074,7 +3413,7 @@ abstract mixin class $ATraiterCopyWith<$Res>  {
   factory $ATraiterCopyWith(ATraiter value, $Res Function(ATraiter) _then) = _$ATraiterCopyWithImpl;
 @useResult
 $Res call({
- Compteurs compteurs,@JsonKey(name: 'a_commander') List<Produit> aCommander,@JsonKey(name: 'a_risque') List<Produit> aRisque, List<Produit> surstock
+@JsonKey(name: 'aligne_commandes') bool aligneCommandes, Compteurs compteurs,@JsonKey(name: 'a_commander') List<Produit> aCommander,@JsonKey(name: 'a_risque') List<Produit> aRisque, List<Produit> surstock
 });
 
 
@@ -3091,9 +3430,10 @@ class _$ATraiterCopyWithImpl<$Res>
 
 /// Create a copy of ATraiter
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? compteurs = null,Object? aCommander = null,Object? aRisque = null,Object? surstock = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? aligneCommandes = null,Object? compteurs = null,Object? aCommander = null,Object? aRisque = null,Object? surstock = null,}) {
   return _then(ATraiter(
-compteurs: null == compteurs ? _self.compteurs : compteurs // ignore: cast_nullable_to_non_nullable
+aligneCommandes: null == aligneCommandes ? _self.aligneCommandes : aligneCommandes // ignore: cast_nullable_to_non_nullable
+as bool,compteurs: null == compteurs ? _self.compteurs : compteurs // ignore: cast_nullable_to_non_nullable
 as Compteurs,aCommander: null == aCommander ? _self.aCommander : aCommander // ignore: cast_nullable_to_non_nullable
 as List<Produit>,aRisque: null == aRisque ? _self.aRisque : aRisque // ignore: cast_nullable_to_non_nullable
 as List<Produit>,surstock: null == surstock ? _self.surstock : surstock // ignore: cast_nullable_to_non_nullable
@@ -3191,10 +3531,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'aligne_commandes')  bool aligneCommandes,  Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ATraiter() when $default != null:
-return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
+return $default(_that.aligneCommandes,_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
   return orElse();
 
 }
@@ -3212,10 +3552,10 @@ return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'aligne_commandes')  bool aligneCommandes,  Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)  $default,) {final _that = this;
 switch (_that) {
 case _ATraiter():
-return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
+return $default(_that.aligneCommandes,_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3232,10 +3572,10 @@ return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'aligne_commandes')  bool aligneCommandes,  Compteurs compteurs, @JsonKey(name: 'a_commander')  List<Produit> aCommander, @JsonKey(name: 'a_risque')  List<Produit> aRisque,  List<Produit> surstock)?  $default,) {final _that = this;
 switch (_that) {
 case _ATraiter() when $default != null:
-return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
+return $default(_that.aligneCommandes,_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);case _:
   return null;
 
 }
@@ -3247,9 +3587,11 @@ return $default(_that.compteurs,_that.aCommander,_that.aRisque,_that.surstock);c
 @JsonSerializable()
 
 class _ATraiter implements ATraiter {
-  const _ATraiter({this.compteurs = const Compteurs(), @JsonKey(name: 'a_commander')  List<Produit> aCommander = const <Produit>[], @JsonKey(name: 'a_risque')  List<Produit> aRisque = const <Produit>[],  List<Produit> surstock = const <Produit>[]}): _aCommander = aCommander,_aRisque = aRisque,_surstock = surstock;
+  const _ATraiter({@JsonKey(name: 'aligne_commandes') this.aligneCommandes = false, this.compteurs = const Compteurs(), @JsonKey(name: 'a_commander')  List<Produit> aCommander = const <Produit>[], @JsonKey(name: 'a_risque')  List<Produit> aRisque = const <Produit>[],  List<Produit> surstock = const <Produit>[]}): _aCommander = aCommander,_aRisque = aRisque,_surstock = surstock;
   factory _ATraiter.fromJson(Map<String, dynamic> json) => _$ATraiterFromJson(json);
 
+/// « À commander » et le surstock suivent le mini / maxi des commandes.
+@override@JsonKey(name: 'aligne_commandes') final  bool aligneCommandes;
 @override@JsonKey() final  Compteurs compteurs;
  final  List<Produit> _aCommander;
 @override@JsonKey(name: 'a_commander') List<Produit> get aCommander {
@@ -3286,18 +3628,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ATraiter&&(identical(other.compteurs, compteurs) || other.compteurs == compteurs)&&const DeepCollectionEquality().equals(other.aCommander, _aCommander)&&const DeepCollectionEquality().equals(other.aRisque, _aRisque)&&const DeepCollectionEquality().equals(other.surstock, _surstock));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ATraiter&&(identical(other.aligneCommandes, aligneCommandes) || other.aligneCommandes == aligneCommandes)&&(identical(other.compteurs, compteurs) || other.compteurs == compteurs)&&const DeepCollectionEquality().equals(other.aCommander, _aCommander)&&const DeepCollectionEquality().equals(other.aRisque, _aRisque)&&const DeepCollectionEquality().equals(other.surstock, _surstock));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,compteurs,const DeepCollectionEquality().hash(_aCommander),const DeepCollectionEquality().hash(_aRisque),const DeepCollectionEquality().hash(_surstock));
+    return Object.hash(runtimeType,aligneCommandes,compteurs,const DeepCollectionEquality().hash(_aCommander),const DeepCollectionEquality().hash(_aRisque),const DeepCollectionEquality().hash(_surstock));
 }
 
 @override
 String toString() {
-    return 'ATraiter(compteurs: $compteurs, aCommander: $aCommander, aRisque: $aRisque, surstock: $surstock)';
+    return 'ATraiter(aligneCommandes: $aligneCommandes, compteurs: $compteurs, aCommander: $aCommander, aRisque: $aRisque, surstock: $surstock)';
 }
 
 
@@ -3308,7 +3650,7 @@ abstract mixin class _$ATraiterCopyWith<$Res> implements $ATraiterCopyWith<$Res>
   factory _$ATraiterCopyWith(_ATraiter value, $Res Function(_ATraiter) _then) = __$ATraiterCopyWithImpl;
 @override @useResult
 $Res call({
- Compteurs compteurs,@JsonKey(name: 'a_commander') List<Produit> aCommander,@JsonKey(name: 'a_risque') List<Produit> aRisque, List<Produit> surstock
+@JsonKey(name: 'aligne_commandes') bool aligneCommandes, Compteurs compteurs,@JsonKey(name: 'a_commander') List<Produit> aCommander,@JsonKey(name: 'a_risque') List<Produit> aRisque, List<Produit> surstock
 });
 
 
@@ -3325,9 +3667,10 @@ class __$ATraiterCopyWithImpl<$Res>
 
 /// Create a copy of ATraiter
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? compteurs = null,Object? aCommander = null,Object? aRisque = null,Object? surstock = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? aligneCommandes = null,Object? compteurs = null,Object? aCommander = null,Object? aRisque = null,Object? surstock = null,}) {
   return _then(_ATraiter(
-compteurs: null == compteurs ? _self.compteurs : compteurs // ignore: cast_nullable_to_non_nullable
+aligneCommandes: null == aligneCommandes ? _self.aligneCommandes : aligneCommandes // ignore: cast_nullable_to_non_nullable
+as bool,compteurs: null == compteurs ? _self.compteurs : compteurs // ignore: cast_nullable_to_non_nullable
 as Compteurs,aCommander: null == aCommander ? _self._aCommander : aCommander // ignore: cast_nullable_to_non_nullable
 as List<Produit>,aRisque: null == aRisque ? _self._aRisque : aRisque // ignore: cast_nullable_to_non_nullable
 as List<Produit>,surstock: null == surstock ? _self._surstock : surstock // ignore: cast_nullable_to_non_nullable

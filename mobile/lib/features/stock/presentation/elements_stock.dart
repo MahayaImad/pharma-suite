@@ -300,7 +300,8 @@ class JaugeStock extends StatelessWidget {
     final p = produit;
     final echelle = [p.stockMaximum.toDouble(), p.stock, 1.0].reduce((a, b) => a > b ? a : b);
     final rempli = (p.stock / echelle).clamp(0.0, 1.0);
-    final securite = (p.stockSecurite / echelle).clamp(0.0, 1.0);
+    // Repère : le point de commande (mini des commandes), sinon le stock de sécurité.
+    final securite = (p.repereBas / echelle).clamp(0.0, 1.0);
     final c = couleursSignal(context, p.signal).texte;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -352,7 +353,7 @@ class JaugeStock extends StatelessWidget {
                   width: c2.maxWidth * rempli,
                   decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(6)),
                 ),
-                if (p.stockSecurite > 0)
+                if (p.repereBas > 0)
                   Positioned(
                     left: (c2.maxWidth * securite - 1).clamp(0, c2.maxWidth - 2),
                     top: -3,

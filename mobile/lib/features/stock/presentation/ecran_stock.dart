@@ -463,6 +463,9 @@ class _Groupes extends ConsumerWidget {
                   toutVoir: () => notif.etat(FiltreEtat.aCommander),
                   raison: (p) => p.etat == EtatStock.rupture
                       ? 'Rupture · ${decimal(p.cmm)} vendus par mois'
+                      : p.aligneCommandes
+                      ? '${entier(p.stock)} en stock, sous le point de commande (${p.pointCommande ?? 0}) · '
+                            '${p.qteACommander} à commander'
                       : '${entier(p.stock)} en stock, seuil ${entier(p.seuil ?? 0)}'
                             '${p.couverture == null ? '' : ' · ${p.couverture} j de couverture'}',
                   action: (p) =>

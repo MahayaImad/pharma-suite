@@ -73,6 +73,12 @@ abstract class Produit with _$Produit {
     @Default(0) double cmm,
     @JsonKey(name: 'stock_securite') @Default(0) int stockSecurite,
     @JsonKey(name: 'stock_maximum') @Default(0) int stockMaximum,
+
+    // Mini / maxi du module Commandes (null tant que son calcul n'est pas
+    // prêt) : point de commande, quantité proposée ce soir, pas de stock.
+    @JsonKey(name: 'point_commande') int? pointCommande,
+    @JsonKey(name: 'qte_a_commander') int? qteACommander,
+    @JsonKey(name: 'sur_demande') @Default(false) bool surDemande,
     @JsonKey(name: 'couverture_jours') int? couverture,
     @JsonKey(name: 'qte_a_risque') @Default(0) int qteARisque,
     @JsonKey(name: 'valeur_a_risque') @Default(0) double valeurARisque,
@@ -94,7 +100,14 @@ abstract class Produit with _$Produit {
     return morceaux.join(' ');
   }
 
-  EtatStock get etat => etatStock(stock: stock, seuil: seuil, actif: actif, quota: disponibilite == 'quota');
+  /// Les seuils viennent du module Commandes (sinon du seuil EASYPHARM).
+  bool get aligneCommandes => qteACommander != null;
+
+  /// Repère bas de la jauge : le point de commande, sinon le stock de sécurité.
+  int get repereBas => pointCommande ?? stockSecurite;
+
+  EtatStock get etat =>
+      etatStock(stock: stock, seuil: seuil, actif: actif, quota: disponibilite == 'quota', aCommander: qteACommander);
 
   /// Ce qui ressort en premier sur la ligne : un problème de stock, sinon
   /// une péremption à risque, sinon un surstock.
@@ -194,6 +207,9 @@ abstract class IndicateursProduit with _$IndicateursProduit {
     @JsonKey(name: 'qte_a_risque') @Default(0) int qteARisque,
     @JsonKey(name: 'valeur_a_risque') @Default(0) double valeurARisque,
     @Default(<RisqueLot>[]) List<RisqueLot> lots,
+
+    /// Seuils du module Commandes ; null : calcul pas prêt, ou produit hors calcul.
+    SeuilsCommande? commande,
   }) = _IndicateursProduit;
 
   factory IndicateursProduit.fromJson(Map<String, dynamic> json) => _$IndicateursProduitFromJson(json);
@@ -205,7 +221,26 @@ abstract class IndicateursProduit with _$IndicateursProduit {
   RisqueLot? risque(int idLot) => lots.where((l) => l.id == idLot).firstOrNull;
 }
 
-/// Une page de la liste des produits.
+/// Mini / maxi et décision du soir du module Commandes pour un produit.
+@freezed
+abstract class SeuilsCommande with _$SeuilsCommande {
+  const factory SeuilsCommande({
+    @JsonKey(name: 'point_commande') @Default(0) int pointCommande,
+    @JsonKey(name: 'stock_maximum') @Default(0) int stockMaximum,
+    @Default(0) int quantite,
+    @JsonKey(name: 'couverture_visee_jours') @Default(0) int couvertureVisee,
+    @Default(0) int ordonnance,
+    @JsonKey(name: 'lot_habituel') @Default(0) int lotHabituel,
+    @Default(false) bool tension,
+    @JsonKey(name: 'sur_demande') @Default(false) bool surDemande,
+    String? motif,
+    @Default('') String type,
+    String? groupe,
+  }) = _SeuilsCommande;
+
+  factory SeuilsCommande.fromJson(Map<String, dynamic> json) => _$SeuilsCommandeFromJson(json);
+}
+
 /// Laboratoire et nombre de produits actifs (`GET /stock/laboratoires`).
 @freezed
 abstract class Laboratoire with _$Laboratoire {
@@ -244,6 +279,8 @@ abstract class Compteurs with _$Compteurs {
 @freezed
 abstract class ATraiter with _$ATraiter {
   const factory ATraiter({
+    /// « À commander » et le surstock suivent le mini / maxi des commandes.
+    @JsonKey(name: 'aligne_commandes') @Default(false) bool aligneCommandes,
     @Default(Compteurs()) Compteurs compteurs,
     @JsonKey(name: 'a_commander') @Default(<Produit>[]) List<Produit> aCommander,
     @JsonKey(name: 'a_risque') @Default(<Produit>[]) List<Produit> aRisque,
@@ -320,9 +357,15 @@ abstract class FiltreProduits with _$FiltreProduits {
 /// « sous le seuil » veut dire strictement sous `qte_alerte`.
 enum EtatStock { enStock, sousSeuil, rupture, quota, inactif }
 
-EtatStock etatStock({required double stock, int? seuil, required bool actif, bool quota = false}) {
+///
+/// Avec la quantité proposée par les commandes ([aCommander], non nulle
+/// quand leur calcul est prêt), « sous le seuil » veut dire : il reste du
+/// stock, mais les commandes proposent d'en recommander — le même critère
+/// que le panier, à la place du seuil d'alerte d'EASYPHARM.
+EtatStock etatStock({required double stock, int? seuil, required bool actif, bool quota = false, int? aCommander}) {
   if (quota && stock <= (seuil ?? 0)) return EtatStock.quota;
   if (stock <= 0) return actif ? EtatStock.rupture : EtatStock.inactif;
+  if (aCommander != null) return aCommander > 0 ? EtatStock.sousSeuil : EtatStock.enStock;
   if (seuil != null && seuil > 0 && stock < seuil) return EtatStock.sousSeuil;
   return EtatStock.enStock;
 }
@@ -403,6 +446,46 @@ enum NiveauConseil { urgent, attention, risque, info, bon }
           'un échange avec une pharmacie voisine ou une mise en avant au comptoir. '
           'Ne pas recommander pour l\'instant.',
     );
+  }
+  final c = i.commande;
+  if (c != null) {
+    // Mêmes seuils et même quantité que le panier des commandes.
+    if (c.surDemande) {
+      return (
+        niveau: NiveauConseil.info,
+        texte:
+            'Commandé à la demande, pas de stock en rayon : '
+            '${c.motif ?? 'vente rare et chère, on le commande quand le patient vient'}.',
+      );
+    }
+    final lot = c.lotHabituel > 0 && c.quantite == c.lotHabituel ? ' (votre lot habituel)' : '';
+    if (c.quantite > 0) {
+      final rupture = p.stock <= 0;
+      return (
+        niveau: rupture ? NiveauConseil.urgent : NiveauConseil.attention,
+        texte:
+            '${rupture ? 'En rupture' : 'Sous le point de commande (${c.pointCommande})'} : '
+            'à commander$livraison, ${c.quantite} boîte${c.quantite > 1 ? 's' : ''}$lot, '
+            'pour remonter vers le stock maximum (${c.stockMaximum})'
+            '${c.tension ? '. Produit en tension : complété dès que possible' : ''}.',
+      );
+    }
+    if (p.qteSurstock > 0 && i.couverture != null) {
+      return (
+        niveau: NiveauConseil.info,
+        texte:
+            'Au-dessus du stock maximum (${c.stockMaximum}) : ${i.couverture} jours de couverture. '
+            'Ne pas recommander avant que le stock repasse sous le point de commande (${c.pointCommande}).',
+      );
+    }
+    if (c.stockMaximum > 0) {
+      return (
+        niveau: NiveauConseil.bon,
+        texte:
+            'Rien à faire : ${_un(p.stock)} en stock, au-dessus du point de commande (${c.pointCommande}). '
+            'Prochaine commande quand il passera dessous.',
+      );
+    }
   }
   if (p.etat == EtatStock.rupture) {
     return (

@@ -71,6 +71,9 @@ _Produit _$ProduitFromJson(Map<String, dynamic> json) => _Produit(
   cmm: (json['cmm'] as num?)?.toDouble() ?? 0,
   stockSecurite: (json['stock_securite'] as num?)?.toInt() ?? 0,
   stockMaximum: (json['stock_maximum'] as num?)?.toInt() ?? 0,
+  pointCommande: (json['point_commande'] as num?)?.toInt(),
+  qteACommander: (json['qte_a_commander'] as num?)?.toInt(),
+  surDemande: json['sur_demande'] as bool? ?? false,
   couverture: (json['couverture_jours'] as num?)?.toInt(),
   qteARisque: (json['qte_a_risque'] as num?)?.toInt() ?? 0,
   valeurARisque: (json['valeur_a_risque'] as num?)?.toDouble() ?? 0,
@@ -111,6 +114,9 @@ Map<String, dynamic> _$ProduitToJson(_Produit instance) => <String, dynamic>{
   'cmm': instance.cmm,
   'stock_securite': instance.stockSecurite,
   'stock_maximum': instance.stockMaximum,
+  'point_commande': instance.pointCommande,
+  'qte_a_commander': instance.qteACommander,
+  'sur_demande': instance.surDemande,
   'couverture_jours': instance.couverture,
   'qte_a_risque': instance.qteARisque,
   'valeur_a_risque': instance.valeurARisque,
@@ -204,6 +210,7 @@ _IndicateursProduit _$IndicateursProduitFromJson(Map<String, dynamic> json) => _
   lots:
       (json['lots'] as List<dynamic>?)?.map((e) => RisqueLot.fromJson(e as Map<String, dynamic>)).toList() ??
       const <RisqueLot>[],
+  commande: json['commande'] == null ? null : SeuilsCommande.fromJson(json['commande'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$IndicateursProduitToJson(_IndicateursProduit instance) => <String, dynamic>{
@@ -224,6 +231,35 @@ Map<String, dynamic> _$IndicateursProduitToJson(_IndicateursProduit instance) =>
   'qte_a_risque': instance.qteARisque,
   'valeur_a_risque': instance.valeurARisque,
   'lots': instance.lots,
+  'commande': instance.commande,
+};
+
+_SeuilsCommande _$SeuilsCommandeFromJson(Map<String, dynamic> json) => _SeuilsCommande(
+  pointCommande: (json['point_commande'] as num?)?.toInt() ?? 0,
+  stockMaximum: (json['stock_maximum'] as num?)?.toInt() ?? 0,
+  quantite: (json['quantite'] as num?)?.toInt() ?? 0,
+  couvertureVisee: (json['couverture_visee_jours'] as num?)?.toInt() ?? 0,
+  ordonnance: (json['ordonnance'] as num?)?.toInt() ?? 0,
+  lotHabituel: (json['lot_habituel'] as num?)?.toInt() ?? 0,
+  tension: json['tension'] as bool? ?? false,
+  surDemande: json['sur_demande'] as bool? ?? false,
+  motif: json['motif'] as String?,
+  type: json['type'] as String? ?? '',
+  groupe: json['groupe'] as String?,
+);
+
+Map<String, dynamic> _$SeuilsCommandeToJson(_SeuilsCommande instance) => <String, dynamic>{
+  'point_commande': instance.pointCommande,
+  'stock_maximum': instance.stockMaximum,
+  'quantite': instance.quantite,
+  'couverture_visee_jours': instance.couvertureVisee,
+  'ordonnance': instance.ordonnance,
+  'lot_habituel': instance.lotHabituel,
+  'tension': instance.tension,
+  'sur_demande': instance.surDemande,
+  'motif': instance.motif,
+  'type': instance.type,
+  'groupe': instance.groupe,
 };
 
 _Laboratoire _$LaboratoireFromJson(Map<String, dynamic> json) => _Laboratoire(
@@ -271,6 +307,7 @@ Map<String, dynamic> _$CompteursToJson(_Compteurs instance) => <String, dynamic>
 };
 
 _ATraiter _$ATraiterFromJson(Map<String, dynamic> json) => _ATraiter(
+  aligneCommandes: json['aligne_commandes'] as bool? ?? false,
   compteurs: json['compteurs'] == null
       ? const Compteurs()
       : Compteurs.fromJson(json['compteurs'] as Map<String, dynamic>),
@@ -286,6 +323,7 @@ _ATraiter _$ATraiterFromJson(Map<String, dynamic> json) => _ATraiter(
 );
 
 Map<String, dynamic> _$ATraiterToJson(_ATraiter instance) => <String, dynamic>{
+  'aligne_commandes': instance.aligneCommandes,
   'compteurs': instance.compteurs,
   'a_commander': instance.aCommander,
   'a_risque': instance.aRisque,

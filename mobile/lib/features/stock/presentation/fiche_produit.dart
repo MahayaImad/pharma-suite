@@ -78,7 +78,15 @@ class _Contenu extends ConsumerWidget {
             couverture: i.couverture,
             qteARisque: i.qteARisque,
             valeurARisque: i.valeurARisque,
-            qteSurstock: math.max(0, p0.stock.round() - i.stockMaximum),
+            // Seuils du module Commandes quand son calcul est prêt.
+            pointCommande: i.commande?.pointCommande,
+            qteACommander: i.commande?.quantite,
+            surDemande: i.commande?.surDemande ?? false,
+            qteSurstock: math.max(
+              0,
+              p0.stock.round() -
+                  math.max(i.stockMaximum, (i.commande?.pointCommande ?? 0) + (i.commande?.lotHabituel ?? 0)),
+            ),
           );
     final enTete = [
       if (p.famille != null && p.famille!.isNotEmpty) libelle(p.famille!),
@@ -266,7 +274,7 @@ class _JaugeFiche extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = produit;
     if (!pret) return const SizedBox(height: 40);
-    final ss = p.stockSecurite.toDouble();
+    final ss = p.repereBas.toDouble();
     final max = math.max(p.stockMaximum.toDouble(), ss + 1);
     final fin = math.max(max * 1.25, p.stock * 1.08);
     final e = context.etats;
@@ -336,7 +344,7 @@ class _JaugeFiche extends StatelessWidget {
                   if (ss > 0)
                     Positioned(
                       left: (x(ss) - 30).clamp(14, c.maxWidth - 120),
-                      child: Text('sécurité ${entier(ss)}', style: style),
+                      child: Text('${p.aligneCommandes ? 'mini' : 'sécurité'} ${entier(ss)}', style: style),
                     ),
                   Positioned(
                     left: (x(max) - 24).clamp(90, c.maxWidth - 60),
@@ -459,7 +467,8 @@ class _Projection extends StatelessWidget {
           child: CustomPaint(
             painter: _PeintreProjection(
               points: points,
-              stockSecurite: i.stockSecurite.toDouble(),
+              stockSecurite: (i.commande?.pointCommande ?? i.stockSecurite).toDouble(),
+              libelleSeuil: i.commande != null ? 'point de commande' : 'stock de sécurité',
               aujourdhui: DateTime.now(),
               couleur: context.schema.primary,
               couleurPerte: couleursSignal(context, Signal.risque).texte,
@@ -478,6 +487,7 @@ class _PeintreProjection extends CustomPainter {
   _PeintreProjection({
     required this.points,
     required this.stockSecurite,
+    this.libelleSeuil = 'stock de sécurité',
     required this.aujourdhui,
     required this.couleur,
     required this.couleurPerte,
@@ -488,6 +498,7 @@ class _PeintreProjection extends CustomPainter {
 
   final List<PointStock> points;
   final double stockSecurite;
+  final String libelleSeuil;
   final DateTime aujourdhui;
   final Color couleur, couleurPerte, couleurSecurite, couleurAxe, couleurTexte;
 
@@ -539,7 +550,7 @@ class _PeintreProjection extends CustomPainter {
       }
       _texte(
         canvas,
-        'stock de sécurité',
+        libelleSeuil,
         Offset(size.width - 2, y(stockSecurite) - 14),
         couleur: couleurSecurite,
         droite: true,
@@ -697,23 +708,65 @@ class _Reappro extends ConsumerWidget {
             ].join(' · '),
             cle: 'delai',
           ),
-          _Ligne(
-            'Stock de sécurité',
-            entier(i.stockSecurite),
-            detail:
-                'Z × σ × √L, ${classe == null ? 'non classé' : 'classe $classe'}, $service de service'
-                ' · simple (CMJ × ${decimal(i.delaiSecurite)} j) : ${entier(i.stockSecuriteSimple)}',
-            cle: 'ss',
-          ),
-          _Ligne(
-            'Stock maximum',
-            entier(i.stockMaximum),
-            detail: 'SS + CMM × ${decimal(i.periodeCommande)} jours entre deux commandes',
-          ),
+          if (i.commande case final c?) ...[
+            // Mêmes seuils que le panier des commandes (mini / maxi).
+            if (c.surDemande)
+              _Ligne(
+                'Commandé à la demande',
+                'pas de stock',
+                detail: c.motif ?? 'Vente rare et chère : on le commande quand le patient vient.',
+                cle: 'sur-demande',
+              )
+            else ...[
+              _Ligne(
+                'Point de commande (mini)',
+                entier(c.pointCommande),
+                detail: [
+                  'ventes jusqu\'à la livraison suivante + sécurité ($service de service)',
+                  if (c.ordonnance > 1) 'au moins une ordonnance de ${c.ordonnance}',
+                ].join(' · '),
+                cle: 'mini',
+              ),
+              _Ligne(
+                'Stock maximum',
+                entier(c.stockMaximum),
+                detail: [
+                  'mini + ${c.couvertureVisee} jours de couverture',
+                  if (c.tension) 'produit en tension',
+                  if (c.groupe != null) 'part de la DCI ${c.groupe}',
+                ].join(' · '),
+                cle: 'maxi',
+              ),
+              _Ligne(
+                'À commander ce soir',
+                c.quantite > 0 ? '${c.quantite} boîte${c.quantite > 1 ? 's' : ''}' : 'rien',
+                detail: c.lotHabituel > 0
+                    ? 'lot habituel : ${c.lotHabituel} (quantité minimale d\'une commande)'
+                    : null,
+                cle: 'a-commander',
+              ),
+            ],
+          ] else ...[
+            _Ligne(
+              'Stock de sécurité',
+              entier(i.stockSecurite),
+              detail:
+                  'Z × σ × √L, ${classe == null ? 'non classé' : 'classe $classe'}, $service de service'
+                  ' · simple (CMJ × ${decimal(i.delaiSecurite)} j) : ${entier(i.stockSecuriteSimple)}',
+              cle: 'ss',
+            ),
+            _Ligne(
+              'Stock maximum',
+              entier(i.stockMaximum),
+              detail: 'SS + CMM × ${decimal(i.periodeCommande)} jours entre deux commandes',
+            ),
+          ],
           _Ligne(
             "Seuil d'alerte EASYPHARM",
             seuil == null || seuil == 0 ? '—' : entier(seuil),
-            detail: seuil == null || seuil == 0 ? 'non défini dans EASYPHARM' : null,
+            detail: seuil == null || seuil == 0
+                ? 'non défini dans EASYPHARM'
+                : (i.commande != null ? 'pour information : les commandes suivent le mini / maxi' : null),
           ),
           _Ligne('Vendu sur 12 mois', entier(i.ventes12Mois), detail: 'quantité nette, retours déduits'),
         ]);

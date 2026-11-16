@@ -183,6 +183,12 @@ budget se règle dans Calendrier et réglages (0 = pas de budget).
 - **« Commander »** (écran Stock et fiche produit) : ajoute le produit au
   brouillon du jour de son grossiste. Le panier proposé de ce grossiste est
   préparé au besoin.
+- **Écran Stock aligné** : dès que le calcul des commandes est prêt, le Stock
+  utilise les mêmes seuils que le panier. « À commander » = ce que le panier
+  propose ; la jauge et la fiche montrent le point de commande (mini), le
+  stock maximum et la quantité du soir ; le surstock se mesure au-dessus du
+  maximum des commandes. Tant que le calcul n'est pas prêt (quelques minutes
+  après un redémarrage), le Stock garde ses seuils simples.
 - **Préférences** :
   - Fournisseurs et validation ;
   - Produits en tension ;

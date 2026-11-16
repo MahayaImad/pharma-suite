@@ -12,6 +12,10 @@ void main() {
       expect(etatStock(stock: 0, seuil: 5, actif: true), EtatStock.rupture);
       expect(etatStock(stock: 0, actif: false), EtatStock.inactif); // pas une rupture
       expect(etatStock(stock: 2, seuil: 5, actif: true, quota: true), EtatStock.quota);
+      // Aligné sur les commandes : la quantité proposée décide, pas le seuil EASYPHARM.
+      expect(etatStock(stock: 4, seuil: 5, actif: true, aCommander: 0), EtatStock.enStock);
+      expect(etatStock(stock: 9, seuil: 5, actif: true, aCommander: 12), EtatStock.sousSeuil);
+      expect(etatStock(stock: 0, seuil: 5, actif: true, aCommander: 0), EtatStock.rupture);
     });
   });
 
@@ -134,6 +138,25 @@ void main() {
       expect(conseil(const Produit(id: 1, stock: 3, actif: true), i).niveau, NiveauConseil.attention);
       expect(conseil(const Produit(id: 1, stock: 90, actif: true), i).niveau, NiveauConseil.info);
       expect(conseil(const Produit(id: 1, stock: 20, actif: true), i).niveau, NiveauConseil.bon);
+    });
+
+    test('avec les seuils des commandes : même mini, même maxi, même quantité que le panier', () {
+      const c = SeuilsCommande(pointCommande: 12, stockMaximum: 40, quantite: 30, lotHabituel: 30);
+      final avec = i.copyWith(commande: c);
+      final bas = conseil(const Produit(id: 1, stock: 8, actif: true), avec);
+      expect(bas.niveau, NiveauConseil.attention);
+      expect(bas.texte, contains('point de commande (12)'));
+      expect(bas.texte, contains('30 boîtes (votre lot habituel)'));
+      expect(conseil(const Produit(id: 1, stock: 0, actif: true), avec).niveau, NiveauConseil.urgent);
+      // Sous le stock de sécurité simple mais rien à commander : pas d'alerte.
+      final rien = conseil(const Produit(id: 1, stock: 20, actif: true), i.copyWith(commande: c.copyWith(quantite: 0)));
+      expect(rien.niveau, NiveauConseil.bon);
+      final demande = conseil(
+        const Produit(id: 1, stock: 0, actif: true),
+        i.copyWith(commande: const SeuilsCommande(surDemande: true)),
+      );
+      expect(demande.niveau, NiveauConseil.info);
+      expect(demande.texte, contains('à la demande'));
     });
   });
 

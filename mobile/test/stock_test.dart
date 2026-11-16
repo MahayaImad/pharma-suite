@@ -184,6 +184,33 @@ void main() {
     expect(_produit(1), findsOneWidget);
   });
 
+  testWidgets('fiche alignée sur les commandes : mini, maxi et quantité du soir', (tester) async {
+    final api = FausseStockApi(
+      seuils: const SeuilsCommande(
+        pointCommande: 60,
+        stockMaximum: 110,
+        quantite: 62,
+        couvertureVisee: 21,
+        ordonnance: 3,
+        lotHabituel: 30,
+      ),
+    );
+    await _lancer(tester, api, depart: '/stock/1');
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('Sous le point de commande (60)'), findsOneWidget);
+    await _voir(tester, find.byKey(const ValueKey('mini')));
+    expect(find.text('Point de commande (mini)'), findsOneWidget);
+    expect(find.textContaining('au moins une ordonnance de 3'), findsOneWidget);
+    expect(find.textContaining('mini + 21 jours de couverture'), findsOneWidget);
+    expect(find.text('62 boîtes'), findsOneWidget);
+    expect(find.text('Stock de sécurité'), findsNothing);
+
+    api.seuils = const SeuilsCommande(surDemande: true, motif: 'vente rare et chère');
+    await _lancer(tester, api, depart: '/stock/2');
+    await _voir(tester, find.byKey(const ValueKey('sur-demande')));
+    expect(find.text('Commandé à la demande'), findsOneWidget);
+  });
+
   testWidgets('lots épuisés : affichés à la demande', (tester) async {
     await _lancer(tester, FausseStockApi(), depart: '/stock/1');
     await _voir(tester, find.byKey(const ValueKey('lots-epuises')));

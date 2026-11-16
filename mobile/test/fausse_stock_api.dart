@@ -4,9 +4,13 @@ import 'package:pharmasuite/domain/stock.dart';
 
 /// API stock simulée, avec quelques produits vraisemblables.
 class FausseStockApi implements StockApi {
-  FausseStockApi({this.panne = false, List<Produit>? produits}) : _produits = List.of(produits ?? exemples);
+  FausseStockApi({this.panne = false, this.seuils, List<Produit>? produits})
+    : _produits = List.of(produits ?? exemples);
 
   bool panne;
+
+  /// Seuils du module Commandes, quand son calcul est prêt.
+  SeuilsCommande? seuils;
   final List<Produit> _produits;
   final demandes = <FiltreProduits>[];
 
@@ -182,8 +186,9 @@ class FausseStockApi implements StockApi {
       stockMaximum: 19,
       couverture: 28,
       dvrMax: 400,
-      qteARisque: 5,
-      valeurARisque: 650,
+      qteARisque: seuils == null ? 5 : 0,
+      valeurARisque: seuils == null ? 650 : 0,
+      commande: seuils,
       lots: const [
         RisqueLot(id: 10, stock: 5, dvr: 0, ecoulable: 0, aRisque: 5),
         RisqueLot(id: 11, stock: 43, dvr: 750, ecoulable: 43, aRisque: 0),
