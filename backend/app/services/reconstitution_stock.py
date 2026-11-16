@@ -12,7 +12,7 @@ n'existe nulle part et se recalcule à rebours. Deux façons :
   avoirs, échanges) − ses ajustements d'inventaire après D. Exact si les
   mouvements portent le bon numéro de lot.
 
-Le diagnostic (`scripts/diagnostiquer_historique_stock.py`) mesure sur la
+Le diagnostic du 2026-11-12 (script ponctuel, retiré depuis) a mesuré sur la
 base réelle laquelle tient le mieux (jours à stock négatif, impossible) avant
 d'en retenir une. Les deux renvoient le stock de fin de journée, jour par
 jour, de [debut] à [fin] inclus.

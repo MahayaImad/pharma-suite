@@ -37,11 +37,12 @@ from app.services.prevision.rejeu import Politique, Resultat, regrouper, simuler
 lignes: list[str] = []
 
 # Politiques comparées : chacune règle le compromis entre ruptures et stock.
+# « 1. quotidienne » : l'ancienne politique (commander chaque soir de quoi
+# tenir jusqu'à la livraison suivante), gardée comme point de comparaison.
+# Les variantes 2 à 4 (sans plancher, lents < 2 mois, sobre) ont été écartées
+# le 2026-11-12 au vu du rejeu : presque le même stock pour plus de ruptures.
 POLITIQUES = [
-    Politique("1. actuelle", z_facteur=1.0, plancher=1.0, plancher_rares=True, fenetre_lent=182),
-    Politique("2. rares sans plancher", z_facteur=1.0, plancher=1.0, plancher_rares=False, fenetre_lent=182),
-    Politique("3. lents vendus < 2 mois", z_facteur=1.0, plancher=1.0, plancher_rares=False, fenetre_lent=61),
-    Politique("4. sobre", z_facteur=0.5, plancher=1.0, plancher_rares=False, fenetre_lent=61),
+    Politique("1. quotidienne", z_facteur=1.0, plancher=1.0, plancher_rares=True, fenetre_lent=182),
 ]
 
 
@@ -85,7 +86,6 @@ async def main() -> int:
     p = argparse.ArgumentParser(description="Rejoue 12 mois de commandes.")
     p.add_argument("--jours", type=int, default=365)
     p.add_argument("--produits", type=int, default=None, help="limiter aux N produits les plus vendus")
-    p.add_argument("--politique", default=None, help="n'en rejouer qu'une (ex. 2)")
     p.add_argument("--sortie", default="logs/rejeu_commandes.md")
     a = p.parse_args()
 
@@ -93,7 +93,7 @@ async def main() -> int:
     hier = datetime.now(timezone.utc).astimezone(ZoneInfo("Africa/Algiers")).date() - timedelta(days=1)
     async with AsyncSessionLocal() as db:
         donnees = await charger(db, hier, a.jours, a.produits)
-    choix = [pol for pol in POLITIQUES if a.politique is None or pol.nom.startswith(a.politique)]
+    choix = POLITIQUES
     resultats = {pol.nom: [simuler(pr, donnees.dates, donnees.debut_rejeu, donnees.calendrier,
                                    donnees.ouvert, pol) for pr in donnees.produits] for pol in choix}
     # Règle des génériques (prevision/generiques.py) sur la politique retenue.
@@ -107,7 +107,7 @@ async def main() -> int:
     # (inconnues dans le passé) ; les génériques gardés ne mettent pas leur
     # stock en commun dans le rejeu (ils le font dans la proposition du soir).
     from dataclasses import replace as _remplacer
-    minmax = _remplacer(donnees.politique_minmax, nom="5. mini-maxi + génériques")
+    minmax = _remplacer(donnees.politique_minmax, nom="2. mini-maxi + génériques")
     resultats[minmax.nom] = [simuler(pr, donnees.dates, donnees.debut_rejeu, donnees.calendrier, donnees.ouvert,
                                      minmax) for pr in groupes]
     duree = time.monotonic() - depart
@@ -129,9 +129,8 @@ async def main() -> int:
            f"{donnees.politique_minmax.couverture_b} j, C {donnees.politique_minmax.couverture_c} j ; "
            f"{sum(1 for pr in donnees.produits if pr.lot > 0)} produits avec un lot habituel, "
            f"{sum(1 for pr in donnees.produits if pr.ordonnance > 1)} vendus par ordonnances de plus d'une boîte")
-    ecrire("\nPolitiques : Z = taux de service par classe (A 95 %, B 90 %, C 85 %), « sobre » = Z × 0,5 ; "
-           "plancher = au moins 1 boîte de réserve ; « rares » = intermittents et sporadiques ; "
-           "un produit lent est gardé en stock (1 boîte) s'il s'est vendu dans les 6 mois, ou 2 mois.")
+    ecrire("\nPolitiques : « quotidienne » = chaque soir, de quoi tenir jusqu'à la livraison suivante ; "
+           "« mini-maxi » = on ne commande que sous le mini, et alors jusqu'au maxi (docs/06-commandes.md).")
 
     premiere = next(iter(resultats.values()))
     reel = {"réalité": premiere}

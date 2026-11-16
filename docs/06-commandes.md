@@ -219,7 +219,7 @@ docker compose run --rm api python -m scripts.expliquer_quantite "NOM DU PRODUIT
 
 **Derniers résultats mesurés (2026-11-15)** : 2,4 % de jours en rupture
 contre 23,3 % en réalité, et un stock moyen de 20,3 M DA contre 27,4 M DA,
-avec l'ancienne politique et les génériques. La stratégie mini / maxi n'a pas
+avec la politique quotidienne et les génériques. La stratégie mini / maxi n'a pas
 encore été rejouée sur les données réelles.
 
 ## 12. Limites connues et suite

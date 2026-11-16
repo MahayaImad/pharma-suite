@@ -197,7 +197,7 @@ class CommandesService:
         donnees = await self._donnees(jour)
         infos = await self.repo.produits([p.id for p in donnees.produits])
         stocks = {i: float(x["stock"]) for i, x in infos.items()}
-        return donnees, infos, appliquer_generiques(donnees, stocks)[1]
+        return donnees, infos, (await asyncio.to_thread(appliquer_generiques, donnees, stocks))[1]
 
     def _ligne(self, id_nom: int, info: dict, qte: int, qte_proposee: Optional[int],
                prix: Decimal, raison_: Optional[dict]) -> dict:
@@ -384,19 +384,7 @@ class CommandesService:
         if id_f is None or id_f not in fournisseurs:
             raise ErreurCommandes("sans_fournisseur", "Aucun achat connu : fournisseur introuvable.", 409)
         f = fournisseurs[id_f]
-        commande = next((c for c in await self.repo.commandes_du_jour(jour) if c["id_fournisseur"] == id_f), None)
-        if commande and commande["statut"] != "brouillon":
-            raise ErreurCommandes(
-                "statut", f"La commande du jour chez {f['nom']} est déjà {commande['statut']} : rouvrez-la d'abord.", 409)
-        if commande:
-            id_c = commande["id"]
-        else:
-            # Pas encore de brouillon chez ce fournisseur : on prépare d'abord
-            # tout son panier proposé, pour ne pas perdre les autres lignes.
-            panier = next((p for p in (await self.journee(jour))["paniers"] if p["fournisseur"]["id"] == id_f), None)
-            id_c = await self._enregistrer(jour, panier) if panier and panier["lignes"] else None
-            if id_c is None:
-                id_c = await self.repo.creer_commande(jour, id_f, self._livraison(jour, f), self.qui)
+        id_c = await self._brouillon(jour, id_f, fournisseurs)
         existante = next((l for l in await self.repo.lignes([id_c]) if l["id_nom"] == id_nom), None)
         if existante and qte is None:
             quantite, proposee, r = existante["qte"], existante["qte_proposee"], existante["raison"]
