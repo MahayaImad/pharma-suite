@@ -408,6 +408,8 @@ _CommandeSuivie _$CommandeSuivieFromJson(Map<String, dynamic> json) => _Commande
   fournisseur: FournisseurPanier.fromJson(json['fournisseur'] as Map<String, dynamic>),
   livraisonPrevue: json['livraison_prevue'] == null ? null : DateTime.parse(json['livraison_prevue'] as String),
   etat: $enumDecodeNullable(_$EtatLivraisonEnumMap, json['etat']) ?? EtatLivraison.attendue,
+  montant: (json['montant'] as num?)?.toDouble() ?? 0,
+  montantRecu: (json['montant_recu'] as num?)?.toDouble() ?? 0,
   lignes:
       (json['lignes'] as List<dynamic>?)?.map((e) => LigneSuivie.fromJson(e as Map<String, dynamic>)).toList() ??
       const <LigneSuivie>[],
@@ -419,6 +421,8 @@ Map<String, dynamic> _$CommandeSuivieToJson(_CommandeSuivie instance) => <String
   'fournisseur': instance.fournisseur,
   'livraison_prevue': instance.livraisonPrevue?.toIso8601String(),
   'etat': _$EtatLivraisonEnumMap[instance.etat]!,
+  'montant': instance.montant,
+  'montant_recu': instance.montantRecu,
   'lignes': instance.lignes,
 };
 

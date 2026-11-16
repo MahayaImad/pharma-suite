@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/commandes/presentation/ecran_commandes.dart';
 import '../../features/commandes/presentation/ecran_fournisseurs.dart';
 import '../../features/commandes/presentation/ecran_livraisons.dart';
+import '../../features/commandes/presentation/livraisons_commandes.dart';
 import '../../features/commandes/presentation/ecran_tensions.dart';
 import '../../features/connexion/presentation/ecran_connexion.dart';
 
@@ -58,6 +59,20 @@ GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte,
             GoRoute(
               path: 'livraisons',
               pageBuilder: (context, etat) => const NoTransitionPage(child: EcranLivraisons()),
+              routes: [
+                GoRoute(
+                  path: 'commandes',
+                  pageBuilder: (context, etat) => const NoTransitionPage(child: EcranLivraisonsParCommande()),
+                  routes: [
+                    GoRoute(
+                      path: ':id',
+                      pageBuilder: (context, etat) => NoTransitionPage(
+                        child: EcranLivraisonsParCommande(selection: int.tryParse(etat.pathParameters['id']!)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
             GoRoute(
               path: ':fournisseur',

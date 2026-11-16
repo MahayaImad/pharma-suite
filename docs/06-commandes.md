@@ -217,6 +217,12 @@ budget se règle dans Calendrier et réglages (0 = pas de budget).
   le reste à recevoir au brouillon du jour d'un autre grossiste actif
   (`POST /commandes/ajouter` avec `id_fournisseur`). L'onglet porte le nombre
   de produits à vérifier.
+  Une bascule « Par produit | Par commande » ouvre la seconde vue
+  (`/commandes/livraisons/commandes`, `/commandes/livraisons/commandes/:id`) :
+  commandes à vérifier, attendues et livrées à gauche, lignes de la commande
+  à droite (manquant, partiel, attendu, livré replié), montant reçu sur
+  montant commandé, et « Recommander chez un autre grossiste » pour tout ce
+  qui manque.
 - **Écran Stock aligné** : dès que le calcul des commandes est prêt, le Stock
   utilise les mêmes seuils que le panier. « À commander » = ce que le panier
   propose ; la jauge et la fiche montrent le point de commande (mini), le

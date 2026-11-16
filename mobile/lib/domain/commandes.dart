@@ -518,16 +518,36 @@ abstract class LigneSuivie with _$LigneSuivie {
 
 @freezed
 abstract class CommandeSuivie with _$CommandeSuivie {
+  const CommandeSuivie._();
+
   const factory CommandeSuivie({
     required int id,
     required DateTime jour,
     required FournisseurPanier fournisseur,
     @JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue,
     @Default(EtatLivraison.attendue) EtatLivraison etat,
+    @Default(0) double montant,
+    @JsonKey(name: 'montant_recu') @Default(0) double montantRecu,
     @Default(<LigneSuivie>[]) List<LigneSuivie> lignes,
   }) = _CommandeSuivie;
 
   factory CommandeSuivie.fromJson(Map<String, dynamic> json) => _$CommandeSuivieFromJson(json);
+
+  List<LigneSuivie> lignesDe(EtatLivraison e) => [
+    for (final l in lignes)
+      if (l.etat == e) l,
+  ];
+
+  int get livrees => lignesDe(EtatLivraison.livree).length;
+
+  /// Non livrées ou livrées en partie : ce qu'on peut recommander ailleurs.
+  List<LigneSuivie> get aRecommander => [...lignesDe(EtatLivraison.manquante), ...lignesDe(EtatLivraison.partielle)];
+
+  /// Dernière réception rapprochée de cette commande.
+  DateTime? get recueLe => lignes
+      .map((l) => l.recuLe)
+      .whereType<DateTime>()
+      .fold<DateTime?>(null, (m, d) => m == null || d.isAfter(m) ? d : m);
 }
 
 /// Taux de service d'un grossiste sur les commandes dont la date est passée.
@@ -577,6 +597,11 @@ abstract class SuiviLivraisons with _$SuiviLivraisons {
             (ligne: l, commande: c),
     ];
   }
+
+  CommandeSuivie? commande(int id) => commandes.where((c) => c.id == id).firstOrNull;
+
+  /// Taux de service (quantités) d'un grossiste, en % ; null s'il n'a pas de commande échue.
+  int? tauxDe(int idFournisseur) => fournisseurs.where((f) => f.id == idFournisseur).firstOrNull?.tauxQuantite;
 
   /// Nombre de commandes où ce produit n'a rien reçu (date prévue dépassée).
   int commandesSansLivraison(int idNom) =>

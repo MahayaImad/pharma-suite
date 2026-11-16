@@ -5,6 +5,7 @@ import 'package:pharmasuite/app.dart';
 import 'package:pharmasuite/core/router/routeur.dart';
 import 'package:pharmasuite/data/api/commandes_api.dart';
 import 'package:pharmasuite/domain/commandes.dart';
+import 'package:pharmasuite/domain/format.dart';
 import 'package:pharmasuite/features/preferences/application/theme_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,6 +34,8 @@ SuiviLivraisons _suivi() => SuiviLivraisons(
       fournisseur: _atlas,
       livraisonPrevue: DateTime(2026, 11, 15),
       etat: EtatLivraison.partielle,
+      montant: 17000,
+      montantRecu: 12000,
       lignes: [
         const LigneSuivie(
           idNom: 7,
@@ -153,7 +156,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('vers-2')));
     await tester.pumpAndSettle();
     expect(api.appels, contains('ajouter 7 10 2'));
-    expect(find.textContaining('Ajouté à la commande de PARA BELLA : 10 boîtes'), findsOneWidget);
+    expect(find.textContaining('Ajouté à la commande de Para Bella : 10 boîtes'), findsOneWidget);
   });
 
   testWidgets('aucune commande envoyée, puis serveur injoignable', (tester) async {
@@ -176,5 +179,61 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('onglet-/commandes')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('sous-titre-commandes')), findsOneWidget);
+  });
+
+  testWidgets('par commande, PC : commandes groupées, détail de la première à vérifier, recommander ailleurs', (
+    tester,
+  ) async {
+    final api = FausseCommandesApi()..livraisons = _suivi();
+    await _lancer(tester, api, taille: _pc);
+    await tester.tap(find.text('Par commande'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('À VÉRIFIER'), findsOneWidget);
+    expect(find.text('ATTENDUES'), findsOneWidget);
+    expect(find.text('Partielle'), findsOneWidget);
+    expect(find.text('Rien reçu'), findsOneWidget);
+    expect(find.text('1 / 3 lignes'), findsOneWidget);
+    // Détail de la commande 2, ouverte d'office.
+    expect(find.text('Grossiste Atlas · commande du 14/11'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const ValueKey('montant-recu'))).data, dinars(12000));
+    expect(find.text('MANQUANT · 1'), findsOneWidget);
+    expect(find.text('PARTIEL · 1'), findsOneWidget);
+    expect(find.text('Reste 40'), findsOneWidget);
+    expect(find.byKey(const ValueKey('ligne-suivie-6')), findsNothing); // livrées repliées
+    await tester.tap(find.byKey(const ValueKey('section-livree')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('ligne-suivie-6')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('recommander-ailleurs')));
+    await tester.pumpAndSettle();
+    expect(find.text('Commander ces 2 produits chez…'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('vers-2')));
+    await tester.pumpAndSettle();
+    expect(api.appels, containsAll(['ajouter 7 10 2', 'ajouter 8 40 2']));
+    expect(find.textContaining('2 produits ajoutés à la commande de Para Bella'), findsOneWidget);
+
+    // Une autre commande : livrée ? non, attendue — pas de bouton.
+    await tester.tap(find.byKey(const ValueKey('commande-suivie-3')));
+    await tester.pumpAndSettle();
+    expect(find.text('ATTENDU · 1'), findsOneWidget);
+    expect(find.byKey(const ValueKey('recommander-ailleurs')), findsNothing);
+  });
+
+  testWidgets('par commande, portable : la liste, puis la commande en plein écran et retour', (tester) async {
+    await _lancer(tester, FausseCommandesApi()..livraisons = _suivi(), depart: '/commandes/livraisons/commandes');
+    expect(tester.takeException(), isNull);
+    expect(find.text('MANQUANT · 1'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('commande-suivie-2')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('MANQUANT · 1'), findsOneWidget);
+    expect(find.textContaining('2ᵉ commande sans livraison'), findsOneWidget);
+    await tester.tap(find.byTooltip('Retour'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('commande-suivie-2')), findsOneWidget);
+    await tester.tap(find.text('Par produit'));
+    await tester.pumpAndSettle();
+    expect(find.text('produits non livrés'), findsOneWidget);
   });
 }

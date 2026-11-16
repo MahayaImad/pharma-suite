@@ -105,8 +105,9 @@ class _EtatEcranLivraisons extends ConsumerState<EcranLivraisons> {
           child: ListView(
             padding: EdgeInsets.fromLTRB(large ? 28 : 16, 14, large ? 28 : 16, 32),
             children: [
-              _EnTete(suivi: s),
+              EnTeteLivraisons(suivi: s),
               const OngletsCommandes(livraisons: true),
+              if (s != null && s.commandes.isNotEmpty) const BasculeVueLivraisons(parCommande: false),
               ...suivi.when(
                 skipLoadingOnReload: true,
                 loading: () => const [
@@ -187,7 +188,7 @@ class _EtatEcranLivraisons extends ConsumerState<EcranLivraisons> {
             cle: 'taux',
             valeur: taux == null ? '—' : '$taux %',
             texte: 'taux de service, ${s.jours} jours',
-            couleur: taux == null ? null : _couleurTaux(context, taux),
+            couleur: taux == null ? null : couleurTaux(context, taux),
             filtre: null,
           ),
         ],
@@ -270,11 +271,11 @@ class _EtatEcranLivraisons extends ConsumerState<EcranLivraisons> {
   }
 }
 
-Color _couleurTaux(BuildContext context, int taux) =>
+Color couleurTaux(BuildContext context, int taux) =>
     taux >= 90 ? context.etats.bon : (taux >= 70 ? context.etats.alerte : context.etats.critique);
 
-class _EnTete extends StatelessWidget {
-  const _EnTete({this.suivi});
+class EnTeteLivraisons extends StatelessWidget {
+  const EnTeteLivraisons({super.key, this.suivi});
   final SuiviLivraisons? suivi;
 
   @override
@@ -373,8 +374,8 @@ class _Tuiles extends StatelessWidget {
   );
 }
 
-class _Pastille extends StatelessWidget {
-  const _Pastille(this.texte, this.couleur, this.fond);
+class PastilleLivraison extends StatelessWidget {
+  const PastilleLivraison(this.texte, this.couleur, this.fond, {super.key});
   final String texte;
   final Color couleur, fond;
 
@@ -469,11 +470,15 @@ class _Ligne extends ConsumerWidget {
       runSpacing: 4,
       direction: large ? Axis.vertical : Axis.horizontal,
       children: [
-        _Pastille(ligne.etat == EtatLivraison.partielle ? 'Reste ${ligne.reste}' : ligne.etat.libelle, couleur, fond),
+        PastilleLivraison(
+          ligne.etat == EtatLivraison.partielle ? 'Reste ${ligne.reste}' : ligne.etat.libelle,
+          couleur,
+          fond,
+        ),
         if (ligne.tension == 'proposee')
-          _Pastille('Tension ?', violet, violetDoux)
+          PastilleLivraison('Tension ?', violet, violetDoux)
         else if (ligne.tension == 'confirmee')
-          _Pastille('En tension', violet, violetDoux),
+          PastilleLivraison('En tension', violet, violetDoux),
       ],
     );
     final quantite = Text.rich(
@@ -578,62 +583,122 @@ class _Ligne extends ConsumerWidget {
     );
   }
 
-  /// Choisit un autre grossiste actif, puis ajoute le reste à son brouillon du jour.
-  Future<void> _autreGrossiste(BuildContext context, WidgetRef ref) async {
-    final messager = ScaffoldMessenger.of(context);
-    final routeur = GoRouter.of(context);
-    final List<FournisseurReglage> tous;
-    try {
-      tous = await ref.read(fournisseursCommandeProvider.future);
-    } catch (err) {
-      messager.showSnackBar(SnackBar(content: Text(ErreurApi.depuis(err).message)));
-      return;
-    }
-    if (!context.mounted) return;
-    final autres = tous.where((f) => f.actif && f.id != l.commande.fournisseur.id).toList();
-    final reste = l.ligne.reste > 0 ? l.ligne.reste : l.ligne.qte;
-    final choisi = await showDialog<FournisseurReglage>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: Text('Commander $reste boîte${reste > 1 ? 's' : ''} chez…'),
-        children: [
-          if (autres.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Text('Aucun autre grossiste actif. Activez-en un dans Préférences › Fournisseurs.'),
-            ),
-          for (final f in autres)
-            SimpleDialogOption(
-              key: ValueKey('vers-${f.id}'),
-              onPressed: () => Navigator.pop(context, f),
-              child: Text(f.nom ?? 'Fournisseur ${f.id}'),
-            ),
-        ],
+  Future<void> _autreGrossiste(BuildContext context, WidgetRef ref) => recommanderAilleurs(
+    context,
+    ref,
+    l.commande.fournisseur.id,
+    [(idNom: l.ligne.idNom, qte: l.ligne.reste > 0 ? l.ligne.reste : l.ligne.qte)],
+  );
+}
+
+/// Choisit un autre grossiste actif, puis ajoute ces produits (le reste à
+/// recevoir) à son brouillon du jour.
+Future<void> recommanderAilleurs(
+  BuildContext context,
+  WidgetRef ref,
+  int idOrigine,
+  List<({int idNom, int qte})> produits,
+) async {
+  if (produits.isEmpty) return;
+  final messager = ScaffoldMessenger.of(context);
+  final routeur = GoRouter.of(context);
+  final List<FournisseurReglage> tous;
+  try {
+    tous = await ref.read(fournisseursCommandeProvider.future);
+  } catch (err) {
+    messager.showSnackBar(SnackBar(content: Text(ErreurApi.depuis(err).message)));
+    return;
+  }
+  if (!context.mounted) return;
+  final autres = tous.where((f) => f.actif && f.id != idOrigine).toList();
+  final un = produits.length == 1;
+  final choisi = await showDialog<FournisseurReglage>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(
+        un
+            ? 'Commander ${produits.first.qte} boîte${produits.first.qte > 1 ? 's' : ''} chez…'
+            : 'Commander ces ${produits.length} produits chez…',
       ),
-    );
-    if (choisi == null) return;
-    try {
-      final a = await ref.read(commandesApiProvider).ajouter(l.ligne.idNom, qte: reste, idFournisseur: choisi.id);
-      ref.invalidate(journeeProvider);
-      final chez = a.fournisseur ?? choisi.nom ?? 'ce grossiste';
-      messager
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              a.dejaPresent
-                  ? 'Déjà dans la commande de $chez : quantité mise à ${a.qte}.'
-                  : 'Ajouté à la commande de $chez : ${a.qte} boîte${a.qte > 1 ? 's' : ''}.',
-            ),
-            action: SnackBarAction(label: 'Voir', onPressed: () => routeur.go('/commandes/${a.idFournisseur}')),
+      children: [
+        if (autres.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text('Aucun autre grossiste actif. Activez-en un dans Préférences › Fournisseurs.'),
           ),
-        );
+        for (final f in autres)
+          SimpleDialogOption(
+            key: ValueKey('vers-${f.id}'),
+            onPressed: () => Navigator.pop(context, f),
+            child: Text(libelleProduit(f.nom ?? 'Fournisseur ${f.id}')),
+          ),
+      ],
+    ),
+  );
+  if (choisi == null) return;
+  final api = ref.read(commandesApiProvider);
+  AjoutCommande? dernier;
+  var faits = 0;
+  String? erreur;
+  for (final p in produits) {
+    try {
+      dernier = await api.ajouter(p.idNom, qte: p.qte, idFournisseur: choisi.id);
+      faits++;
     } catch (err) {
-      messager
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(ErreurApi.depuis(err).message)));
+      erreur ??= ErreurApi.depuis(err).message;
     }
   }
+  ref.invalidate(journeeProvider);
+  final chez = libelleProduit(dernier?.fournisseur ?? choisi.nom ?? 'ce grossiste');
+  final String texte;
+  if (dernier == null) {
+    texte = erreur ?? 'Rien n\'a été ajouté.';
+  } else if (un) {
+    texte = dernier.dejaPresent
+        ? 'Déjà dans la commande de $chez : quantité mise à ${dernier.qte}.'
+        : 'Ajouté à la commande de $chez : ${dernier.qte} boîte${dernier.qte > 1 ? 's' : ''}.';
+  } else {
+    final refuses = produits.length - faits;
+    texte =
+        '$faits produit${faits > 1 ? 's' : ''} ajouté${faits > 1 ? 's' : ''} à la commande de $chez'
+        '${refuses > 0 ? ' ; $refuses refusé${refuses > 1 ? 's' : ''} ($erreur)' : '.'}';
+  }
+  final idPanier = dernier?.idFournisseur;
+  messager
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(texte),
+        action: idPanier == null
+            ? null
+            : SnackBarAction(label: 'Voir', onPressed: () => routeur.go('/commandes/$idPanier')),
+      ),
+    );
+}
+
+/// « Par produit | Par commande » : les deux vues des livraisons.
+class BasculeVueLivraisons extends StatelessWidget {
+  const BasculeVueLivraisons({super.key, required this.parCommande});
+  final bool parCommande;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: SegmentedButton<bool>(
+        key: const ValueKey('bascule-vue'),
+        showSelectedIcon: false,
+        style: const ButtonStyle(visualDensity: VisualDensity.compact),
+        segments: const [
+          ButtonSegment(value: false, icon: Icon(Icons.medication_outlined, size: 16), label: Text('Par produit')),
+          ButtonSegment(value: true, icon: Icon(Icons.receipt_long_outlined, size: 16), label: Text('Par commande')),
+        ],
+        selected: {parCommande},
+        onSelectionChanged: (v) => context.go(v.first ? '/commandes/livraisons/commandes' : '/commandes/livraisons'),
+      ),
+    ),
+  );
 }
 
 class _TauxService extends StatelessWidget {
@@ -670,7 +735,7 @@ class _TauxService extends StatelessWidget {
               Text(
                 f.tauxQuantite == null ? '—' : '${f.tauxQuantite} %',
                 key: ValueKey('taux-${f.id}'),
-                style: TextStyle(fontWeight: FontWeight.w700, color: _couleurTaux(context, f.tauxQuantite ?? 0)),
+                style: TextStyle(fontWeight: FontWeight.w700, color: couleurTaux(context, f.tauxQuantite ?? 0)),
               ),
             ],
           ),
@@ -681,7 +746,7 @@ class _TauxService extends StatelessWidget {
               value: (f.tauxQuantite ?? 0) / 100,
               minHeight: 6,
               backgroundColor: context.couleurs.neutreDoux,
-              color: _couleurTaux(context, f.tauxQuantite ?? 0),
+              color: couleurTaux(context, f.tauxQuantite ?? 0),
             ),
           ),
           const SizedBox(height: 5),

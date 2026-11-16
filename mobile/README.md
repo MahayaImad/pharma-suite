@@ -29,6 +29,8 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   réceptions d'EASYPHARM rapprochées des commandes envoyées ; tuiles, liste
   par produit (non livrés, partiels, attendus, livrés), taux de service par
   grossiste, « Autre grossiste » pour recommander ailleurs.
+  Seconde vue « Par commande » (`/commandes/livraisons/commandes`) : liste des
+  commandes envoyées et détail de chacune, ce qui manque d'abord.
 - **Commandes** (`/commandes`, `/commandes/:fournisseur`), design « épuré,
   deux volets » : ⇄ change une ligne de générique (même DCI) ; sur PC, la
   poignée ⋮⋮ glisse une ligne sur un autre grossiste ; sur portable, un appui

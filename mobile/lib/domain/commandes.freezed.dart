@@ -4867,7 +4867,7 @@ as String?,
 /// @nodoc
 mixin _$CommandeSuivie {
 
- int get id; DateTime get jour; FournisseurPanier get fournisseur;@JsonKey(name: 'livraison_prevue') DateTime? get livraisonPrevue; EtatLivraison get etat; List<LigneSuivie> get lignes;
+ int get id; DateTime get jour; FournisseurPanier get fournisseur;@JsonKey(name: 'livraison_prevue') DateTime? get livraisonPrevue; EtatLivraison get etat; double get montant;@JsonKey(name: 'montant_recu') double get montantRecu; List<LigneSuivie> get lignes;
 /// Create a copy of CommandeSuivie
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4881,20 +4881,20 @@ $CommandeSuivieCopyWith<CommandeSuivie> get copyWith => _$CommandeSuivieCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as CommandeSuivie;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommandeSuivie&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.jour, _this.jour) || other.jour == _this.jour)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur)&&(identical(other.livraisonPrevue, _this.livraisonPrevue) || other.livraisonPrevue == _this.livraisonPrevue)&&(identical(other.etat, _this.etat) || other.etat == _this.etat)&&const DeepCollectionEquality().equals(other.lignes, _this.lignes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommandeSuivie&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.jour, _this.jour) || other.jour == _this.jour)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur)&&(identical(other.livraisonPrevue, _this.livraisonPrevue) || other.livraisonPrevue == _this.livraisonPrevue)&&(identical(other.etat, _this.etat) || other.etat == _this.etat)&&(identical(other.montant, _this.montant) || other.montant == _this.montant)&&(identical(other.montantRecu, _this.montantRecu) || other.montantRecu == _this.montantRecu)&&const DeepCollectionEquality().equals(other.lignes, _this.lignes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CommandeSuivie;
-  return Object.hash(runtimeType,_this.id,_this.jour,_this.fournisseur,_this.livraisonPrevue,_this.etat,const DeepCollectionEquality().hash(_this.lignes));
+  return Object.hash(runtimeType,_this.id,_this.jour,_this.fournisseur,_this.livraisonPrevue,_this.etat,_this.montant,_this.montantRecu,const DeepCollectionEquality().hash(_this.lignes));
 }
 
 @override
 String toString() {
   final _this = this as CommandeSuivie;
-  return 'CommandeSuivie(id: ${_this.id}, jour: ${_this.jour}, fournisseur: ${_this.fournisseur}, livraisonPrevue: ${_this.livraisonPrevue}, etat: ${_this.etat}, lignes: ${_this.lignes})';
+  return 'CommandeSuivie(id: ${_this.id}, jour: ${_this.jour}, fournisseur: ${_this.fournisseur}, livraisonPrevue: ${_this.livraisonPrevue}, etat: ${_this.etat}, montant: ${_this.montant}, montantRecu: ${_this.montantRecu}, lignes: ${_this.lignes})';
 }
 
 
@@ -4905,7 +4905,7 @@ abstract mixin class $CommandeSuivieCopyWith<$Res>  {
   factory $CommandeSuivieCopyWith(CommandeSuivie value, $Res Function(CommandeSuivie) _then) = _$CommandeSuivieCopyWithImpl;
 @useResult
 $Res call({
- int id, DateTime jour, FournisseurPanier fournisseur,@JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue, EtatLivraison etat, List<LigneSuivie> lignes
+ int id, DateTime jour, FournisseurPanier fournisseur,@JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue, EtatLivraison etat, double montant,@JsonKey(name: 'montant_recu') double montantRecu, List<LigneSuivie> lignes
 });
 
 
@@ -4922,14 +4922,16 @@ class _$CommandeSuivieCopyWithImpl<$Res>
 
 /// Create a copy of CommandeSuivie
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? jour = null,Object? fournisseur = null,Object? livraisonPrevue = freezed,Object? etat = null,Object? lignes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? jour = null,Object? fournisseur = null,Object? livraisonPrevue = freezed,Object? etat = null,Object? montant = null,Object? montantRecu = null,Object? lignes = null,}) {
   return _then(CommandeSuivie(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,jour: null == jour ? _self.jour : jour // ignore: cast_nullable_to_non_nullable
 as DateTime,fournisseur: null == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
 as FournisseurPanier,livraisonPrevue: freezed == livraisonPrevue ? _self.livraisonPrevue : livraisonPrevue // ignore: cast_nullable_to_non_nullable
 as DateTime?,etat: null == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
-as EtatLivraison,lignes: null == lignes ? _self.lignes : lignes // ignore: cast_nullable_to_non_nullable
+as EtatLivraison,montant: null == montant ? _self.montant : montant // ignore: cast_nullable_to_non_nullable
+as double,montantRecu: null == montantRecu ? _self.montantRecu : montantRecu // ignore: cast_nullable_to_non_nullable
+as double,lignes: null == lignes ? _self.lignes : lignes // ignore: cast_nullable_to_non_nullable
 as List<LigneSuivie>,
   ));
 }
@@ -5024,10 +5026,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  List<LigneSuivie> lignes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  double montant, @JsonKey(name: 'montant_recu')  double montantRecu,  List<LigneSuivie> lignes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CommandeSuivie() when $default != null:
-return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.lignes);case _:
+return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.montant,_that.montantRecu,_that.lignes);case _:
   return orElse();
 
 }
@@ -5045,10 +5047,10 @@ return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  List<LigneSuivie> lignes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  double montant, @JsonKey(name: 'montant_recu')  double montantRecu,  List<LigneSuivie> lignes)  $default,) {final _that = this;
 switch (_that) {
 case _CommandeSuivie():
-return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.lignes);case _:
+return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.montant,_that.montantRecu,_that.lignes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -5065,10 +5067,10 @@ return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  List<LigneSuivie> lignes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  double montant, @JsonKey(name: 'montant_recu')  double montantRecu,  List<LigneSuivie> lignes)?  $default,) {final _that = this;
 switch (_that) {
 case _CommandeSuivie() when $default != null:
-return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.lignes);case _:
+return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.montant,_that.montantRecu,_that.lignes);case _:
   return null;
 
 }
@@ -5079,8 +5081,8 @@ return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_tha
 /// @nodoc
 @JsonSerializable()
 
-class _CommandeSuivie implements CommandeSuivie {
-  const _CommandeSuivie({required this.id, required this.jour, required this.fournisseur, @JsonKey(name: 'livraison_prevue') this.livraisonPrevue, this.etat = EtatLivraison.attendue,  List<LigneSuivie> lignes = const <LigneSuivie>[]}): _lignes = lignes;
+class _CommandeSuivie extends CommandeSuivie {
+  const _CommandeSuivie({required this.id, required this.jour, required this.fournisseur, @JsonKey(name: 'livraison_prevue') this.livraisonPrevue, this.etat = EtatLivraison.attendue, this.montant = 0, @JsonKey(name: 'montant_recu') this.montantRecu = 0,  List<LigneSuivie> lignes = const <LigneSuivie>[]}): _lignes = lignes,super._();
   factory _CommandeSuivie.fromJson(Map<String, dynamic> json) => _$CommandeSuivieFromJson(json);
 
 @override final  int id;
@@ -5088,6 +5090,8 @@ class _CommandeSuivie implements CommandeSuivie {
 @override final  FournisseurPanier fournisseur;
 @override@JsonKey(name: 'livraison_prevue') final  DateTime? livraisonPrevue;
 @override@JsonKey() final  EtatLivraison etat;
+@override@JsonKey() final  double montant;
+@override@JsonKey(name: 'montant_recu') final  double montantRecu;
  final  List<LigneSuivie> _lignes;
 @override@JsonKey() List<LigneSuivie> get lignes {
   if (_lignes is EqualUnmodifiableListView) return _lignes;
@@ -5109,18 +5113,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommandeSuivie&&(identical(other.id, id) || other.id == id)&&(identical(other.jour, jour) || other.jour == jour)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur)&&(identical(other.livraisonPrevue, livraisonPrevue) || other.livraisonPrevue == livraisonPrevue)&&(identical(other.etat, etat) || other.etat == etat)&&const DeepCollectionEquality().equals(other.lignes, _lignes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommandeSuivie&&(identical(other.id, id) || other.id == id)&&(identical(other.jour, jour) || other.jour == jour)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur)&&(identical(other.livraisonPrevue, livraisonPrevue) || other.livraisonPrevue == livraisonPrevue)&&(identical(other.etat, etat) || other.etat == etat)&&(identical(other.montant, montant) || other.montant == montant)&&(identical(other.montantRecu, montantRecu) || other.montantRecu == montantRecu)&&const DeepCollectionEquality().equals(other.lignes, _lignes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,jour,fournisseur,livraisonPrevue,etat,const DeepCollectionEquality().hash(_lignes));
+    return Object.hash(runtimeType,id,jour,fournisseur,livraisonPrevue,etat,montant,montantRecu,const DeepCollectionEquality().hash(_lignes));
 }
 
 @override
 String toString() {
-    return 'CommandeSuivie(id: $id, jour: $jour, fournisseur: $fournisseur, livraisonPrevue: $livraisonPrevue, etat: $etat, lignes: $lignes)';
+    return 'CommandeSuivie(id: $id, jour: $jour, fournisseur: $fournisseur, livraisonPrevue: $livraisonPrevue, etat: $etat, montant: $montant, montantRecu: $montantRecu, lignes: $lignes)';
 }
 
 
@@ -5131,7 +5135,7 @@ abstract mixin class _$CommandeSuivieCopyWith<$Res> implements $CommandeSuivieCo
   factory _$CommandeSuivieCopyWith(_CommandeSuivie value, $Res Function(_CommandeSuivie) _then) = __$CommandeSuivieCopyWithImpl;
 @override @useResult
 $Res call({
- int id, DateTime jour, FournisseurPanier fournisseur,@JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue, EtatLivraison etat, List<LigneSuivie> lignes
+ int id, DateTime jour, FournisseurPanier fournisseur,@JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue, EtatLivraison etat, double montant,@JsonKey(name: 'montant_recu') double montantRecu, List<LigneSuivie> lignes
 });
 
 
@@ -5148,14 +5152,16 @@ class __$CommandeSuivieCopyWithImpl<$Res>
 
 /// Create a copy of CommandeSuivie
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? jour = null,Object? fournisseur = null,Object? livraisonPrevue = freezed,Object? etat = null,Object? lignes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? jour = null,Object? fournisseur = null,Object? livraisonPrevue = freezed,Object? etat = null,Object? montant = null,Object? montantRecu = null,Object? lignes = null,}) {
   return _then(_CommandeSuivie(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,jour: null == jour ? _self.jour : jour // ignore: cast_nullable_to_non_nullable
 as DateTime,fournisseur: null == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
 as FournisseurPanier,livraisonPrevue: freezed == livraisonPrevue ? _self.livraisonPrevue : livraisonPrevue // ignore: cast_nullable_to_non_nullable
 as DateTime?,etat: null == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
-as EtatLivraison,lignes: null == lignes ? _self._lignes : lignes // ignore: cast_nullable_to_non_nullable
+as EtatLivraison,montant: null == montant ? _self.montant : montant // ignore: cast_nullable_to_non_nullable
+as double,montantRecu: null == montantRecu ? _self.montantRecu : montantRecu // ignore: cast_nullable_to_non_nullable
+as double,lignes: null == lignes ? _self._lignes : lignes // ignore: cast_nullable_to_non_nullable
 as List<LigneSuivie>,
   ));
 }
