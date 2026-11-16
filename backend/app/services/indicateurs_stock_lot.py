@@ -38,6 +38,7 @@ class Indicateurs:
     # Stock au-delà du stock maximum, et sa valeur au prix d'achat moyen.
     qte_surstock: int
     valeur_surstock: Decimal
+    prix_moyen: Decimal = Decimal(0)
 
 
 def ecart_type_depuis_sommes(somme: float, somme_carres: float, nb_jours: int) -> float:
@@ -125,6 +126,7 @@ async def calculer_tous(db: AsyncSession, jour: date) -> dict[int, Indicateurs]:
             valeur_a_risque=sum((r.valeur_a_risque or Decimal(0) for r in risques), Decimal(0)),
             qte_surstock=surplus,
             valeur_surstock=(Decimal(surplus) * prix_moyen).quantize(Decimal("0.01")),
+            prix_moyen=prix_moyen,
         )
     _cache.clear()  # une seule entrée : la plus récente
     _cache[cle] = resultat

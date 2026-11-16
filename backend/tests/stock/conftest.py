@@ -45,3 +45,16 @@ async def db():
         await session.commit()
         yield session
     await engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def _sans_seuils_des_commandes(monkeypatch):
+    """Ces tests vérifient les indicateurs propres au stock. L'alignement sur
+    le mini / maxi des commandes (calcul lourd, lancé en arrière-plan) est
+    testé à part, dans tests/commandes/test_module_commandes.py."""
+    import app.api.v1.stock as stock
+
+    async def _aucun(db):
+        return None
+
+    monkeypatch.setattr(stock, "_seuils", _aucun)

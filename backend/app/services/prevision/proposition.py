@@ -86,6 +86,7 @@ class Decision:
     couverture: int = 0        # jours visés au-delà de la livraison suivante
     ordonnance: int = 0        # taille habituelle d'une vente (P80)
     lot: int = 0               # lot habituel appliqué (0 : non)
+    lot_habituel: int = 0      # lot habituel du produit, appliqué ou non
     tension: bool = False
     sur_demande: bool = False  # pas de stock, commande à la demande (lent et cher, para C…)
     motif: Optional[str] = None   # pourquoi pas de stock
@@ -190,4 +191,4 @@ def decider_minmax(demande: np.ndarray, cens: np.ndarray, ouvert: np.ndarray, da
             lot_applique = lot if quantite == lot else 0
     return Decision(classe.type, quantite, r, len(couverts), prevu, securite, maxi, stock, en_cours, arrivee,
                     mini=mini, maxi=maxi, couverture=couv, ordonnance=ordo, lot=lot_applique, tension=tension,
-                    sur_demande=sur_demande)
+                    sur_demande=sur_demande, lot_habituel=lot)

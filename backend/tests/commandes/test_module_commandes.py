@@ -24,6 +24,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.modules.commandes import service
+from app.api.v1.stock import router as stock_router
 from app.modules.commandes.router import router
 
 JEUDI = date(2026, 11, 12)
@@ -78,6 +79,7 @@ async def api(monkeypatch):
 
         app = FastAPI()
         app.include_router(router)
+        app.include_router(stock_router)
 
         async def _db():
             yield db
@@ -390,4 +392,44 @@ async def test_parapharmacie_seulement_classes_a_et_b(api):
     assert d["decision"]["quantite"] == 0 and "Parapharmacie" in d["decision"]["motif"]
     await api.db.execute(text("UPDATE nomenclature SET segment_abc = 'B' WHERE id = 3"))
     await api.db.commit()
+    service.vider_cache()      # le classement ABC n'est relu qu'au prochain calcul
     assert "GAMMA" in {l["nom"] for p in (await _jour(api))["paniers"] for l in p["lignes"]}
+
+
+async def test_le_stock_reprend_le_mini_maxi_des_commandes(api):
+    """Tant que le calcul des commandes n'est pas prêt, le Stock garde ses
+    seuils simples ; ensuite « à commander », le point de commande, le stock
+    maximum et le surstock sont ceux du panier."""
+    froid = (await api.get("/stock/a-traiter")).json()
+    assert froid["aligne_commandes"] is False
+
+    vue = await _jour(api)            # le calcul du soir est maintenant en cache
+    proposes = {l["id_nom"]: l for cle in ("psychotropes", "sans_fournisseur") for l in vue[cle]}
+    proposes |= {l["id_nom"]: l for p in vue["paniers"] for l in p["lignes"]}
+
+    a = (await api.get("/stock/a-traiter", params={"limite": 50})).json()
+    assert a["aligne_commandes"] is True
+    assert a["compteurs"]["a_commander"] == len(proposes)
+    assert {p["id"] for p in a["a_commander"]} == set(proposes)
+
+    alpha = next(p for p in a["a_commander"] if p["nom"] == "ALPHA")
+    r = proposes[1]["raison"]
+    assert alpha["qte_a_commander"] == proposes[1]["qte"]
+    # Arrondis à la boîte supérieure (la raison du panier est arrondie à 0,1).
+    assert 0 <= alpha["point_commande"] - r["mini"] < 1.1 and 0 <= alpha["stock_maximum"] - r["maxi"] < 1.1
+
+    liste = (await api.get("/stock/products", params={"etat": "a_commander", "limit": 50})).json()
+    assert {p["id"] for p in liste["items"]} == set(proposes)
+    # ALPHA a du stock (2) et est proposé : « sous le seuil ». Les ruptures n'y sont pas.
+    sous = (await api.get("/stock/products", params={"etat": "sous_seuil"})).json()
+    assert [p["nom"] for p in sous["items"]] == ["ALPHA"] and a["compteurs"]["sous_seuil"] == 1
+
+    # EPSILON (100 en stock, 1 par jour) : surstock au-delà du maxi des commandes.
+    eps = (await api.get("/stock/products", params={"q": "EPSILON"})).json()["items"][0]
+    assert eps["qte_a_commander"] == 0
+    assert eps["qte_surstock"] == 100 - eps["stock_maximum"] > 0     # pas de lot habituel sur 12 mois
+
+    fiche = (await api.get("/stock/products/1/indicateurs")).json()
+    assert fiche["commande"]["quantite"] == proposes[1]["qte"]
+    assert fiche["stock_maximum"] == alpha["stock_maximum"]
+    assert fiche["commande"]["point_commande"] == alpha["point_commande"]

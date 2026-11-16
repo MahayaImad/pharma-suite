@@ -67,8 +67,30 @@ _cache: dict[tuple, Donnees] = {}
 _en_cours: dict[tuple, asyncio.Future] = {}
 
 
+# Décisions du soir (une seule entrée), pour la journée, l'écran Stock et le
+# détail d'un calcul.
+_decisions: dict[tuple, tuple] = {}
+
+
 def vider_cache() -> None:
     _cache.clear()
+    _decisions.clear()
+
+
+async def seuils_si_prets(db: AsyncSession) -> Optional[dict[int, Decision]]:
+    """Décisions du soir pour l'écran Stock (mini, maxi, quantité à
+    commander), **sans attendre** : si le calcul du jour n'est pas encore en
+    cache, il est lancé en arrière-plan et la fonction rend None — le Stock
+    garde alors ses seuils simples et s'alignera à l'affichage suivant."""
+    repo = CommandesRepository(db)
+    jour = jour_de_commande()
+    donnees_du = await repo.donnees_du()
+    if (jour, donnees_du) not in _cache:
+        if (jour, donnees_du) not in _en_cours:
+            tache = asyncio.ensure_future(donnees_du_calcul(jour, donnees_du))
+            tache.add_done_callback(lambda t: t.exception())   # l'erreur éventuelle est déjà journalisée
+        return None
+    return (await CommandesService(repo, {})._propositions(jour))[0]
 
 
 def _charger_dans_un_fil(jour: date) -> Donnees:
@@ -177,8 +199,13 @@ class CommandesService:
 
     async def _propositions(self, jour: date) -> tuple[dict[int, Decision], dict[int, dict], dict[int, list[int]]]:
         """Décisions du soir, infos produits, et pour chaque marque gardée les
-        marques épuisées dont elle reprend la demande (règle des génériques)."""
+        marques épuisées dont elle reprend la demande (règle des génériques).
+        Gardé en cache tant que ni le stock ni les commandes en cours ne changent."""
         donnees = await self._donnees(jour)
+        en_cours = await self.repo.en_cours(jour)
+        cle = (jour, await self.repo.donnees_du(), tuple(sorted(en_cours.items())))
+        if cle in _decisions:
+            return _decisions[cle]
         ids = [p.id for p in donnees.produits]
         infos = await self.repo.produits(ids)
         stocks = {i: float(x["stock"]) for i, x in infos.items()}
@@ -188,10 +215,12 @@ class CommandesService:
             if not st.garde and stocks.get(id_nom, 0) <= 0:
                 for k in st.parts:
                     reprises.setdefault(k, []).append(id_nom)
-        en_cours = await self.repo.en_cours(jour)
         decisions = await asyncio.to_thread(proposer_tous, replace(donnees, produits=produits), stocks, en_cours,
                                             None, False, statuts)
-        return _regle_para(decisions, infos, await self.repo.fournisseurs(jour)), infos, reprises
+        resultat = (_regle_para(decisions, infos, await self.repo.fournisseurs(jour)), infos, reprises)
+        _decisions.clear()
+        _decisions[cle] = resultat
+        return resultat
 
     async def _statuts_generiques(self, jour: date):
         donnees = await self._donnees(jour)
@@ -492,6 +521,7 @@ class CommandesService:
             raise ErreurCommandes("introuvable", "Fournisseur inconnu.", 404)
         await self.repo.regler_fournisseur(id_fournisseur, type_, actif, whatsapp, qui)
         await self.repo.commit()
+        _decisions.clear()
 
     async def valideurs(self) -> list[str]:
         return await self.repo.valideurs()

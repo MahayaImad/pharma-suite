@@ -2,6 +2,7 @@
 Stock endpoints — Nomenclature & Instances produits
 Stock réel calculé depuis entrees_produits via mv_stock_produits (vue matérialisée).
 """
+import math
 from datetime import date as Date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Optional, Literal
@@ -67,8 +68,47 @@ _COLONNES_PRODUIT = f"""
 """
 
 
-def _item_produit(r, indic: "Optional[ind_lot.Indicateurs]") -> dict:
-    """Une ligne de liste : le produit et ses indicateurs de gestion."""
+async def _seuils(db: AsyncSession) -> Optional[dict]:
+    """Décisions du soir du module Commandes (mini, maxi, quantité), si elles
+    sont déjà calculées : l'écran Stock montre alors les mêmes seuils que le
+    panier. Sinon None (calcul lancé en arrière-plan) et le Stock garde ses
+    seuils simples : il ne doit jamais attendre ce calcul."""
+    from app.modules.commandes.service import seuils_si_prets
+    try:
+        return await seuils_si_prets(db)
+    except Exception as e:  # le Stock reste utilisable sans les commandes
+        from loguru import logger
+        logger.warning(f"[stock] seuils des commandes indisponibles : {e}")
+        return None
+
+
+def _mini_maxi(dec) -> tuple[int, int]:
+    """Mini et maxi d'un produit ; pour une marque d'une DCI calculée en
+    groupe, sa part du mini et du maxi du groupe."""
+    part = dec.part if dec.groupe else 1.0
+    return math.ceil(dec.mini * part - 1e-6), math.ceil(dec.maxi * part - 1e-6)
+
+
+def _surstock(indic: "Optional[ind_lot.Indicateurs]", dec) -> tuple[int, Decimal]:
+    """Unités au-delà du maxi des commandes (ou du mini + lot habituel, pour
+    qu'un lot fraîchement reçu ne soit pas un surstock), et leur valeur.
+    Sans maxi (produit commandé à la demande, calcul pas prêt) : l'ancien
+    stock maximum."""
+    if indic is None:
+        return 0, Decimal(0)
+    if dec is None or dec.maxi <= 0:
+        return indic.qte_surstock, indic.valeur_surstock
+    mini, maxi = _mini_maxi(dec)
+    q = max(0, int(indic.stock) - max(maxi, mini + dec.lot_habituel))
+    return q, (Decimal(q) * indic.prix_moyen).quantize(Decimal("0.01"))
+
+
+def _item_produit(r, indic: "Optional[ind_lot.Indicateurs]", dec=None) -> dict:
+    """Une ligne de liste : le produit et ses indicateurs de gestion. Avec la
+    décision des commandes [dec], le stock maximum, le point de commande et la
+    quantité à commander sont ceux du panier."""
+    qte_surstock, valeur_surstock = _surstock(indic, dec)
+    mini, maxi = _mini_maxi(dec) if dec is not None else (None, None)
     return {
         "id": r.id, "nom": r.nom, "dci": r.dci, "dosage": r.dosage,
         "forme_abr": r.forme_abr, "id_famille": r.id_famille, "famille": r.famille,
@@ -82,12 +122,16 @@ def _item_produit(r, indic: "Optional[ind_lot.Indicateurs]") -> dict:
         "derniere_vente": r.derniere_vente.isoformat() if r.derniere_vente else None,
         "cmm": round(indic.cmm, 2) if indic else 0,
         "stock_securite": indic.stock_securite if indic else 0,
-        "stock_maximum": indic.stock_maximum if indic else 0,
+        "stock_maximum": maxi if maxi else (indic.stock_maximum if indic else 0),
+        # Mini / maxi des commandes (None : calcul pas prêt, ou produit hors calcul).
+        "point_commande": mini,
+        "qte_a_commander": dec.quantite if dec is not None else None,
+        "sur_demande": bool(dec.sur_demande) if dec is not None else False,
         "couverture_jours": indic.couverture_jours if indic else None,
         "qte_a_risque": indic.qte_a_risque if indic else 0,
         "valeur_a_risque": _f(indic.valeur_a_risque) if indic else 0,
-        "qte_surstock": indic.qte_surstock if indic else 0,
-        "valeur_surstock": _f(indic.valeur_surstock) if indic else 0,
+        "qte_surstock": qte_surstock,
+        "valeur_surstock": _f(valeur_surstock),
     }
 
 
@@ -267,12 +311,21 @@ async def list_products(
         conditions.append("upper(trim(n.labo)) = upper(trim(:labo))")
         params["labo"] = labo
     tous = await ind_lot.calculer_tous(db, _aujourdhui_alger())
+    seuils = await _seuils(db)
     if etat in _ETATS_CALCULES:
         consommables = await _consommables(db)
         ids = [i for i, x in tous.items()
-               if (x.qte_a_risque if etat == "a_risque" else x.qte_surstock) > 0 and i not in consommables]
+               if (x.qte_a_risque if etat == "a_risque" else _surstock(x, (seuils or {}).get(i))[0]) > 0
+               and i not in consommables]
         conditions.append("n.id = ANY(:ids_etat)")
         params["ids_etat"] = ids
+    elif etat in ("a_commander", "sous_seuil") and seuils is not None:
+        # Aligné sur le panier : ce que les commandes proposent ce soir
+        # (« sous le seuil » : proposé alors qu'il reste du stock).
+        conditions.append("n.id = ANY(:ids_etat)")
+        params["ids_etat"] = [i for i, d in seuils.items() if d.quantite > 0]
+        if etat == "sous_seuil":
+            conditions.append("COALESCE(mv.stock_actuel, 0) > 0")
     elif etat:
         conditions.append(_ETATS[etat])
     if forme:
@@ -317,12 +370,13 @@ async def list_products(
         ORDER BY {_TRIS[tri]}
         LIMIT :limit OFFSET :offset
     """), params)
-    items = [_item_produit(r, tous.get(r.id)) for r in res.fetchall()]
+    items = [_item_produit(r, tous.get(r.id), (seuils or {}).get(r.id)) for r in res.fetchall()]
 
     return {"total": total, "limit": limit, "offset": offset, "items": items}
 
 
-async def _produits_par_ids(db: AsyncSession, ids: list[int], tous: dict) -> list[dict]:
+async def _produits_par_ids(db: AsyncSession, ids: list[int], tous: dict, seuils: Optional[dict] = None
+                            ) -> list[dict]:
     """Lignes de liste des produits [ids], dans cet ordre."""
     if not ids:
         return []
@@ -333,7 +387,7 @@ async def _produits_par_ids(db: AsyncSession, ids: list[int], tous: dict) -> lis
         {_JOINTURE_FAMILLE}
         WHERE n.id = ANY(:ids)
     """), {"ids": ids})}
-    return [_item_produit(lignes[i], tous.get(i)) for i in ids if i in lignes]
+    return [_item_produit(lignes[i], tous.get(i), (seuils or {}).get(i)) for i in ids if i in lignes]
 
 
 @router.get("/a-traiter")
@@ -352,6 +406,7 @@ async def a_traiter(
       excédentaire d'abord.
     """
     tous = await ind_lot.calculer_tous(db, _aujourdhui_alger())
+    seuils = await _seuils(db)
     compte = (await db.execute(text(f"""
         SELECT count(*) FILTER (WHERE {_ETATS['rupture']})    AS ruptures,
                count(*) FILTER (WHERE {_ETATS['sous_seuil']}) AS sous_seuil
@@ -359,35 +414,47 @@ async def a_traiter(
         LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
         WHERE n.archive = false
     """))).one()
-    commander = [r.id for r in await db.execute(text(f"""
-        SELECT n.id, n.segment_abc
-        FROM nomenclature n
-        LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
-        WHERE n.archive = false AND {_ETATS['a_commander']}
-    """))]
+    sous_seuil = compte.sous_seuil
+    if seuils is not None:
+        # Aligné sur le panier : ce que les commandes proposent ce soir.
+        commander = [i for i, d in seuils.items() if d.quantite > 0]
+        sous_seuil = sum(1 for i in commander if i in tous and tous[i].stock > 0)
+    else:
+        commander = [r.id for r in await db.execute(text(f"""
+            SELECT n.id
+            FROM nomenclature n
+            LEFT JOIN mv_stock_produits mv ON mv.id_nom = n.id
+            WHERE n.archive = false AND {_ETATS['a_commander']}
+        """))]
     ordre_classe = {"A": 0, "B": 1, "C": 2}
     classes = {r.id: r.segment_abc for r in await db.execute(text(
         "SELECT id, segment_abc FROM nomenclature WHERE id = ANY(:ids)"), {"ids": commander})}
-    commander.sort(key=lambda i: (ordre_classe.get(classes.get(i) or "", 3),
+    # Ruptures d'abord, puis classe A, puis la plus forte consommation.
+    commander.sort(key=lambda i: ((tous[i].stock > 0) if i in tous else False,
+                                  ordre_classe.get(classes.get(i) or "", 3),
                                   -(tous[i].cmm if i in tous else 0), i))
     consommables = await _consommables(db)
     risque = sorted((x for x in tous.values() if x.qte_a_risque > 0 and x.id_nom not in consommables),
                     key=lambda x: (-x.valeur_a_risque, x.id_nom))
-    surstock = sorted((x for x in tous.values() if x.qte_surstock > 0 and x.id_nom not in consommables),
-                      key=lambda x: (-x.valeur_surstock, x.id_nom))
+    excedents = {x.id_nom: _surstock(x, (seuils or {}).get(x.id_nom)) for x in tous.values()
+                 if x.id_nom not in consommables}
+    surstock = sorted((i for i, (q, _v) in excedents.items() if q > 0), key=lambda i: (-excedents[i][1], i))
     return {
+        # Vrai quand « à commander », « sous le seuil » et le surstock suivent
+        # le mini / maxi des commandes ; faux tant que ce calcul n'est pas prêt.
+        "aligne_commandes": seuils is not None,
         "compteurs": {
             "ruptures": compte.ruptures,
-            "sous_seuil": compte.sous_seuil,
+            "sous_seuil": sous_seuil,
             "a_commander": len(commander),
             "a_risque": len(risque),
             "valeur_a_risque": _f(sum((x.valeur_a_risque for x in risque), Decimal(0))),
             "surstock": len(surstock),
-            "valeur_surstock": _f(sum((x.valeur_surstock for x in surstock), Decimal(0))),
+            "valeur_surstock": _f(sum((excedents[i][1] for i in surstock), Decimal(0))),
         },
-        "a_commander": await _produits_par_ids(db, commander[:limite], tous),
-        "a_risque": await _produits_par_ids(db, [x.id_nom for x in risque[:limite]], tous),
-        "surstock": await _produits_par_ids(db, [x.id_nom for x in surstock[:limite]], tous),
+        "a_commander": await _produits_par_ids(db, commander[:limite], tous, seuils),
+        "a_risque": await _produits_par_ids(db, [x.id_nom for x in risque[:limite]], tous, seuils),
+        "surstock": await _produits_par_ids(db, surstock[:limite], tous, seuils),
     }
 
 
@@ -664,7 +731,21 @@ async def indicateurs_produit(
     dvr_connues = [r.dvr for r in risques if r.dvr is not None]
     couverture = ind.couverture_jours(stock, cmj)
 
+    # Mini / maxi des commandes, si le calcul du soir est prêt.
+    dec = (await _seuils(db) or {}).get(product_id)
+    commande = None
+    if dec is not None:
+        mini, maxi = _mini_maxi(dec)
+        commande = {
+            "point_commande": mini, "stock_maximum": maxi, "quantite": dec.quantite,
+            "couverture_visee_jours": dec.couverture, "ordonnance": dec.ordonnance,
+            "lot_habituel": dec.lot_habituel, "tension": dec.tension, "sur_demande": dec.sur_demande,
+            "motif": dec.motif, "type": dec.type, "groupe": dec.groupe,
+        }
+
     return {
+        # Seuils du module Commandes (None : calcul pas prêt ou produit hors calcul).
+        "commande": commande,
         "date_calcul": jour.isoformat(),
         "ventes_12_mois": ventes_12_mois,
         "mois_historique": mois,
@@ -683,7 +764,8 @@ async def indicateurs_produit(
         "stock_securite_simple": ind.stock_securite_simple(cmj, delai_securite),
         "delai_securite_jours": delai_securite,
         "periode_commande_jours": periode,
-        "stock_maximum": ind.stock_maximum(ss, cmm, periode),
+        "stock_maximum": (commande["stock_maximum"] if commande and commande["stock_maximum"] > 0
+                          else ind.stock_maximum(ss, cmm, periode)),
         "stock": stock,
         "couverture_jours": couverture,
         # La couverture doit rester sous la DVR du lot le plus long : au-delà,
