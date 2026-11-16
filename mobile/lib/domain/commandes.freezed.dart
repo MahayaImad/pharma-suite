@@ -18,7 +18,8 @@ mixin _$Raison {
 
  String get type; double get rythme;@JsonKey(name: 'jours_couverts') int get joursCouverts; double get prevu; double get securite; double get cible; double get stock;@JsonKey(name: 'en_cours') double get enCours;/// Marques remplacées (génériques) dont ce produit reprend la demande.
  List<String> get reprend;/// Générique remplacé à la main par ce produit.
- String? get remplace; double get mini; double get maxi; int get couverture; int get ordonnance; int get lot; bool get tension;/// Génériques interchangeables calculés ensemble : code DCI, part de la
+ String? get remplace; double get mini; double get maxi; int get couverture; int get ordonnance; int get lot; bool get tension;/// Produit lent et cher : pas de stock, commandé à la demande.
+@JsonKey(name: 'sur_demande') bool get surDemande;/// Génériques interchangeables calculés ensemble : code DCI, part de la
 /// marque, stock et maxi du groupe.
  String? get groupe; double get part;@JsonKey(name: 'stock_groupe') double get stockGroupe;@JsonKey(name: 'maxi_groupe') double get maxiGroupe;
 /// Create a copy of Raison
@@ -34,20 +35,20 @@ $RaisonCopyWith<Raison> get copyWith => _$RaisonCopyWithImpl<Raison>(this as Rai
 @override
 bool operator ==(Object other) {
   final _this = this as Raison;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Raison&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.rythme, _this.rythme) || other.rythme == _this.rythme)&&(identical(other.joursCouverts, _this.joursCouverts) || other.joursCouverts == _this.joursCouverts)&&(identical(other.prevu, _this.prevu) || other.prevu == _this.prevu)&&(identical(other.securite, _this.securite) || other.securite == _this.securite)&&(identical(other.cible, _this.cible) || other.cible == _this.cible)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.enCours, _this.enCours) || other.enCours == _this.enCours)&&const DeepCollectionEquality().equals(other.reprend, _this.reprend)&&(identical(other.remplace, _this.remplace) || other.remplace == _this.remplace)&&(identical(other.mini, _this.mini) || other.mini == _this.mini)&&(identical(other.maxi, _this.maxi) || other.maxi == _this.maxi)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.ordonnance, _this.ordonnance) || other.ordonnance == _this.ordonnance)&&(identical(other.lot, _this.lot) || other.lot == _this.lot)&&(identical(other.tension, _this.tension) || other.tension == _this.tension)&&(identical(other.groupe, _this.groupe) || other.groupe == _this.groupe)&&(identical(other.part, _this.part) || other.part == _this.part)&&(identical(other.stockGroupe, _this.stockGroupe) || other.stockGroupe == _this.stockGroupe)&&(identical(other.maxiGroupe, _this.maxiGroupe) || other.maxiGroupe == _this.maxiGroupe));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Raison&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.rythme, _this.rythme) || other.rythme == _this.rythme)&&(identical(other.joursCouverts, _this.joursCouverts) || other.joursCouverts == _this.joursCouverts)&&(identical(other.prevu, _this.prevu) || other.prevu == _this.prevu)&&(identical(other.securite, _this.securite) || other.securite == _this.securite)&&(identical(other.cible, _this.cible) || other.cible == _this.cible)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.enCours, _this.enCours) || other.enCours == _this.enCours)&&const DeepCollectionEquality().equals(other.reprend, _this.reprend)&&(identical(other.remplace, _this.remplace) || other.remplace == _this.remplace)&&(identical(other.mini, _this.mini) || other.mini == _this.mini)&&(identical(other.maxi, _this.maxi) || other.maxi == _this.maxi)&&(identical(other.couverture, _this.couverture) || other.couverture == _this.couverture)&&(identical(other.ordonnance, _this.ordonnance) || other.ordonnance == _this.ordonnance)&&(identical(other.lot, _this.lot) || other.lot == _this.lot)&&(identical(other.tension, _this.tension) || other.tension == _this.tension)&&(identical(other.surDemande, _this.surDemande) || other.surDemande == _this.surDemande)&&(identical(other.groupe, _this.groupe) || other.groupe == _this.groupe)&&(identical(other.part, _this.part) || other.part == _this.part)&&(identical(other.stockGroupe, _this.stockGroupe) || other.stockGroupe == _this.stockGroupe)&&(identical(other.maxiGroupe, _this.maxiGroupe) || other.maxiGroupe == _this.maxiGroupe));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Raison;
-  return Object.hashAll([runtimeType,_this.type,_this.rythme,_this.joursCouverts,_this.prevu,_this.securite,_this.cible,_this.stock,_this.enCours,const DeepCollectionEquality().hash(_this.reprend),_this.remplace,_this.mini,_this.maxi,_this.couverture,_this.ordonnance,_this.lot,_this.tension,_this.groupe,_this.part,_this.stockGroupe,_this.maxiGroupe]);
+  return Object.hashAll([runtimeType,_this.type,_this.rythme,_this.joursCouverts,_this.prevu,_this.securite,_this.cible,_this.stock,_this.enCours,const DeepCollectionEquality().hash(_this.reprend),_this.remplace,_this.mini,_this.maxi,_this.couverture,_this.ordonnance,_this.lot,_this.tension,_this.surDemande,_this.groupe,_this.part,_this.stockGroupe,_this.maxiGroupe]);
 }
 
 @override
 String toString() {
   final _this = this as Raison;
-  return 'Raison(type: ${_this.type}, rythme: ${_this.rythme}, joursCouverts: ${_this.joursCouverts}, prevu: ${_this.prevu}, securite: ${_this.securite}, cible: ${_this.cible}, stock: ${_this.stock}, enCours: ${_this.enCours}, reprend: ${_this.reprend}, remplace: ${_this.remplace}, mini: ${_this.mini}, maxi: ${_this.maxi}, couverture: ${_this.couverture}, ordonnance: ${_this.ordonnance}, lot: ${_this.lot}, tension: ${_this.tension}, groupe: ${_this.groupe}, part: ${_this.part}, stockGroupe: ${_this.stockGroupe}, maxiGroupe: ${_this.maxiGroupe})';
+  return 'Raison(type: ${_this.type}, rythme: ${_this.rythme}, joursCouverts: ${_this.joursCouverts}, prevu: ${_this.prevu}, securite: ${_this.securite}, cible: ${_this.cible}, stock: ${_this.stock}, enCours: ${_this.enCours}, reprend: ${_this.reprend}, remplace: ${_this.remplace}, mini: ${_this.mini}, maxi: ${_this.maxi}, couverture: ${_this.couverture}, ordonnance: ${_this.ordonnance}, lot: ${_this.lot}, tension: ${_this.tension}, surDemande: ${_this.surDemande}, groupe: ${_this.groupe}, part: ${_this.part}, stockGroupe: ${_this.stockGroupe}, maxiGroupe: ${_this.maxiGroupe})';
 }
 
 
@@ -58,7 +59,7 @@ abstract mixin class $RaisonCopyWith<$Res>  {
   factory $RaisonCopyWith(Raison value, $Res Function(Raison) _then) = _$RaisonCopyWithImpl;
 @useResult
 $Res call({
- String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend, String? remplace, double mini, double maxi, int couverture, int ordonnance, int lot, bool tension, String? groupe, double part,@JsonKey(name: 'stock_groupe') double stockGroupe,@JsonKey(name: 'maxi_groupe') double maxiGroupe
+ String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend, String? remplace, double mini, double maxi, int couverture, int ordonnance, int lot, bool tension,@JsonKey(name: 'sur_demande') bool surDemande, String? groupe, double part,@JsonKey(name: 'stock_groupe') double stockGroupe,@JsonKey(name: 'maxi_groupe') double maxiGroupe
 });
 
 
@@ -75,7 +76,7 @@ class _$RaisonCopyWithImpl<$Res>
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,Object? remplace = freezed,Object? mini = null,Object? maxi = null,Object? couverture = null,Object? ordonnance = null,Object? lot = null,Object? tension = null,Object? groupe = freezed,Object? part = null,Object? stockGroupe = null,Object? maxiGroupe = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,Object? remplace = freezed,Object? mini = null,Object? maxi = null,Object? couverture = null,Object? ordonnance = null,Object? lot = null,Object? tension = null,Object? surDemande = null,Object? groupe = freezed,Object? part = null,Object? stockGroupe = null,Object? maxiGroupe = null,}) {
   return _then(Raison(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
@@ -93,6 +94,7 @@ as double,couverture: null == couverture ? _self.couverture : couverture // igno
 as int,ordonnance: null == ordonnance ? _self.ordonnance : ordonnance // ignore: cast_nullable_to_non_nullable
 as int,lot: null == lot ? _self.lot : lot // ignore: cast_nullable_to_non_nullable
 as int,tension: null == tension ? _self.tension : tension // ignore: cast_nullable_to_non_nullable
+as bool,surDemande: null == surDemande ? _self.surDemande : surDemande // ignore: cast_nullable_to_non_nullable
 as bool,groupe: freezed == groupe ? _self.groupe : groupe // ignore: cast_nullable_to_non_nullable
 as String?,part: null == part ? _self.part : part // ignore: cast_nullable_to_non_nullable
 as double,stockGroupe: null == stockGroupe ? _self.stockGroupe : stockGroupe // ignore: cast_nullable_to_non_nullable
@@ -182,10 +184,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace,  double mini,  double maxi,  int couverture,  int ordonnance,  int lot,  bool tension,  String? groupe,  double part, @JsonKey(name: 'stock_groupe')  double stockGroupe, @JsonKey(name: 'maxi_groupe')  double maxiGroupe)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace,  double mini,  double maxi,  int couverture,  int ordonnance,  int lot,  bool tension, @JsonKey(name: 'sur_demande')  bool surDemande,  String? groupe,  double part, @JsonKey(name: 'stock_groupe')  double stockGroupe, @JsonKey(name: 'maxi_groupe')  double maxiGroupe)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Raison() when $default != null:
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace,_that.mini,_that.maxi,_that.couverture,_that.ordonnance,_that.lot,_that.tension,_that.groupe,_that.part,_that.stockGroupe,_that.maxiGroupe);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace,_that.mini,_that.maxi,_that.couverture,_that.ordonnance,_that.lot,_that.tension,_that.surDemande,_that.groupe,_that.part,_that.stockGroupe,_that.maxiGroupe);case _:
   return orElse();
 
 }
@@ -203,10 +205,10 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace,  double mini,  double maxi,  int couverture,  int ordonnance,  int lot,  bool tension,  String? groupe,  double part, @JsonKey(name: 'stock_groupe')  double stockGroupe, @JsonKey(name: 'maxi_groupe')  double maxiGroupe)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace,  double mini,  double maxi,  int couverture,  int ordonnance,  int lot,  bool tension, @JsonKey(name: 'sur_demande')  bool surDemande,  String? groupe,  double part, @JsonKey(name: 'stock_groupe')  double stockGroupe, @JsonKey(name: 'maxi_groupe')  double maxiGroupe)  $default,) {final _that = this;
 switch (_that) {
 case _Raison():
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace,_that.mini,_that.maxi,_that.couverture,_that.ordonnance,_that.lot,_that.tension,_that.groupe,_that.part,_that.stockGroupe,_that.maxiGroupe);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace,_that.mini,_that.maxi,_that.couverture,_that.ordonnance,_that.lot,_that.tension,_that.surDemande,_that.groupe,_that.part,_that.stockGroupe,_that.maxiGroupe);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -223,10 +225,10 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace,  double mini,  double maxi,  int couverture,  int ordonnance,  int lot,  bool tension,  String? groupe,  double part, @JsonKey(name: 'stock_groupe')  double stockGroupe, @JsonKey(name: 'maxi_groupe')  double maxiGroupe)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String type,  double rythme, @JsonKey(name: 'jours_couverts')  int joursCouverts,  double prevu,  double securite,  double cible,  double stock, @JsonKey(name: 'en_cours')  double enCours,  List<String> reprend,  String? remplace,  double mini,  double maxi,  int couverture,  int ordonnance,  int lot,  bool tension, @JsonKey(name: 'sur_demande')  bool surDemande,  String? groupe,  double part, @JsonKey(name: 'stock_groupe')  double stockGroupe, @JsonKey(name: 'maxi_groupe')  double maxiGroupe)?  $default,) {final _that = this;
 switch (_that) {
 case _Raison() when $default != null:
-return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace,_that.mini,_that.maxi,_that.couverture,_that.ordonnance,_that.lot,_that.tension,_that.groupe,_that.part,_that.stockGroupe,_that.maxiGroupe);case _:
+return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.securite,_that.cible,_that.stock,_that.enCours,_that.reprend,_that.remplace,_that.mini,_that.maxi,_that.couverture,_that.ordonnance,_that.lot,_that.tension,_that.surDemande,_that.groupe,_that.part,_that.stockGroupe,_that.maxiGroupe);case _:
   return null;
 
 }
@@ -238,7 +240,7 @@ return $default(_that.type,_that.rythme,_that.joursCouverts,_that.prevu,_that.se
 @JsonSerializable()
 
 class _Raison implements Raison {
-  const _Raison({this.type = '', this.rythme = 0, @JsonKey(name: 'jours_couverts') this.joursCouverts = 0, this.prevu = 0, this.securite = 0, this.cible = 0, this.stock = 0, @JsonKey(name: 'en_cours') this.enCours = 0,  List<String> reprend = const <String>[], this.remplace, this.mini = 0, this.maxi = 0, this.couverture = 0, this.ordonnance = 0, this.lot = 0, this.tension = false, this.groupe, this.part = 1, @JsonKey(name: 'stock_groupe') this.stockGroupe = 0, @JsonKey(name: 'maxi_groupe') this.maxiGroupe = 0}): _reprend = reprend;
+  const _Raison({this.type = '', this.rythme = 0, @JsonKey(name: 'jours_couverts') this.joursCouverts = 0, this.prevu = 0, this.securite = 0, this.cible = 0, this.stock = 0, @JsonKey(name: 'en_cours') this.enCours = 0,  List<String> reprend = const <String>[], this.remplace, this.mini = 0, this.maxi = 0, this.couverture = 0, this.ordonnance = 0, this.lot = 0, this.tension = false, @JsonKey(name: 'sur_demande') this.surDemande = false, this.groupe, this.part = 1, @JsonKey(name: 'stock_groupe') this.stockGroupe = 0, @JsonKey(name: 'maxi_groupe') this.maxiGroupe = 0}): _reprend = reprend;
   factory _Raison.fromJson(Map<String, dynamic> json) => _$RaisonFromJson(json);
 
 @override@JsonKey() final  String type;
@@ -266,6 +268,8 @@ class _Raison implements Raison {
 @override@JsonKey() final  int ordonnance;
 @override@JsonKey() final  int lot;
 @override@JsonKey() final  bool tension;
+/// Produit lent et cher : pas de stock, commandé à la demande.
+@override@JsonKey(name: 'sur_demande') final  bool surDemande;
 /// Génériques interchangeables calculés ensemble : code DCI, part de la
 /// marque, stock et maxi du groupe.
 @override final  String? groupe;
@@ -286,18 +290,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Raison&&(identical(other.type, type) || other.type == type)&&(identical(other.rythme, rythme) || other.rythme == rythme)&&(identical(other.joursCouverts, joursCouverts) || other.joursCouverts == joursCouverts)&&(identical(other.prevu, prevu) || other.prevu == prevu)&&(identical(other.securite, securite) || other.securite == securite)&&(identical(other.cible, cible) || other.cible == cible)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.enCours, enCours) || other.enCours == enCours)&&const DeepCollectionEquality().equals(other.reprend, _reprend)&&(identical(other.remplace, remplace) || other.remplace == remplace)&&(identical(other.mini, mini) || other.mini == mini)&&(identical(other.maxi, maxi) || other.maxi == maxi)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.ordonnance, ordonnance) || other.ordonnance == ordonnance)&&(identical(other.lot, lot) || other.lot == lot)&&(identical(other.tension, tension) || other.tension == tension)&&(identical(other.groupe, groupe) || other.groupe == groupe)&&(identical(other.part, part) || other.part == part)&&(identical(other.stockGroupe, stockGroupe) || other.stockGroupe == stockGroupe)&&(identical(other.maxiGroupe, maxiGroupe) || other.maxiGroupe == maxiGroupe));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Raison&&(identical(other.type, type) || other.type == type)&&(identical(other.rythme, rythme) || other.rythme == rythme)&&(identical(other.joursCouverts, joursCouverts) || other.joursCouverts == joursCouverts)&&(identical(other.prevu, prevu) || other.prevu == prevu)&&(identical(other.securite, securite) || other.securite == securite)&&(identical(other.cible, cible) || other.cible == cible)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.enCours, enCours) || other.enCours == enCours)&&const DeepCollectionEquality().equals(other.reprend, _reprend)&&(identical(other.remplace, remplace) || other.remplace == remplace)&&(identical(other.mini, mini) || other.mini == mini)&&(identical(other.maxi, maxi) || other.maxi == maxi)&&(identical(other.couverture, couverture) || other.couverture == couverture)&&(identical(other.ordonnance, ordonnance) || other.ordonnance == ordonnance)&&(identical(other.lot, lot) || other.lot == lot)&&(identical(other.tension, tension) || other.tension == tension)&&(identical(other.surDemande, surDemande) || other.surDemande == surDemande)&&(identical(other.groupe, groupe) || other.groupe == groupe)&&(identical(other.part, part) || other.part == part)&&(identical(other.stockGroupe, stockGroupe) || other.stockGroupe == stockGroupe)&&(identical(other.maxiGroupe, maxiGroupe) || other.maxiGroupe == maxiGroupe));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,type,rythme,joursCouverts,prevu,securite,cible,stock,enCours,const DeepCollectionEquality().hash(_reprend),remplace,mini,maxi,couverture,ordonnance,lot,tension,groupe,part,stockGroupe,maxiGroupe]);
+    return Object.hashAll([runtimeType,type,rythme,joursCouverts,prevu,securite,cible,stock,enCours,const DeepCollectionEquality().hash(_reprend),remplace,mini,maxi,couverture,ordonnance,lot,tension,surDemande,groupe,part,stockGroupe,maxiGroupe]);
 }
 
 @override
 String toString() {
-    return 'Raison(type: $type, rythme: $rythme, joursCouverts: $joursCouverts, prevu: $prevu, securite: $securite, cible: $cible, stock: $stock, enCours: $enCours, reprend: $reprend, remplace: $remplace, mini: $mini, maxi: $maxi, couverture: $couverture, ordonnance: $ordonnance, lot: $lot, tension: $tension, groupe: $groupe, part: $part, stockGroupe: $stockGroupe, maxiGroupe: $maxiGroupe)';
+    return 'Raison(type: $type, rythme: $rythme, joursCouverts: $joursCouverts, prevu: $prevu, securite: $securite, cible: $cible, stock: $stock, enCours: $enCours, reprend: $reprend, remplace: $remplace, mini: $mini, maxi: $maxi, couverture: $couverture, ordonnance: $ordonnance, lot: $lot, tension: $tension, surDemande: $surDemande, groupe: $groupe, part: $part, stockGroupe: $stockGroupe, maxiGroupe: $maxiGroupe)';
 }
 
 
@@ -308,7 +312,7 @@ abstract mixin class _$RaisonCopyWith<$Res> implements $RaisonCopyWith<$Res> {
   factory _$RaisonCopyWith(_Raison value, $Res Function(_Raison) _then) = __$RaisonCopyWithImpl;
 @override @useResult
 $Res call({
- String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend, String? remplace, double mini, double maxi, int couverture, int ordonnance, int lot, bool tension, String? groupe, double part,@JsonKey(name: 'stock_groupe') double stockGroupe,@JsonKey(name: 'maxi_groupe') double maxiGroupe
+ String type, double rythme,@JsonKey(name: 'jours_couverts') int joursCouverts, double prevu, double securite, double cible, double stock,@JsonKey(name: 'en_cours') double enCours, List<String> reprend, String? remplace, double mini, double maxi, int couverture, int ordonnance, int lot, bool tension,@JsonKey(name: 'sur_demande') bool surDemande, String? groupe, double part,@JsonKey(name: 'stock_groupe') double stockGroupe,@JsonKey(name: 'maxi_groupe') double maxiGroupe
 });
 
 
@@ -325,7 +329,7 @@ class __$RaisonCopyWithImpl<$Res>
 
 /// Create a copy of Raison
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,Object? remplace = freezed,Object? mini = null,Object? maxi = null,Object? couverture = null,Object? ordonnance = null,Object? lot = null,Object? tension = null,Object? groupe = freezed,Object? part = null,Object? stockGroupe = null,Object? maxiGroupe = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? rythme = null,Object? joursCouverts = null,Object? prevu = null,Object? securite = null,Object? cible = null,Object? stock = null,Object? enCours = null,Object? reprend = null,Object? remplace = freezed,Object? mini = null,Object? maxi = null,Object? couverture = null,Object? ordonnance = null,Object? lot = null,Object? tension = null,Object? surDemande = null,Object? groupe = freezed,Object? part = null,Object? stockGroupe = null,Object? maxiGroupe = null,}) {
   return _then(_Raison(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
@@ -343,6 +347,7 @@ as double,couverture: null == couverture ? _self.couverture : couverture // igno
 as int,ordonnance: null == ordonnance ? _self.ordonnance : ordonnance // ignore: cast_nullable_to_non_nullable
 as int,lot: null == lot ? _self.lot : lot // ignore: cast_nullable_to_non_nullable
 as int,tension: null == tension ? _self.tension : tension // ignore: cast_nullable_to_non_nullable
+as bool,surDemande: null == surDemande ? _self.surDemande : surDemande // ignore: cast_nullable_to_non_nullable
 as bool,groupe: freezed == groupe ? _self.groupe : groupe // ignore: cast_nullable_to_non_nullable
 as String?,part: null == part ? _self.part : part // ignore: cast_nullable_to_non_nullable
 as double,stockGroupe: null == stockGroupe ? _self.stockGroupe : stockGroupe // ignore: cast_nullable_to_non_nullable

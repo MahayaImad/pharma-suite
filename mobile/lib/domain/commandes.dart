@@ -59,6 +59,9 @@ abstract class Raison with _$Raison {
     @Default(0) int lot,
     @Default(false) bool tension,
 
+    /// Produit lent et cher : pas de stock, commandé à la demande.
+    @JsonKey(name: 'sur_demande') @Default(false) bool surDemande,
+
     /// Génériques interchangeables calculés ensemble : code DCI, part de la
     /// marque, stock et maxi du groupe.
     String? groupe,

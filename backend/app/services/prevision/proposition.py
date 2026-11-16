@@ -49,6 +49,9 @@ class Politique:
     couverture_b: int = 21
     couverture_c: int = 30
     couverture_tension: int = 60
+    # Produit lent et cher (une ordonnance vaut plus que ce montant) : pas de
+    # stock, commandé à la demande du patient (Menopur, Decapeptyl…).
+    lent_valeur_max: float = 5000.0
 
     def couverture(self, classe_abc: Optional[str], tension: bool = False) -> int:
         if tension:
@@ -84,6 +87,7 @@ class Decision:
     ordonnance: int = 0        # taille habituelle d'une vente (P80)
     lot: int = 0               # lot habituel appliqué (0 : non)
     tension: bool = False
+    sur_demande: bool = False  # lent et cher : pas de stock, commande à la demande
     # Génériques interchangeables calculés ensemble (code DCI, part de cette
     # marque, stock et maxi de tout le groupe).
     groupe: Optional[str] = None
@@ -130,7 +134,7 @@ def decider_minmax(demande: np.ndarray, cens: np.ndarray, ouvert: np.ndarray, da
                    classe: m.Classe, premiere: Optional[int], classe_abc: Optional[str], delai_ouvres: int,
                    cal: m.Calendrier, stock: float, en_cours: float, saison: Optional[np.ndarray] = None,
                    ramadan: float = 1.0, politique: Politique = MINMAX, ordonnance: float = 1.0, lot: int = 0,
-                   tension: bool = False, vie_jours: Optional[int] = None) -> Decision:
+                   tension: bool = False, vie_jours: Optional[int] = None, prix: float = 0.0) -> Decision:
     """Mini / maxi.
 
         mini  = max(demande jusqu'à la livraison suivante + SS, taille d'une ordonnance)
@@ -139,7 +143,8 @@ def decider_minmax(demande: np.ndarray, cens: np.ndarray, ouvert: np.ndarray, da
         on commande si stock + en cours < mini (en tension : < maxi),
         quantité = maxi − stock − en cours, au moins le lot habituel, sans que
         le lot fasse dépasser 90 jours de vente ni la péremption.
-        Produit lent : mini = maxi = une ordonnance s'il s'est vendu récemment.
+        Produit lent : mini = maxi = une ordonnance s'il s'est vendu récemment,
+        sauf s'il est cher (une ordonnance > 5 000 DA) : commandé à la demande.
     """
     aujourd_hui = dates[jour]
     arrivee = ind.date_livraison(aujourd_hui, delai_ouvres)
@@ -150,10 +155,13 @@ def decider_minmax(demande: np.ndarray, cens: np.ndarray, ouvert: np.ndarray, da
     if vie_jours:
         couv = max(7, min(couv, int(0.8 * vie_jours)))
     position = stock + en_cours
+    sur_demande = False
     if classe.type == "lent":
         vendu = demande[max(0, jour - politique.fenetre_lent):jour + 1].sum() > 0
         r = prevu = securite = 0.0
-        mini = maxi = float(ordo) if vendu else 0.0
+        sur_demande = bool(vendu and not tension and politique.lent_valeur_max
+                           and prix * ordo > politique.lent_valeur_max)
+        mini = maxi = float(ordo) if vendu and not sur_demande else 0.0
         if tension and vendu:
             maxi = float(max(ordo, math.ceil(demande[max(0, jour - 365):jour + 1].sum() / 365 * couv - 1e-6)))
         r_plafond = float(demande[max(0, jour - 365):jour + 1].sum()) / 365
@@ -180,4 +188,5 @@ def decider_minmax(demande: np.ndarray, cens: np.ndarray, ouvert: np.ndarray, da
             quantite = min(lot, plafond)
             lot_applique = lot if quantite == lot else 0
     return Decision(classe.type, quantite, r, len(couverts), prevu, securite, maxi, stock, en_cours, arrivee,
-                    mini=mini, maxi=maxi, couverture=couv, ordonnance=ordo, lot=lot_applique, tension=tension)
+                    mini=mini, maxi=maxi, couverture=couv, ordonnance=ordo, lot=lot_applique, tension=tension,
+                    sur_demande=sur_demande)

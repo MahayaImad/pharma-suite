@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import logging
 import time
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +49,18 @@ logging.basicConfig(handlers=[_InterceptHandler()], level=logging.DEBUG, force=T
 # ── Scheduler ─────────────────────────────────────────────────────────────────
 
 _scheduler = AsyncIOScheduler(timezone="Africa/Algiers")
+
+
+async def _prechauffer_commandes() -> None:
+    """Prépare le calcul des commandes du jour s'il n'est pas déjà en cache."""
+    from app.modules.commandes.service import donnees_du_calcul, jour_de_commande
+    try:
+        async with AsyncSessionLocal() as db:
+            donnees_du = (await db.execute(text(
+                "SELECT last_sync_at FROM sync_status WHERE table_name = 'mv_stock_produits'"))).scalar()
+        await donnees_du_calcul(jour_de_commande(), donnees_du)
+    except Exception as e:  # le calcul sera refait à la demande
+        logger.warning(f"[commandes] préchauffage impossible : {e}")
 
 
 async def _monthly_segmentation() -> None:
@@ -107,8 +120,18 @@ async def lifespan(app: FastAPI):
         id="photo_stock_soir",
         replace_existing=True,
     )
+    # Commandes : calcul du jour préparé d'avance (toutes les 15 min, et dès
+    # que le stock est rafraîchi), pour que l'écran s'ouvre sans attendre.
+    _scheduler.add_job(
+        _prechauffer_commandes,
+        "interval",
+        minutes=15,
+        id="prechauffer_commandes",
+        replace_existing=True,
+        next_run_time=datetime.now(timezone.utc) + timedelta(seconds=30),
+    )
     _scheduler.start()
-    logger.info("[Scheduler] Classement ABC/XYZ mensuel et photo du stock du soir activés.")
+    logger.info("[Scheduler] Classement ABC/XYZ mensuel, photo du stock du soir et calcul des commandes activés.")
 
     yield
 

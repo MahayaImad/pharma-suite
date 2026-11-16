@@ -72,6 +72,7 @@ class Produit:
     lot: int = 0
     tension: bool = False
     vie_jours: Optional[int] = None
+    prix: float = 0.0             # prix d'achat moyen (produit lent et cher : à la demande)
 
     def serie_prevision(self, jour: int) -> np.ndarray:
         """Série sur laquelle se prévoit la demande au jour [jour]."""
@@ -144,7 +145,7 @@ def simuler(p: Produit, dates: list[date], debut: int, cal: m.Calendrier, ouvert
         if politique.minmax:
             dec = decider_minmax(serie, cens, ouvert, dates, d, classe, premiere, p.classe_abc, p.delai_ouvres,
                                  cal, stock, en_cours, p.saison, p.ramadan, politique, p.ordonnance, p.lot,
-                                 p.tension, p.vie_jours)
+                                 p.tension, p.vie_jours, p.prix)
         else:
             dec = decider(serie, cens, ouvert, dates, d, classe, premiere, p.classe_abc, p.delai_ouvres,
                           cal, stock, en_cours, p.saison, p.ramadan, politique)

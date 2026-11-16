@@ -123,7 +123,7 @@ def proposer_tous(d: Donnees, stocks: dict[int, float], en_cours: dict[int, floa
         if politique.minmax:
             resultat[p.id] = decider_minmax(demande, cens, ouvert, d.dates, jour, classe, premiere, p.classe_abc,
                                             p.delai_ouvres, d.calendrier, stock, cours, p.saison, p.ramadan,
-                                            politique, p.ordonnance, p.lot, p.tension, p.vie_jours)
+                                            politique, p.ordonnance, p.lot, p.tension, p.vie_jours, p.prix)
         else:
             resultat[p.id] = decider(demande, cens, ouvert, d.dates, jour, classe, premiere, p.classe_abc,
                                      p.delai_ouvres, d.calendrier, stock, cours, p.saison, p.ramadan, politique)
@@ -145,7 +145,7 @@ def proposer_tous(d: Donnees, stocks: dict[int, float], en_cours: dict[int, floa
             sum(float(stocks.get(p.id, 0.0)) for p in membres), sum(float(en_cours.get(p.id, 0.0)) for p in membres),
             None, membres[0].ramadan, politique, max(p.ordonnance for p in membres),
             max(p.lot for p in membres), any(p.tension for p in membres),
-            min((p.vie_jours for p in membres if p.vie_jours), default=None))
+            min((p.vie_jours for p in membres if p.vie_jours), default=None), max(p.prix for p in membres))
         ventes_an = [float(p.serie_prevision(jour)[max(0, jour - 365):jour].sum()) for p in membres]
         total = sum(ventes_an)
         parts_ventes = [v / total if total > 0 else 1 / len(membres) for v in ventes_an]

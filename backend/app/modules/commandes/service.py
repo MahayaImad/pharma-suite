@@ -17,6 +17,7 @@
 """
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
@@ -25,6 +26,10 @@ from typing import Any, Optional
 from zoneinfo import ZoneInfo
 
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.pool import NullPool
+
+from app.core.config import settings
 
 from app.modules.commandes.repository import CommandesRepository
 from app.services import indicateurs_stock as ind
@@ -57,10 +62,53 @@ def jour_de_commande() -> date:
 # Données du calcul (lourdes : ventes depuis 2023), gardées jusqu'au prochain
 # rafraîchissement du stock. Une seule entrée : la plus récente.
 _cache: dict[tuple, Donnees] = {}
+# Calcul en cours : les requêtes qui arrivent pendant ce temps l'attendent au
+# lieu d'en lancer un second.
+_en_cours: dict[tuple, asyncio.Future] = {}
 
 
 def vider_cache() -> None:
     _cache.clear()
+
+
+def _charger_dans_un_fil(jour: date) -> Donnees:
+    """Charge les données dans un fil à part, avec sa propre connexion : le
+    calcul (30 à 60 s sur la base réelle, surtout du calcul Python) ne bloque
+    plus le serveur, qui continue de répondre aux autres écrans."""
+    async def _charger() -> Donnees:
+        moteur = create_async_engine(settings.database_url, poolclass=NullPool)
+        try:
+            async with AsyncSession(moteur) as db:
+                return await charger(db, jour, jours_rejeu=1)
+        finally:
+            await moteur.dispose()
+
+    return asyncio.run(_charger())
+
+
+async def donnees_du_calcul(jour: date, donnees_du) -> Donnees:
+    """Données du calcul du jour, en cache ; calculées une seule fois même si
+    plusieurs écrans les demandent en même temps."""
+    cle = (jour, donnees_du)
+    if cle in _cache:
+        return _cache[cle]
+    tache = _en_cours.get(cle)
+    if tache is None:
+        depart = time.monotonic()
+
+        async def _calculer() -> Donnees:
+            try:
+                donnees = await asyncio.to_thread(_charger_dans_un_fil, jour)
+                _cache.clear()
+                _cache[cle] = donnees
+                logger.info(f"[commandes] données du calcul chargées en {time.monotonic() - depart:.1f} s "
+                            f"({len(donnees.produits)} produits)")
+                return donnees
+            finally:
+                _en_cours.pop(cle, None)
+
+        tache = _en_cours[cle] = asyncio.ensure_future(_calculer())
+    return await asyncio.shield(tache)
 
 
 def raison(dec: Decision) -> dict[str, Any]:
@@ -69,7 +117,8 @@ def raison(dec: Decision) -> dict[str, Any]:
          "stock": dec.stock, "en_cours": dec.en_cours}
     if dec.maxi > 0 or dec.mini > 0:
         r |= {"mini": round(dec.mini, 1), "maxi": round(dec.maxi, 1), "couverture": dec.couverture,
-              "ordonnance": dec.ordonnance, "lot": dec.lot, "tension": dec.tension}
+              "ordonnance": dec.ordonnance, "lot": dec.lot, "tension": dec.tension,
+              "sur_demande": dec.sur_demande}
     if dec.groupe:
         r |= {"groupe": dec.groupe, "part": dec.part, "stock_groupe": dec.stock_groupe,
               "maxi_groupe": round(dec.maxi_groupe, 1)}
@@ -106,15 +155,7 @@ class CommandesService:
 
     # ── Calcul ──
     async def _donnees(self, jour: date) -> Donnees:
-        cle = (jour, await self.repo.donnees_du())
-        if cle not in _cache:
-            depart = time.monotonic()
-            donnees = await charger(self.repo.db, jour, jours_rejeu=1)
-            _cache.clear()
-            _cache[cle] = donnees
-            logger.info(f"[commandes] données du calcul chargées en {time.monotonic() - depart:.1f} s "
-                        f"({len(donnees.produits)} produits)")
-        return _cache[cle]
+        return await donnees_du_calcul(jour, await self.repo.donnees_du())
 
     async def _propositions(self, jour: date) -> tuple[dict[int, Decision], dict[int, dict], dict[int, list[int]]]:
         """Décisions du soir, infos produits, et pour chaque marque gardée les
@@ -123,14 +164,15 @@ class CommandesService:
         ids = [p.id for p in donnees.produits]
         infos = await self.repo.produits(ids)
         stocks = {i: float(x["stock"]) for i, x in infos.items()}
-        produits, statuts = appliquer_generiques(donnees, stocks)
+        produits, statuts = await asyncio.to_thread(appliquer_generiques, donnees, stocks)
         reprises: dict[int, list[int]] = {}
         for id_nom, st in statuts.items():
             if not st.garde and stocks.get(id_nom, 0) <= 0:
                 for k in st.parts:
                     reprises.setdefault(k, []).append(id_nom)
-        decisions = proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour),
-                                  generiques=False, statuts=statuts)
+        en_cours = await self.repo.en_cours(jour)
+        decisions = await asyncio.to_thread(proposer_tous, replace(donnees, produits=produits), stocks, en_cours,
+                                            None, False, statuts)
         return decisions, infos, reprises
 
     async def _statuts_generiques(self, jour: date):

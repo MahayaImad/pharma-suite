@@ -15,9 +15,7 @@ _Raison _$RaisonFromJson(Map<String, dynamic> json) => _Raison(
   cible: (json['cible'] as num?)?.toDouble() ?? 0,
   stock: (json['stock'] as num?)?.toDouble() ?? 0,
   enCours: (json['en_cours'] as num?)?.toDouble() ?? 0,
-  reprend:
-      (json['reprend'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const <String>[],
+  reprend: (json['reprend'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const <String>[],
   remplace: json['remplace'] as String?,
   mini: (json['mini'] as num?)?.toDouble() ?? 0,
   maxi: (json['maxi'] as num?)?.toDouble() ?? 0,
@@ -25,6 +23,7 @@ _Raison _$RaisonFromJson(Map<String, dynamic> json) => _Raison(
   ordonnance: (json['ordonnance'] as num?)?.toInt() ?? 0,
   lot: (json['lot'] as num?)?.toInt() ?? 0,
   tension: json['tension'] as bool? ?? false,
+  surDemande: json['sur_demande'] as bool? ?? false,
   groupe: json['groupe'] as String?,
   part: (json['part'] as num?)?.toDouble() ?? 1,
   stockGroupe: (json['stock_groupe'] as num?)?.toDouble() ?? 0,
@@ -48,84 +47,69 @@ Map<String, dynamic> _$RaisonToJson(_Raison instance) => <String, dynamic>{
   'ordonnance': instance.ordonnance,
   'lot': instance.lot,
   'tension': instance.tension,
+  'sur_demande': instance.surDemande,
   'groupe': instance.groupe,
   'part': instance.part,
   'stock_groupe': instance.stockGroupe,
   'maxi_groupe': instance.maxiGroupe,
 };
 
-_LigneCommande _$LigneCommandeFromJson(Map<String, dynamic> json) =>
-    _LigneCommande(
-      idNom: (json['id_nom'] as num).toInt(),
-      nom: json['nom'] as String?,
-      famille: json['famille'] as String?,
-      classeAbc: json['classe_abc'] as String?,
-      stock: (json['stock'] as num?)?.toInt() ?? 0,
-      qte: (json['qte'] as num).toInt(),
-      qteProposee: (json['qte_proposee'] as num?)?.toInt(),
-      prixAchat: (json['prix_achat'] as num?)?.toDouble() ?? 0,
-      montant: (json['montant'] as num?)?.toDouble() ?? 0,
-      raison: json['raison'] == null
-          ? null
-          : Raison.fromJson(json['raison'] as Map<String, dynamic>),
-      fournisseur: json['fournisseur'] as String?,
-      codeDci: json['code_dci'] as String?,
-    );
+_LigneCommande _$LigneCommandeFromJson(Map<String, dynamic> json) => _LigneCommande(
+  idNom: (json['id_nom'] as num).toInt(),
+  nom: json['nom'] as String?,
+  famille: json['famille'] as String?,
+  classeAbc: json['classe_abc'] as String?,
+  stock: (json['stock'] as num?)?.toInt() ?? 0,
+  qte: (json['qte'] as num).toInt(),
+  qteProposee: (json['qte_proposee'] as num?)?.toInt(),
+  prixAchat: (json['prix_achat'] as num?)?.toDouble() ?? 0,
+  montant: (json['montant'] as num?)?.toDouble() ?? 0,
+  raison: json['raison'] == null ? null : Raison.fromJson(json['raison'] as Map<String, dynamic>),
+  fournisseur: json['fournisseur'] as String?,
+  codeDci: json['code_dci'] as String?,
+);
 
-Map<String, dynamic> _$LigneCommandeToJson(_LigneCommande instance) =>
-    <String, dynamic>{
-      'id_nom': instance.idNom,
-      'nom': instance.nom,
-      'famille': instance.famille,
-      'classe_abc': instance.classeAbc,
-      'stock': instance.stock,
-      'qte': instance.qte,
-      'qte_proposee': instance.qteProposee,
-      'prix_achat': instance.prixAchat,
-      'montant': instance.montant,
-      'raison': instance.raison,
-      'fournisseur': instance.fournisseur,
-      'code_dci': instance.codeDci,
-    };
-
-_FournisseurPanier _$FournisseurPanierFromJson(Map<String, dynamic> json) =>
-    _FournisseurPanier(
-      id: (json['id'] as num).toInt(),
-      nom: json['nom'] as String?,
-      type:
-          $enumDecodeNullable(_$TypeFournisseurEnumMap, json['type']) ??
-          TypeFournisseur.pharma,
-      whatsapp: json['whatsapp'] as String?,
-    );
-
-Map<String, dynamic> _$FournisseurPanierToJson(_FournisseurPanier instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'nom': instance.nom,
-      'type': _$TypeFournisseurEnumMap[instance.type]!,
-      'whatsapp': instance.whatsapp,
-    };
-
-const _$TypeFournisseurEnumMap = {
-  TypeFournisseur.pharma: 'pharma',
-  TypeFournisseur.para: 'para',
+Map<String, dynamic> _$LigneCommandeToJson(_LigneCommande instance) => <String, dynamic>{
+  'id_nom': instance.idNom,
+  'nom': instance.nom,
+  'famille': instance.famille,
+  'classe_abc': instance.classeAbc,
+  'stock': instance.stock,
+  'qte': instance.qte,
+  'qte_proposee': instance.qteProposee,
+  'prix_achat': instance.prixAchat,
+  'montant': instance.montant,
+  'raison': instance.raison,
+  'fournisseur': instance.fournisseur,
+  'code_dci': instance.codeDci,
 };
 
-_CommandeEnregistree _$CommandeEnregistreeFromJson(Map<String, dynamic> json) =>
-    _CommandeEnregistree(
-      id: (json['id'] as num).toInt(),
-      jour: DateTime.parse(json['jour'] as String),
-      statut: $enumDecode(_$StatutCommandeEnumMap, json['statut']),
-      livraisonPrevue: json['livraison_prevue'] == null
-          ? null
-          : DateTime.parse(json['livraison_prevue'] as String),
-      creePar: json['cree_par'] as String?,
-      validePar: json['valide_par'] as String?,
-    );
+_FournisseurPanier _$FournisseurPanierFromJson(Map<String, dynamic> json) => _FournisseurPanier(
+  id: (json['id'] as num).toInt(),
+  nom: json['nom'] as String?,
+  type: $enumDecodeNullable(_$TypeFournisseurEnumMap, json['type']) ?? TypeFournisseur.pharma,
+  whatsapp: json['whatsapp'] as String?,
+);
 
-Map<String, dynamic> _$CommandeEnregistreeToJson(
-  _CommandeEnregistree instance,
-) => <String, dynamic>{
+Map<String, dynamic> _$FournisseurPanierToJson(_FournisseurPanier instance) => <String, dynamic>{
+  'id': instance.id,
+  'nom': instance.nom,
+  'type': _$TypeFournisseurEnumMap[instance.type]!,
+  'whatsapp': instance.whatsapp,
+};
+
+const _$TypeFournisseurEnumMap = {TypeFournisseur.pharma: 'pharma', TypeFournisseur.para: 'para'};
+
+_CommandeEnregistree _$CommandeEnregistreeFromJson(Map<String, dynamic> json) => _CommandeEnregistree(
+  id: (json['id'] as num).toInt(),
+  jour: DateTime.parse(json['jour'] as String),
+  statut: $enumDecode(_$StatutCommandeEnumMap, json['statut']),
+  livraisonPrevue: json['livraison_prevue'] == null ? null : DateTime.parse(json['livraison_prevue'] as String),
+  creePar: json['cree_par'] as String?,
+  validePar: json['valide_par'] as String?,
+);
+
+Map<String, dynamic> _$CommandeEnregistreeToJson(_CommandeEnregistree instance) => <String, dynamic>{
   'id': instance.id,
   'jour': instance.jour.toIso8601String(),
   'statut': _$StatutCommandeEnumMap[instance.statut]!,
@@ -142,19 +126,11 @@ const _$StatutCommandeEnumMap = {
 };
 
 _Panier _$PanierFromJson(Map<String, dynamic> json) => _Panier(
-  fournisseur: FournisseurPanier.fromJson(
-    json['fournisseur'] as Map<String, dynamic>,
-  ),
-  commande: json['commande'] == null
-      ? null
-      : CommandeEnregistree.fromJson(json['commande'] as Map<String, dynamic>),
-  livraisonPrevue: json['livraison_prevue'] == null
-      ? null
-      : DateTime.parse(json['livraison_prevue'] as String),
+  fournisseur: FournisseurPanier.fromJson(json['fournisseur'] as Map<String, dynamic>),
+  commande: json['commande'] == null ? null : CommandeEnregistree.fromJson(json['commande'] as Map<String, dynamic>),
+  livraisonPrevue: json['livraison_prevue'] == null ? null : DateTime.parse(json['livraison_prevue'] as String),
   lignes:
-      (json['lignes'] as List<dynamic>?)
-          ?.map((e) => LigneCommande.fromJson(e as Map<String, dynamic>))
-          .toList() ??
+      (json['lignes'] as List<dynamic>?)?.map((e) => LigneCommande.fromJson(e as Map<String, dynamic>)).toList() ??
       const <LigneCommande>[],
 );
 
@@ -181,45 +157,37 @@ Map<String, dynamic> _$BudgetToJson(_Budget instance) => <String, dynamic>{
   'reste': instance.reste,
 };
 
-_JourneeCommandes _$JourneeCommandesFromJson(Map<String, dynamic> json) =>
-    _JourneeCommandes(
-      jour: DateTime.parse(json['jour'] as String),
-      donneesDu: json['donnees_du'] == null
-          ? null
-          : DateTime.parse(json['donnees_du'] as String),
-      peutValider: json['peut_valider'] as bool? ?? false,
-      ferme: json['ferme'] as bool? ?? false,
-      paniers:
-          (json['paniers'] as List<dynamic>?)
-              ?.map((e) => Panier.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <Panier>[],
-      psychotropes:
-          (json['psychotropes'] as List<dynamic>?)
-              ?.map((e) => LigneCommande.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <LigneCommande>[],
-      sansFournisseur:
-          (json['sans_fournisseur'] as List<dynamic>?)
-              ?.map((e) => LigneCommande.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <LigneCommande>[],
-      budget: json['budget'] == null
-          ? const Budget()
-          : Budget.fromJson(json['budget'] as Map<String, dynamic>),
-    );
+_JourneeCommandes _$JourneeCommandesFromJson(Map<String, dynamic> json) => _JourneeCommandes(
+  jour: DateTime.parse(json['jour'] as String),
+  donneesDu: json['donnees_du'] == null ? null : DateTime.parse(json['donnees_du'] as String),
+  peutValider: json['peut_valider'] as bool? ?? false,
+  ferme: json['ferme'] as bool? ?? false,
+  paniers:
+      (json['paniers'] as List<dynamic>?)?.map((e) => Panier.fromJson(e as Map<String, dynamic>)).toList() ??
+      const <Panier>[],
+  psychotropes:
+      (json['psychotropes'] as List<dynamic>?)
+          ?.map((e) => LigneCommande.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <LigneCommande>[],
+  sansFournisseur:
+      (json['sans_fournisseur'] as List<dynamic>?)
+          ?.map((e) => LigneCommande.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <LigneCommande>[],
+  budget: json['budget'] == null ? const Budget() : Budget.fromJson(json['budget'] as Map<String, dynamic>),
+);
 
-Map<String, dynamic> _$JourneeCommandesToJson(_JourneeCommandes instance) =>
-    <String, dynamic>{
-      'jour': instance.jour.toIso8601String(),
-      'donnees_du': instance.donneesDu?.toIso8601String(),
-      'peut_valider': instance.peutValider,
-      'ferme': instance.ferme,
-      'paniers': instance.paniers,
-      'psychotropes': instance.psychotropes,
-      'sans_fournisseur': instance.sansFournisseur,
-      'budget': instance.budget,
-    };
+Map<String, dynamic> _$JourneeCommandesToJson(_JourneeCommandes instance) => <String, dynamic>{
+  'jour': instance.jour.toIso8601String(),
+  'donnees_du': instance.donneesDu?.toIso8601String(),
+  'peut_valider': instance.peutValider,
+  'ferme': instance.ferme,
+  'paniers': instance.paniers,
+  'psychotropes': instance.psychotropes,
+  'sans_fournisseur': instance.sansFournisseur,
+  'budget': instance.budget,
+};
 
 _BonCommande _$BonCommandeFromJson(Map<String, dynamic> json) => _BonCommande(
   idCommande: (json['id_commande'] as num).toInt(),
@@ -228,43 +196,36 @@ _BonCommande _$BonCommandeFromJson(Map<String, dynamic> json) => _BonCommande(
   texte: json['texte'] as String,
 );
 
-Map<String, dynamic> _$BonCommandeToJson(_BonCommande instance) =>
-    <String, dynamic>{
-      'id_commande': instance.idCommande,
-      'fournisseur': instance.fournisseur,
-      'whatsapp': instance.whatsapp,
-      'texte': instance.texte,
-    };
+Map<String, dynamic> _$BonCommandeToJson(_BonCommande instance) => <String, dynamic>{
+  'id_commande': instance.idCommande,
+  'fournisseur': instance.fournisseur,
+  'whatsapp': instance.whatsapp,
+  'texte': instance.texte,
+};
 
-_FournisseurReglage _$FournisseurReglageFromJson(Map<String, dynamic> json) =>
-    _FournisseurReglage(
-      id: (json['id'] as num).toInt(),
-      nom: json['nom'] as String?,
-      type:
-          $enumDecodeNullable(_$TypeFournisseurEnumMap, json['type']) ??
-          TypeFournisseur.pharma,
-      actif: json['actif'] as bool? ?? true,
-      auto: json['auto'] as bool? ?? true,
-      whatsapp: json['whatsapp'] as String?,
-      telephone: json['telephone'] as String?,
-      derniereCommande: json['derniere_commande'] == null
-          ? null
-          : DateTime.parse(json['derniere_commande'] as String),
-      delaiLivraison: (json['delai_livraison'] as num?)?.toInt(),
-    );
+_FournisseurReglage _$FournisseurReglageFromJson(Map<String, dynamic> json) => _FournisseurReglage(
+  id: (json['id'] as num).toInt(),
+  nom: json['nom'] as String?,
+  type: $enumDecodeNullable(_$TypeFournisseurEnumMap, json['type']) ?? TypeFournisseur.pharma,
+  actif: json['actif'] as bool? ?? true,
+  auto: json['auto'] as bool? ?? true,
+  whatsapp: json['whatsapp'] as String?,
+  telephone: json['telephone'] as String?,
+  derniereCommande: json['derniere_commande'] == null ? null : DateTime.parse(json['derniere_commande'] as String),
+  delaiLivraison: (json['delai_livraison'] as num?)?.toInt(),
+);
 
-Map<String, dynamic> _$FournisseurReglageToJson(_FournisseurReglage instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'nom': instance.nom,
-      'type': _$TypeFournisseurEnumMap[instance.type]!,
-      'actif': instance.actif,
-      'auto': instance.auto,
-      'whatsapp': instance.whatsapp,
-      'telephone': instance.telephone,
-      'derniere_commande': instance.derniereCommande?.toIso8601String(),
-      'delai_livraison': instance.delaiLivraison,
-    };
+Map<String, dynamic> _$FournisseurReglageToJson(_FournisseurReglage instance) => <String, dynamic>{
+  'id': instance.id,
+  'nom': instance.nom,
+  'type': _$TypeFournisseurEnumMap[instance.type]!,
+  'actif': instance.actif,
+  'auto': instance.auto,
+  'whatsapp': instance.whatsapp,
+  'telephone': instance.telephone,
+  'derniere_commande': instance.derniereCommande?.toIso8601String(),
+  'delai_livraison': instance.delaiLivraison,
+};
 
 _Compte _$CompteFromJson(Map<String, dynamic> json) => _Compte(
   username: json['username'] as String,
@@ -282,124 +243,109 @@ Map<String, dynamic> _$CompteToJson(_Compte instance) => <String, dynamic>{
   'is_active': instance.actif,
 };
 
-_MembreGenerique _$MembreGeneriqueFromJson(Map<String, dynamic> json) =>
-    _MembreGenerique(
-      idNom: (json['id_nom'] as num).toInt(),
-      nom: json['nom'] as String?,
-      stock: (json['stock'] as num?)?.toInt() ?? 0,
-      ventes12m: (json['ventes_12m'] as num?)?.toDouble() ?? 0,
-      garde: json['garde'] as bool? ?? true,
-      choix: json['choix'] as String?,
-    );
+_MembreGenerique _$MembreGeneriqueFromJson(Map<String, dynamic> json) => _MembreGenerique(
+  idNom: (json['id_nom'] as num).toInt(),
+  nom: json['nom'] as String?,
+  stock: (json['stock'] as num?)?.toInt() ?? 0,
+  ventes12m: (json['ventes_12m'] as num?)?.toDouble() ?? 0,
+  garde: json['garde'] as bool? ?? true,
+  choix: json['choix'] as String?,
+);
 
-Map<String, dynamic> _$MembreGeneriqueToJson(_MembreGenerique instance) =>
-    <String, dynamic>{
-      'id_nom': instance.idNom,
-      'nom': instance.nom,
-      'stock': instance.stock,
-      'ventes_12m': instance.ventes12m,
-      'garde': instance.garde,
-      'choix': instance.choix,
-    };
+Map<String, dynamic> _$MembreGeneriqueToJson(_MembreGenerique instance) => <String, dynamic>{
+  'id_nom': instance.idNom,
+  'nom': instance.nom,
+  'stock': instance.stock,
+  'ventes_12m': instance.ventes12m,
+  'garde': instance.garde,
+  'choix': instance.choix,
+};
 
-_GroupeGenerique _$GroupeGeneriqueFromJson(Map<String, dynamic> json) =>
-    _GroupeGenerique(
-      code: json['code'] as String?,
-      classe: json['classe'] as String?,
-      mode: json['mode'] as String? ?? 'toutes',
-      modeForce: json['mode_force'] as String?,
-      chronique: json['chronique'] as bool? ?? false,
-      nombreGardes: (json['nombre_gardes'] as num?)?.toInt() ?? 2,
-      membres:
-          (json['membres'] as List<dynamic>?)
-              ?.map((e) => MembreGenerique.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <MembreGenerique>[],
-    );
+_GroupeGenerique _$GroupeGeneriqueFromJson(Map<String, dynamic> json) => _GroupeGenerique(
+  code: json['code'] as String?,
+  classe: json['classe'] as String?,
+  mode: json['mode'] as String? ?? 'toutes',
+  modeForce: json['mode_force'] as String?,
+  chronique: json['chronique'] as bool? ?? false,
+  nombreGardes: (json['nombre_gardes'] as num?)?.toInt() ?? 2,
+  membres:
+      (json['membres'] as List<dynamic>?)?.map((e) => MembreGenerique.fromJson(e as Map<String, dynamic>)).toList() ??
+      const <MembreGenerique>[],
+);
 
-Map<String, dynamic> _$GroupeGeneriqueToJson(_GroupeGenerique instance) =>
-    <String, dynamic>{
-      'code': instance.code,
-      'classe': instance.classe,
-      'mode': instance.mode,
-      'mode_force': instance.modeForce,
-      'chronique': instance.chronique,
-      'nombre_gardes': instance.nombreGardes,
-      'membres': instance.membres,
-    };
+Map<String, dynamic> _$GroupeGeneriqueToJson(_GroupeGenerique instance) => <String, dynamic>{
+  'code': instance.code,
+  'classe': instance.classe,
+  'mode': instance.mode,
+  'mode_force': instance.modeForce,
+  'chronique': instance.chronique,
+  'nombre_gardes': instance.nombreGardes,
+  'membres': instance.membres,
+};
 
-_AjoutCommande _$AjoutCommandeFromJson(Map<String, dynamic> json) =>
-    _AjoutCommande(
-      idCommande: (json['id_commande'] as num).toInt(),
-      idFournisseur: (json['id_fournisseur'] as num).toInt(),
-      fournisseur: json['fournisseur'] as String?,
-      qte: (json['qte'] as num).toInt(),
-      dejaPresent: json['deja_present'] as bool? ?? false,
-    );
+_AjoutCommande _$AjoutCommandeFromJson(Map<String, dynamic> json) => _AjoutCommande(
+  idCommande: (json['id_commande'] as num).toInt(),
+  idFournisseur: (json['id_fournisseur'] as num).toInt(),
+  fournisseur: json['fournisseur'] as String?,
+  qte: (json['qte'] as num).toInt(),
+  dejaPresent: json['deja_present'] as bool? ?? false,
+);
 
-Map<String, dynamic> _$AjoutCommandeToJson(_AjoutCommande instance) =>
-    <String, dynamic>{
-      'id_commande': instance.idCommande,
-      'id_fournisseur': instance.idFournisseur,
-      'fournisseur': instance.fournisseur,
-      'qte': instance.qte,
-      'deja_present': instance.dejaPresent,
-    };
+Map<String, dynamic> _$AjoutCommandeToJson(_AjoutCommande instance) => <String, dynamic>{
+  'id_commande': instance.idCommande,
+  'id_fournisseur': instance.idFournisseur,
+  'fournisseur': instance.fournisseur,
+  'qte': instance.qte,
+  'deja_present': instance.dejaPresent,
+};
 
-_DetailCalcul _$DetailCalculFromJson(Map<String, dynamic> json) =>
-    _DetailCalcul(
-      idNom: (json['id_nom'] as num).toInt(),
-      nom: json['nom'] as String?,
-      type: json['type'] as String? ?? '',
-      joursVente12m: (json['jours_vente_12m'] as num?)?.toInt() ?? 0,
-      fenetreJours: (json['fenetre_jours'] as num?)?.toInt() ?? 0,
-      joursOuverts: (json['jours_ouverts'] as num?)?.toInt() ?? 0,
-      joursExclusRupture: (json['jours_exclus_rupture'] as num?)?.toInt() ?? 0,
-      joursRetenus: (json['jours_retenus'] as num?)?.toInt() ?? 0,
-      joursStockNul: (json['jours_stock_nul'] as num?)?.toInt() ?? 0,
-      venduFenetre: (json['vendu_fenetre'] as num?)?.toDouble() ?? 0,
-      venduJoursRetenus: (json['vendu_jours_retenus'] as num?)?.toDouble() ?? 0,
-      reprisGeneriques: (json['repris_generiques'] as num?)?.toDouble() ?? 0,
-      rythme: (json['rythme'] as num?)?.toDouble() ?? 0,
-      moyenneHorsRuptures:
-          (json['moyenne_hors_ruptures'] as num?)?.toDouble() ?? 0,
-      moyenneBrute: (json['moyenne_brute'] as num?)?.toDouble() ?? 0,
-      ventes12m: (json['ventes_12m'] as num?)?.toDouble() ?? 0,
-      moyenne12m: (json['moyenne_12m_jour_ouvert'] as num?)?.toDouble() ?? 0,
-      cmm: (json['cmm'] as num?)?.toDouble() ?? 0,
-      plusGrossesVentes:
-          (json['plus_grosses_ventes'] as List<dynamic>?)
-              ?.map((e) => e as Map<String, dynamic>)
-              .toList() ??
-          const <Map<String, dynamic>>[],
-      decision: json['decision'] == null
-          ? null
-          : Raison.fromJson(json['decision'] as Map<String, dynamic>),
-    );
+_DetailCalcul _$DetailCalculFromJson(Map<String, dynamic> json) => _DetailCalcul(
+  idNom: (json['id_nom'] as num).toInt(),
+  nom: json['nom'] as String?,
+  type: json['type'] as String? ?? '',
+  joursVente12m: (json['jours_vente_12m'] as num?)?.toInt() ?? 0,
+  fenetreJours: (json['fenetre_jours'] as num?)?.toInt() ?? 0,
+  joursOuverts: (json['jours_ouverts'] as num?)?.toInt() ?? 0,
+  joursExclusRupture: (json['jours_exclus_rupture'] as num?)?.toInt() ?? 0,
+  joursRetenus: (json['jours_retenus'] as num?)?.toInt() ?? 0,
+  joursStockNul: (json['jours_stock_nul'] as num?)?.toInt() ?? 0,
+  venduFenetre: (json['vendu_fenetre'] as num?)?.toDouble() ?? 0,
+  venduJoursRetenus: (json['vendu_jours_retenus'] as num?)?.toDouble() ?? 0,
+  reprisGeneriques: (json['repris_generiques'] as num?)?.toDouble() ?? 0,
+  rythme: (json['rythme'] as num?)?.toDouble() ?? 0,
+  moyenneHorsRuptures: (json['moyenne_hors_ruptures'] as num?)?.toDouble() ?? 0,
+  moyenneBrute: (json['moyenne_brute'] as num?)?.toDouble() ?? 0,
+  ventes12m: (json['ventes_12m'] as num?)?.toDouble() ?? 0,
+  moyenne12m: (json['moyenne_12m_jour_ouvert'] as num?)?.toDouble() ?? 0,
+  cmm: (json['cmm'] as num?)?.toDouble() ?? 0,
+  plusGrossesVentes:
+      (json['plus_grosses_ventes'] as List<dynamic>?)?.map((e) => e as Map<String, dynamic>).toList() ??
+      const <Map<String, dynamic>>[],
+  decision: json['decision'] == null ? null : Raison.fromJson(json['decision'] as Map<String, dynamic>),
+);
 
-Map<String, dynamic> _$DetailCalculToJson(_DetailCalcul instance) =>
-    <String, dynamic>{
-      'id_nom': instance.idNom,
-      'nom': instance.nom,
-      'type': instance.type,
-      'jours_vente_12m': instance.joursVente12m,
-      'fenetre_jours': instance.fenetreJours,
-      'jours_ouverts': instance.joursOuverts,
-      'jours_exclus_rupture': instance.joursExclusRupture,
-      'jours_retenus': instance.joursRetenus,
-      'jours_stock_nul': instance.joursStockNul,
-      'vendu_fenetre': instance.venduFenetre,
-      'vendu_jours_retenus': instance.venduJoursRetenus,
-      'repris_generiques': instance.reprisGeneriques,
-      'rythme': instance.rythme,
-      'moyenne_hors_ruptures': instance.moyenneHorsRuptures,
-      'moyenne_brute': instance.moyenneBrute,
-      'ventes_12m': instance.ventes12m,
-      'moyenne_12m_jour_ouvert': instance.moyenne12m,
-      'cmm': instance.cmm,
-      'plus_grosses_ventes': instance.plusGrossesVentes,
-      'decision': instance.decision,
-    };
+Map<String, dynamic> _$DetailCalculToJson(_DetailCalcul instance) => <String, dynamic>{
+  'id_nom': instance.idNom,
+  'nom': instance.nom,
+  'type': instance.type,
+  'jours_vente_12m': instance.joursVente12m,
+  'fenetre_jours': instance.fenetreJours,
+  'jours_ouverts': instance.joursOuverts,
+  'jours_exclus_rupture': instance.joursExclusRupture,
+  'jours_retenus': instance.joursRetenus,
+  'jours_stock_nul': instance.joursStockNul,
+  'vendu_fenetre': instance.venduFenetre,
+  'vendu_jours_retenus': instance.venduJoursRetenus,
+  'repris_generiques': instance.reprisGeneriques,
+  'rythme': instance.rythme,
+  'moyenne_hors_ruptures': instance.moyenneHorsRuptures,
+  'moyenne_brute': instance.moyenneBrute,
+  'ventes_12m': instance.ventes12m,
+  'moyenne_12m_jour_ouvert': instance.moyenne12m,
+  'cmm': instance.cmm,
+  'plus_grosses_ventes': instance.plusGrossesVentes,
+  'decision': instance.decision,
+};
 
 _Tension _$TensionFromJson(Map<String, dynamic> json) => _Tension(
   idNom: (json['id_nom'] as num).toInt(),

@@ -432,6 +432,9 @@ de la vue, et rendue par `GET /stock/resume` (`donnees_du`, UTC).
     des réceptions sur 12 mois, hors UG, avoirs, échanges), sans que le lot
     dépasse 90 jours de vente ;
   - produit lent : mini = maxi = une ordonnance s'il s'est vendu dans les 6 mois ;
+  - produit lent **et cher** (une ordonnance vaut plus que `lent_valeur_max_da`,
+    5 000 DA) : pas de stock, **commandé à la demande** du patient (Menopur,
+    Decapeptyl…), sauf s'il est en tension confirmée ;
   - **génériques interchangeables** : les marques gardées d'une DCI sont
     calculées ensemble (ventes, stock, en cours), puis la quantité est
     répartie selon leur part des ventes.

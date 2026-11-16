@@ -163,18 +163,22 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
         GROUP BY id_nom"""), params_an) if r.vie is not None}
     tensions = {r.id_nom for r in await db.execute(text(
         "SELECT id_nom FROM produits_tension WHERE tension AND confirme AND id_nom = ANY(:ids)"), params_an)}
+    prix = {r.id: float(r.prix) for r in lignes}
     for p in produits:
+        p.prix = prix.get(p.id, 0.0)
         p.ordonnance = ordonnances.get(p.id, 1.0)
         p.lot = lots.get(p.id, 0)
         p.vie_jours = vies.get(p.id)
         p.tension = p.id in tensions
     reglages = {r.cle: int(r.valeur) for r in await db.execute(text(
-        "SELECT cle, valeur FROM reglages_stock WHERE cle LIKE 'couverture_%'"))}
+        "SELECT cle, valeur FROM reglages_stock WHERE cle LIKE 'couverture_%' OR cle = 'lent_valeur_max_da'"))}
     from app.services.prevision.proposition import MINMAX
     from dataclasses import replace as _remplacer
-    politique = _remplacer(MINMAX, **{k.removesuffix("_jours"): v for k, v in reglages.items()
-                                      if k.removesuffix("_jours") in ("couverture_a", "couverture_b", "couverture_c",
-                                                                      "couverture_tension")})
+    champs = {k.removesuffix("_jours"): v for k, v in reglages.items()
+              if k.removesuffix("_jours") in ("couverture_a", "couverture_b", "couverture_c", "couverture_tension")}
+    if "lent_valeur_max_da" in reglages:
+        champs["lent_valeur_max"] = float(reglages["lent_valeur_max_da"])
+    politique = _remplacer(MINMAX, **champs)
 
     from app.services.prevision.generiques import normaliser
     classes = {normaliser(r.prefix) for r in await db.execute(text("SELECT DISTINCT prefix FROM classe_maladie"))}

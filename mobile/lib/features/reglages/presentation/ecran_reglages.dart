@@ -835,6 +835,11 @@ const _reglagesConnus = {
     'marques',
     'Pour une DCI non chronique, les plus vendues parmi les disponibles.',
   ),
+  'lent_valeur_max_da': (
+    'Produit lent et cher',
+    'DA',
+    'Au-delà de cette valeur par ordonnance, un produit à vente rare n\'est pas gardé en stock : commandé à la demande.',
+  ),
   'budget_mensuel_commandes': (
     'Budget mensuel des commandes',
     'DA',

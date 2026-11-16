@@ -61,3 +61,15 @@ def test_peremption_courte_reduit_la_couverture():
     d = np.where(OUVERT, 1.0, 0.0)
     _, dec = _decider(d, 0.0, abc="C", vie_jours=20)
     assert dec.couverture == 16                                  # 80 % de 20 jours
+
+
+def test_lent_et_cher_commande_a_la_demande():
+    """Menopur : vendu par 5 de temps en temps, 10 000 DA la boîte → pas de stock."""
+    d = np.zeros(JEUDI_N + 1)
+    d[np.arange(30, JEUDI_N, 60)] = 5.0
+    _, cher = _decider(d, 0.0, ordonnance=5, prix=10_000)
+    assert cher.sur_demande and cher.quantite == 0 and cher.maxi == 0
+    _, bon_marche = _decider(d, 0.0, ordonnance=5, prix=300)
+    assert not bon_marche.sur_demande and bon_marche.quantite == 5
+    _, tension = _decider(d, 0.0, ordonnance=5, prix=10_000, tension=True)
+    assert not tension.sur_demande and tension.quantite > 0

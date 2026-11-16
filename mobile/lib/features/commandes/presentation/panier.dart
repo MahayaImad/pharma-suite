@@ -139,27 +139,6 @@ class _ContenuState extends ConsumerState<_Contenu> {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      dinars(p.montant.round()),
-                      style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: large ? 22 : 18),
-                    ),
-                    Text(
-                      [
-                        '${p.nbLignes} ligne${p.nbLignes > 1 ? 's' : ''}',
-                        '${entier(p.boites)} boîtes',
-                        if (p.ruptures > 0) '${p.ruptures} rupture${p.ruptures > 1 ? 's' : ''}',
-                      ].join(' · '),
-                      textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
-                    ),
-                  ],
-                ),
-              ),
               if (large) _MenuPanier(panier: p),
             ],
           ),
@@ -284,7 +263,7 @@ class LigneDuPanier extends ConsumerWidget {
         Flexible(
           child: Text(
             libelleProduit(l.nom ?? 'Produit ${l.idNom}'),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
           ),
@@ -313,7 +292,7 @@ class LigneDuPanier extends ConsumerWidget {
             ),
         ],
       ),
-      maxLines: large ? 1 : 2,
+      maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
     );
@@ -351,7 +330,6 @@ class LigneDuPanier extends ConsumerWidget {
                 children: [nom, const SizedBox(height: 2), raison],
               ),
             ),
-            if (large) ...[const SizedBox(width: 12), SizedBox(width: 80, child: JaugeCommande(ligne: l))],
             const SizedBox(width: 12),
             quantite,
             if (large) ...[
@@ -741,6 +719,14 @@ class _DetailCalcul extends ConsumerWidget {
                       detail: '${decimal(d.ventes12m)} vendus · CMM ${decimal(d.cmm)}',
                     ),
                     const Divider(),
+                    if (d.decision?.surDemande ?? false)
+                      l(
+                        'Commandé à la demande',
+                        '0 en stock',
+                        detail:
+                            'Vente rare et chère : on le commande quand le patient vient (réglage « produit lent '
+                            'et cher »).',
+                      ),
                     if (d.decision != null && (d.decision!.maxi > 0 || d.decision!.mini > 0)) ...[
                       l(
                         'Point de commande (mini)',
