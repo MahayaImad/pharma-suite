@@ -41,10 +41,10 @@ backend/
 └── app/
     ├── main.py               # app FastAPI, logging loguru, scheduler APScheduler
     ├── core/                 # config.py, database.py, security.py
-    ├── api/v1/               # 19 routers (~11 500 lignes)
+    ├── api/v1/               # 18 routers (~10 800 lignes)
     ├── models/               # 16 modules SQLAlchemy (~1 240 lignes)
     ├── schemas/              # auth.py, sync.py uniquement (38 lignes)
-    └── services/             # sms_queue, stock_segmentation, purchase_engine/
+    └── services/             # sms_queue, stock_segmentation, prevision/ (calcul des commandes)
 
 docs/
 ├── 02-sync-contrat.md        # contrat de l'agent EASYPHARM, reconstitué depuis le code
@@ -133,13 +133,13 @@ Il n'y a **pas** de `make dev` / `make test` / `make api-client`.
 - Auth : JWT `python-jose`, mots de passe `passlib[bcrypt]`
 - Logs : `loguru`, avec pont depuis `logging` stdlib
 - Scheduler : `apscheduler`, timezone `Africa/Algiers` (segmentation ABC/XYZ mensuelle)
-- Calcul : `numpy`, `pandas`, `statsmodels`, `scipy`, `PuLP` (moteur d'achat)
+- Calcul : `numpy`, `pandas` (prévision des commandes, `services/prevision/`)
 - `anthropic` (SDK) — utilisé par le chatbot texte→SQL
 
 ## Conventions du code existant
 
 Ces conventions ne sont pas idéales, mais elles sont cohérentes sur les
-19 routers. **Les suivre quand on modifie l'existant**, ne pas réécrire un
+18 routers. **Les suivre quand on modifie l'existant**, ne pas réécrire un
 router au passage.
 
 - **Un domaine = un fichier** dans `app/api/v1/<domaine>.py`, monté dans
@@ -185,7 +185,6 @@ router au passage.
 | `clients`, `crm` | fichier client, relances SMS |
 | `chifa` | bordereaux, factures, rejets CNAS |
 | `caisse` | opérations, dépenses, comptes |
-| `assistant_achat` | moteur de réappro (prévision + optimisation PuLP) |
 | `performance` | KPIs employés, enveloppe et primes de rendement |
 | `grh_employes` | fiches employés, demandes de congé |
 | `grh_presence` | présence mensuelle auto-détectée + overrides manuels |
@@ -280,8 +279,10 @@ part entière, pas des effets de bord.
 
 - Service séparé `ml/`, appelé en HTTP par le backend.
 - Modèles TFLite embarqués dans `mobile/assets/models/`.
-- Aujourd'hui le calcul prédictif vit dans `app/services/purchase_engine/`
-  (statsmodels/scipy/PuLP), en process.
+- Aujourd'hui le calcul prédictif vit dans `app/services/prevision/`
+  (numpy/pandas), en process. L'ancien moteur (`assistant_achat`,
+  `purchase_engine/`, tables `parametres_stock` et `previsions_demande`) a
+  été retiré le 2026-11-16 (migration 017).
 
 ## Outillage cible
 

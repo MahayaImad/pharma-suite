@@ -5,7 +5,6 @@ from app.api.v1.kpis import router as kpis_router
 from app.api.v1.chatbot import router as chatbot_router
 from app.api.v1.finance import router as finance_router
 from app.api.v1.crm import router as crm_router
-from app.api.v1.assistant_achat import router as assistant_achat_router
 from app.api.v1.sms import router as sms_router
 from app.api.v1.tasks import router as tasks_router
 from app.api.v1.grh_presence import router as grh_presence_router
@@ -28,7 +27,6 @@ router.include_router(kpis_router)
 router.include_router(chatbot_router)
 router.include_router(finance_router)
 router.include_router(crm_router)
-router.include_router(assistant_achat_router)
 router.include_router(sms_router)
 router.include_router(tasks_router)
 router.include_router(grh_presence_router)

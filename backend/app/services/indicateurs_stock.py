@@ -24,8 +24,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Iterable, Optional
 
-# Taux de service visé par classe ABC → Z de la loi normale. Mêmes valeurs
-# que le moteur d'achat (purchase_engine/stock_params.py) : A 95 %, B 90 %,
+# Taux de service visé par classe ABC → Z de la loi normale : A 95 %, B 90 %,
 # C 85 %. Un produit non classé est traité comme B.
 Z_PAR_CLASSE = {"A": 1.645, "B": 1.282, "C": 1.036}
 Z_DEFAUT = Z_PAR_CLASSE["B"]

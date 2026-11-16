@@ -44,7 +44,7 @@ Chaque phase a une sortie vérifiable. On ne commence pas la suivante avant.
 | **3. Piloter** | indicateurs de la section 5, par famille / étagère / responsable, avec historique | le titulaire lit l'état du stock en une page |
 | **4. Classer** | ABC × XYZ existants, ajout de la criticité VEN, taux de service cible par classe (bloc 1) | chaque produit actif a ses trois classes |
 | **5. Inventorier** | inventaire tournant : listes de comptage par classe, saisie, écarts, exactitude | l'exactitude du stock est mesurée chaque mois |
-| **6. Réapprovisionner** | brancher le moteur d'achat existant (`assistant_achat`) sur des paramètres fiables | une proposition de commande est acceptée sans retouche majeure |
+| **6. Réapprovisionner** | fait par le module Commandes (`docs/06-commandes.md`) ; l'ancien moteur `assistant_achat` a été retiré le 2026-11-16 | une proposition de commande est acceptée sans retouche majeure |
 
 La phase 0 est le backend ; le frontend Flutter démarre à la phase 1, sur
 des routes vérifiées. Les six blocs de la section 4 disent, pour chaque
@@ -156,10 +156,11 @@ Règles de calcul retenues (`services/stock_segmentation.py`, testées dans
 La qualité se mesure : erreur (MAPE ou MASE — le MAPE est indéfini quand la
 demande vaut zéro) et **biais**, suivis dans le temps et par classe.
 
-- **Existe** : `purchase_engine/forecaster.py` choisit entre Croston
-  (variante SBA), Holt-Winters, régression et moyenne mobile, sur le MAPE des
-  30 derniers jours ; `censored_demand.py` corrige la demande des jours de
-  rupture ; `stock_history.py` reconstitue le stock jour par jour.
+- **Existait** (retiré le 2026-11-16, remplacé par `services/prevision/`) :
+  `purchase_engine/forecaster.py` choisissait entre Croston (variante SBA),
+  Holt-Winters, régression et moyenne mobile ; `censored_demand.py`
+  corrigeait la demande des jours de rupture. Le stock jour par jour est
+  reconstitué par `services/historique_stock.py`.
 - **À faire** : vérifier sur données réelles ; remplacer ou compléter le MAPE
   par le MASE pour les produits intermittents ; suivre le biais ; gérer les
   fêtes mobiles (Ramadan, Aïd), que la saisonnalité calendaire ne voit pas ;
@@ -203,10 +204,11 @@ quantité économique EOQ = √(2 × demande annuelle × coût de commande ÷ co
   sécurité Z(ABC) × σ × √(jours ouverts couverts), au moins 1 boîte ;
   quantité = cible − stock − en cours, à la boîte ; produit lent : 1 boîte
   s'il s'est vendu dans les 6 mois.
-- **Existe** : `purchase_engine/stock_params.py` (SS, ROP, EOQ ; taux de
-  service A 95 %, B 90 %, C 85 %) ; `optimizer.py` (quantités entières sous
-  contrainte de budget, PuLP) ; tables `parametres_stock` et
-  `previsions_demande`.
+- **Existait** (retiré le 2026-11-16, migration 017) :
+  `purchase_engine/stock_params.py` (SS, ROP, EOQ), `optimizer.py`
+  (quantités entières sous contrainte de budget, PuLP), tables
+  `parametres_stock` et `previsions_demande`. Les seuils viennent maintenant
+  du mini / maxi des commandes.
 - **À faire** : taux de service par ABC × VEN au lieu d'ABC seul ; délai et
   sa variabilité mesurés par fournisseur au lieu d'un délai fixe ; coût de
   commande (500 DA) et taux de possession (20 %) aujourd'hui en dur, à rendre

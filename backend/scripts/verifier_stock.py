@@ -131,8 +131,6 @@ async def partie_donnees(rafraichir: bool) -> bool:
         UNION ALL SELECT 'inventaires_produits', count(*) FROM inventaires_produits
         UNION ALL SELECT 'nomenclature_classification', count(*) FROM nomenclature_classification
         UNION ALL SELECT 'historique_stock_jour', count(*) FROM historique_stock_jour
-        UNION ALL SELECT 'parametres_stock', count(*) FROM parametres_stock
-        UNION ALL SELECT 'previsions_demande', count(*) FROM previsions_demande
     """)
 
     await verifier("Fraîcheur de la synchronisation", """

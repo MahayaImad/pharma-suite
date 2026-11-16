@@ -4,7 +4,6 @@ from datetime import date
 from sqlalchemy import text
 
 from app.services.photo_stock import prendre_photo
-from app.services.purchase_engine.stock_history import reconstituer_et_sauvegarder
 
 JOUR = date(2026, 11, 12)
 
@@ -40,18 +39,3 @@ async def test_photo_releve_les_produits_actifs_ou_en_stock(db):
     await prendre_photo(db, JOUR)
     assert (await db.execute(text(
         "SELECT stock_eod FROM historique_stock_jour WHERE id_nom = 1"))).scalar() == 7
-
-
-async def test_une_reconstitution_n_ecrase_pas_une_photo(db):
-    await _jeu(db)
-    await prendre_photo(db, date.today())
-    # Une vente aujourd'hui : la reconstitution écrit une ligne pour ce jour.
-    await db.execute(text("""
-        INSERT INTO sorties_produits (id, id_nom, date, qte_sortie, prix_vente, type_sortie)
-        VALUES (2, 2, CURRENT_DATE, 1, 10, 'V')"""))
-    await db.commit()
-    await reconstituer_et_sauvegarder(db, 2, 5, (date.today().replace(day=1)).isoformat())
-    await db.commit()
-    ligne = (await db.execute(text(
-        "SELECT source, stock_eod FROM historique_stock_jour WHERE id_nom = 2 AND date = CURRENT_DATE"))).one()
-    assert (ligne.source, float(ligne.stock_eod)) == ("photo", 0)   # pas le 5 reconstitué

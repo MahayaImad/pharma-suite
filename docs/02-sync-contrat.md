@@ -1228,8 +1228,7 @@ l'agent. À ne pas confondre avec des miroirs :
 | `facture_anomalies`, `facture_rejets` | `chifa.py` |
 | `maladies_chroniques`, `classe_maladie`, `patients_chifa` | `chifa.py`, `crm.py` |
 | `nomenclature_classification` | `stock.py` |
-| `parametres_stock`, `previsions_demande` | `assistant_achat.py` |
-| `historique_stock_jour` | `services/purchase_engine/stock_history.py` |
+| `historique_stock_jour` | `services/historique_stock.py`, `services/photo_stock.py` |
 | `task_templates`, `task_assignments` | `tasks.py` |
 | `presences_overrides`, `demandes_conge` | `grh_presence.py`, `grh_employes.py` |
 | `sms_logs` | `sms.py` |
