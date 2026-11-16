@@ -578,6 +578,10 @@ abstract class SuiviLivraisons with _$SuiviLivraisons {
     ];
   }
 
+  /// Nombre de commandes où ce produit n'a rien reçu (date prévue dépassée).
+  int commandesSansLivraison(int idNom) =>
+      commandes.expand((c) => c.lignes).where((l) => l.idNom == idNom && l.etat == EtatLivraison.manquante).length;
+
   /// À vérifier : produits non livrés ou livrés en partie.
   int get aVerifier => lignesDe(EtatLivraison.manquante).length + lignesDe(EtatLivraison.partielle).length;
 

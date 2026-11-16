@@ -115,6 +115,7 @@ void main() {
     expect(find.byKey(const ValueKey('livraison-7-2')), findsOneWidget);
     expect(find.byKey(const ValueKey('livraison-7-1')), findsNothing);
     expect(find.text('Tension ?'), findsOneWidget);
+    expect(find.textContaining('2ᵉ commande sans livraison'), findsOneWidget);
     expect(find.text('NOVOFORMINE 1000'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('tuile-partielle')));
@@ -143,6 +144,8 @@ void main() {
     await _lancer(tester, api, taille: _pc);
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('taux-service')), findsOneWidget);
+    expect(find.text('GROSSISTE'), findsOneWidget); // en-tête du tableau
+    expect(find.text('commande du 14/11'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('autre-7')));
     await tester.pumpAndSettle();
     expect(find.text('Commander 10 boîtes chez…'), findsOneWidget);

@@ -186,7 +186,7 @@ class _EtatEcranLivraisons extends ConsumerState<EcranLivraisons> {
           (
             cle: 'taux',
             valeur: taux == null ? '—' : '$taux %',
-            texte: 'taux de service',
+            texte: 'taux de service, ${s.jours} jours',
             couleur: taux == null ? null : _couleurTaux(context, taux),
             filtre: null,
           ),
@@ -202,12 +202,25 @@ class _EtatEcranLivraisons extends ConsumerState<EcranLivraisons> {
             for (final f in EtatLivraison.values)
               Padding(
                 padding: const EdgeInsets.only(right: 6),
-                child: ChoiceChip(
+                child: InkWell(
                   key: ValueKey('filtre-${f.name}'),
-                  label: Text('${f.pluriel} ${s.lignesDe(f).length}'),
-                  selected: _filtre == f,
-                  showCheckmark: false,
-                  onSelected: (_) => setState(() => _filtre = f),
+                  borderRadius: BorderRadius.circular(99),
+                  onTap: () => setState(() => _filtre = f),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _filtre == f ? context.schema.onSurface : context.couleurs.neutreDoux,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      '${f.pluriel} ${s.lignesDe(f).length}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _filtre == f ? context.schema.surface : context.couleurs.encre2,
+                      ),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -236,9 +249,10 @@ class _EtatEcranLivraisons extends ConsumerState<EcranLivraisons> {
           clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
+              if (large) const _EnTeteTableau(),
               for (final (i, l) in lignes.indexed) ...[
-                if (i > 0) Divider(height: 1, color: context.couleurs.bord),
-                _Ligne(l, large: large),
+                if (i > 0 || large) Divider(height: 1, color: context.couleurs.bord),
+                _Ligne(l, large: large, sansLivraison: s.commandesSansLivraison(l.ligne.idNom)),
               ],
             ],
           ),
@@ -283,7 +297,7 @@ class _EnTete extends StatelessWidget {
                     [
                       '${s.jours} derniers jours',
                       if (s.donneesDu != null)
-                        'réceptions EASYPHARM lues ${horodatage(s.donneesDu!, DateTime.now().toUtc())}',
+                        'réceptions lues dans EASYPHARM ${horodatage(s.donneesDu!, DateTime.now().toUtc())}',
                     ].join(' · '),
                     style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
                   ),
@@ -375,10 +389,57 @@ class _Pastille extends StatelessWidget {
   );
 }
 
+// Colonnes du tableau (PC) : grossiste, reçu, état, action.
+const _colRecu = 80.0, _colGrossiste = 200.0, _colEtat = 120.0, _colAction = 150.0;
+
+class _EnTeteTableau extends StatelessWidget {
+  const _EnTeteTableau();
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      fontFamily: 'Sora',
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.5,
+      color: context.couleurs.encre3,
+    );
+    return ColoredBox(
+      color: context.couleurs.neutreDoux.withValues(alpha: 0.35),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+        child: Row(
+          children: [
+            Expanded(child: Text('PRODUIT', style: style)),
+            const SizedBox(width: 14),
+            SizedBox(
+              width: _colGrossiste,
+              child: Text('GROSSISTE', style: style),
+            ),
+            SizedBox(
+              width: _colRecu,
+              child: Text('REÇU', textAlign: TextAlign.right, style: style),
+            ),
+            const SizedBox(width: 18),
+            SizedBox(
+              width: _colEtat,
+              child: Text('ÉTAT', style: style),
+            ),
+            const SizedBox(width: _colAction),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Ligne extends ConsumerWidget {
-  const _Ligne(this.l, {required this.large});
+  const _Ligne(this.l, {required this.large, this.sansLivraison = 0});
   final LigneLivraison l;
   final bool large;
+
+  /// Nombre de commandes de ce produit restées sans aucune livraison.
+  final int sansLivraison;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -392,23 +453,27 @@ class _Ligne extends ConsumerWidget {
       EtatLivraison.attendue => (context.couleurs.encre2, context.couleurs.neutreDoux),
     };
     final prevue = commande.livraisonPrevue;
+    final grossiste = libelleProduit(commande.fournisseur.nom ?? 'Fournisseur');
     final detail = [
       'stock ${ligne.stock}',
-      commande.fournisseur.nom ?? 'Fournisseur',
-      'commande du ${jourMois(commande.jour)}',
+      if (!large) ...[grossiste, 'commande du ${jourMois(commande.jour)}'],
       if (ligne.etat == EtatLivraison.attendue && prevue != null) 'prévue ${jourEtDate(prevue)}',
       if (ligne.recuLe != null) 'reçu le ${jourMois(ligne.recuLe!)}',
+      if (ligne.etat == EtatLivraison.manquante && sansLivraison > 1) '$sansLivraisonᵉ commande sans livraison',
     ].join(' · ');
     final aRecommander = ligne.etat == EtatLivraison.manquante || ligne.etat == EtatLivraison.partielle;
+    const violet = Color(0xFF6B3FC4);
+    final violetDoux = violet.withValues(alpha: 0.14);
     final pastilles = Wrap(
       spacing: 6,
       runSpacing: 4,
+      direction: large ? Axis.vertical : Axis.horizontal,
       children: [
         _Pastille(ligne.etat == EtatLivraison.partielle ? 'Reste ${ligne.reste}' : ligne.etat.libelle, couleur, fond),
         if (ligne.tension == 'proposee')
-          _Pastille('Tension ?', context.schema.onPrimaryContainer, context.schema.primaryContainer)
+          _Pastille('Tension ?', violet, violetDoux)
         else if (ligne.tension == 'confirmee')
-          _Pastille('En tension', context.schema.onPrimaryContainer, context.schema.primaryContainer),
+          _Pastille('En tension', violet, violetDoux),
       ],
     );
     final quantite = Text.rich(
@@ -453,21 +518,40 @@ class _Ligne extends ConsumerWidget {
     );
     return Padding(
       key: ValueKey('livraison-${ligne.idNom}-${commande.id}'),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+      padding: EdgeInsets.symmetric(horizontal: large ? 18 : 16, vertical: 11),
       child: large
           ? Row(
               children: [
                 Expanded(child: produit),
                 const SizedBox(width: 14),
                 SizedBox(
-                  width: 70,
+                  width: _colGrossiste,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        grossiste,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'commande du ${jourMois(commande.jour)}',
+                        style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: _colRecu,
                   child: Align(alignment: Alignment.centerRight, child: quantite),
                 ),
-                const SizedBox(width: 14),
-                SizedBox(width: 170, child: pastilles),
+                const SizedBox(width: 18),
+                SizedBox(width: _colEtat, child: pastilles),
                 SizedBox(
-                  width: 150,
-                  child: Align(alignment: Alignment.centerRight, child: bouton),
+                  width: _colAction,
+                  child: Align(alignment: Alignment.centerLeft, child: bouton),
                 ),
               ],
             )
@@ -573,12 +657,12 @@ class _TauxService extends StatelessWidget {
           style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
         ),
         for (final f in liste) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  f.nom ?? 'Fournisseur ${f.id}',
+                  libelleProduit(f.nom ?? 'Fournisseur ${f.id}'),
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
@@ -602,10 +686,11 @@ class _TauxService extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            '${f.commandes} commande${f.commandes > 1 ? 's' : ''} · ${f.lignes} ligne${f.lignes > 1 ? 's' : ''}'
-            '${f.tauxLignes == null ? '' : ' · ${f.tauxLignes} % livrées en entier'}',
+            '${f.commandes} commande${f.commandes > 1 ? 's' : ''} · ${f.lignes} ligne${f.lignes > 1 ? 's' : ''}',
             style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
           ),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: context.couleurs.bord),
         ],
       ],
     );
