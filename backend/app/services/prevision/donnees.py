@@ -37,6 +37,8 @@ class Donnees:
     classes_chroniques: set = field(default_factory=set)
     modes_forces: dict = field(default_factory=dict)
     nombre_generiques: int = 2
+    # Mini / maxi : politique (couvertures des réglages).
+    politique_minmax: object = None
 
 
 async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: int | None = None) -> Donnees:
@@ -137,9 +139,46 @@ async def charger(db: AsyncSession, fin: date, jours_rejeu: int = 365, limite: i
             ramadan=ramadan, saison=m.indices_saison(demande[r.id], dates, debut_rejeu),
             lancement=lancements.get(r.id), code_dci=r.de_equiv, choix=r.choix,
         ))
+    # Mini / maxi, appris sur les 12 mois avant le rejeu (aujourd'hui en production).
+    ref = dates[debut_rejeu]
+    params_an = {"ids": ids, "ref": ref, "an": ref - timedelta(days=365)}
+    ordonnances = {r.id_nom: float(r.p80) for r in await db.execute(text("""
+        SELECT id_nom, percentile_cont(0.8) WITHIN GROUP (ORDER BY qte_sortie) AS p80
+        FROM sorties_produits
+        WHERE id_nom = ANY(:ids) AND qte_sortie > 0 AND date >= :an AND date < :ref
+        GROUP BY id_nom"""), params_an)}
+    lots = {r.id_nom: int(round(float(r.mediane))) for r in await db.execute(text("""
+        SELECT id_nom, percentile_cont(0.5) WITHIN GROUP (ORDER BY q) AS mediane FROM (
+            SELECT id_nom, date_entree, sum(qte_entree) AS q FROM entrees_produits
+            WHERE id_nom = ANY(:ids) AND date_entree >= :an AND date_entree < :ref
+              AND COALESCE(type_entree, '') <> 'AV' AND COALESCE(type_achat, '') <> 'E'
+              AND COALESCE(prix_achat, 0) > 0 AND qte_entree > 0
+            GROUP BY id_nom, date_entree) r
+        GROUP BY id_nom"""), params_an)}
+    vies = {r.id_nom: int(r.vie) for r in await db.execute(text("""
+        SELECT id_nom, percentile_cont(0.5) WITHIN GROUP (ORDER BY peremption_date - date_entree) AS vie
+        FROM entrees_produits
+        WHERE id_nom = ANY(:ids) AND date_entree >= :an AND date_entree < :ref
+          AND peremption_date IS NOT NULL AND peremption_date > date_entree
+        GROUP BY id_nom"""), params_an) if r.vie is not None}
+    tensions = {r.id_nom for r in await db.execute(text(
+        "SELECT id_nom FROM produits_tension WHERE tension AND confirme AND id_nom = ANY(:ids)"), params_an)}
+    for p in produits:
+        p.ordonnance = ordonnances.get(p.id, 1.0)
+        p.lot = lots.get(p.id, 0)
+        p.vie_jours = vies.get(p.id)
+        p.tension = p.id in tensions
+    reglages = {r.cle: int(r.valeur) for r in await db.execute(text(
+        "SELECT cle, valeur FROM reglages_stock WHERE cle LIKE 'couverture_%'"))}
+    from app.services.prevision.proposition import MINMAX
+    from dataclasses import replace as _remplacer
+    politique = _remplacer(MINMAX, **{k.removesuffix("_jours"): v for k, v in reglages.items()
+                                      if k.removesuffix("_jours") in ("couverture_a", "couverture_b", "couverture_c",
+                                                                      "couverture_tension")})
+
     from app.services.prevision.generiques import normaliser
     classes = {normaliser(r.prefix) for r in await db.execute(text("SELECT DISTINCT prefix FROM classe_maladie"))}
     modes = {normaliser(r.code): r.mode for r in await db.execute(text("SELECT code, mode FROM generiques_groupes"))}
     nombre = (await db.execute(text("SELECT valeur FROM reglages_stock WHERE cle = 'generiques_gardes'"))).scalar()
     return Donnees(dates, debut_rejeu, produits, {r.id: Decimal(r.prix) for r in lignes}, cal, ouvert,
-                   {c for c in classes if c}, modes, int(nombre if nombre is not None else 2))
+                   {c for c in classes if c}, modes, int(nombre if nombre is not None else 2), politique)

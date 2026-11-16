@@ -40,3 +40,7 @@ class Deplacement(BaseModel):
 
 class Remplacement(BaseModel):
     par: int = Field(..., description="id_nom du générique qui remplace la ligne")
+
+
+class TensionSaisie(BaseModel):
+    tension: bool

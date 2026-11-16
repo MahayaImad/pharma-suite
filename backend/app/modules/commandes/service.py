@@ -64,9 +64,16 @@ def vider_cache() -> None:
 
 
 def raison(dec: Decision) -> dict[str, Any]:
-    return {"type": dec.type, "rythme": round(dec.rythme, 3), "jours_couverts": dec.jours_couverts,
-            "prevu": round(dec.prevu, 2), "securite": round(dec.securite, 2), "cible": round(dec.cible, 2),
-            "stock": dec.stock, "en_cours": dec.en_cours}
+    r = {"type": dec.type, "rythme": round(dec.rythme, 3), "jours_couverts": dec.jours_couverts,
+         "prevu": round(dec.prevu, 2), "securite": round(dec.securite, 2), "cible": round(dec.cible, 2),
+         "stock": dec.stock, "en_cours": dec.en_cours}
+    if dec.maxi > 0 or dec.mini > 0:
+        r |= {"mini": round(dec.mini, 1), "maxi": round(dec.maxi, 1), "couverture": dec.couverture,
+              "ordonnance": dec.ordonnance, "lot": dec.lot, "tension": dec.tension}
+    if dec.groupe:
+        r |= {"groupe": dec.groupe, "part": dec.part, "stock_groupe": dec.stock_groupe,
+              "maxi_groupe": round(dec.maxi_groupe, 1)}
+    return r
 
 
 def _ordre(ligne: dict) -> tuple:
@@ -123,7 +130,7 @@ class CommandesService:
                 for k in st.parts:
                     reprises.setdefault(k, []).append(id_nom)
         decisions = proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour),
-                                  generiques=False)
+                                  generiques=False, statuts=statuts)
         return decisions, infos, reprises
 
     async def _statuts_generiques(self, jour: date):
@@ -540,7 +547,7 @@ class CommandesService:
             if n >= j:
                 reprises.append(float(h[debut:n][garde].sum()))
         dec = proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour_c),
-                            generiques=False).get(id_nom)
+                            generiques=False, statuts=statuts).get(id_nom)
         grands = sorted(((donnees.dates[debut + i], float(v)) for i, v in enumerate(serie[debut:n]) if v > 0),
                         key=lambda x: -x[1])[:5]
         st = statuts.get(id_nom)
@@ -567,3 +574,20 @@ class CommandesService:
             "generique": None if st is None else {"code": st.code, "mode": st.mode, "garde": st.garde},
             "decision": None if dec is None else raison(dec) | {"quantite": dec.quantite},
         }
+
+    # ── Produits en tension ──
+    async def tensions(self) -> list[dict]:
+        """Détecte puis liste : à confirmer d'abord, puis les décidés."""
+        await self.repo.detecter_tensions(aujourdhui())
+        await self.repo.commit()
+        return await self.repo.tensions()
+
+    async def tension(self, id_nom: int) -> dict:
+        return await self.repo.tension(id_nom) or {"id_nom": id_nom, "tension": False, "confirme": False}
+
+    async def regler_tension(self, id_nom: int, tension: bool) -> dict:
+        qui = self._admin()
+        await self.repo.regler_tension(id_nom, tension, qui)
+        await self.repo.commit()
+        vider_cache()
+        return await self.tension(id_nom)

@@ -97,6 +97,23 @@ async def bon(id_commande: int, svc: CommandesService = Depends(_service)):
     return await _repondre(svc.bon(id_commande))
 
 
+@router.get("/tensions")
+async def tensions(svc: CommandesService = Depends(_service)):
+    """Produits en tension : détectés à confirmer, puis décidés par le titulaire."""
+    return await _repondre(svc.tensions())
+
+
+@router.get("/tensions/{id_nom}")
+async def tension(id_nom: int, svc: CommandesService = Depends(_service)):
+    return await _repondre(svc.tension(id_nom))
+
+
+@router.put("/tensions/{id_nom}")
+async def regler_tension(id_nom: int, saisie: s.TensionSaisie, svc: CommandesService = Depends(_service)):
+    """Confirme (ou écarte) un produit en tension ; titulaire."""
+    return await _repondre(svc.regler_tension(id_nom, saisie.tension))
+
+
 @router.get("/calcul/{id_nom}")
 async def calcul(id_nom: int, svc: CommandesService = Depends(_service)):
     """Détail du calcul de la quantité proposée pour un produit."""

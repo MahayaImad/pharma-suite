@@ -221,3 +221,65 @@ class CommandesRepository:
 
     async def code_dci(self, id_nom: int) -> Optional[str]:
         return (await self.db.execute(text("SELECT de_equiv FROM nomenclature WHERE id = :p"), {"p": id_nom})).scalar()
+
+    # ── Produits en tension ──
+    async def detecter_tensions(self, jour: date) -> int:
+        """Propose (à confirmer) les produits qui semblent en tension :
+        - marqués « quota » dans EASYPHARM ;
+        - en rupture depuis au moins 14 jours, sans aucune livraison depuis,
+          alors qu'ils se vendaient au moins 6 jours sur les 6 mois d'avant.
+        Un produit déjà décidé par le titulaire n'est jamais reproposé."""
+        r = await self.db.execute(text(f"""
+            WITH ruptures AS (
+                SELECT n.id AS id_nom,
+                       COALESCE((SELECT max(h.date) FROM historique_stock_jour h
+                                 WHERE h.id_nom = n.id AND h.stock_eod > 0), CAST(:jour AS date) - 365) AS dernier_stock
+                FROM nomenclature n JOIN mv_stock_produits mv ON mv.id_nom = n.id
+                WHERE n.archive = false AND COALESCE(mv.stock_actuel, 0) <= 0 AND mv.actif
+            ), candidats AS (
+                SELECT r.id_nom, CAST(:jour AS date) - r.dernier_stock AS jours,
+                       (SELECT count(DISTINCT sp.date) FROM sorties_produits sp
+                        WHERE sp.id_nom = r.id_nom AND sp.qte_sortie > 0
+                          AND sp.date BETWEEN r.dernier_stock - 182 AND r.dernier_stock) AS jours_vente
+                FROM ruptures r
+                WHERE r.dernier_stock <= CAST(:jour AS date) - 14
+                  AND NOT EXISTS (SELECT 1 FROM entrees_produits ep
+                                  WHERE ep.id_nom = r.id_nom AND ep.date_entree > r.dernier_stock
+                                    AND {_EXCLUS_ACHAT})
+            )
+            INSERT INTO produits_tension (id_nom, motif)
+            SELECT DISTINCT ON (id_nom) id_nom, motif FROM (
+                SELECT n.id AS id_nom, 'Marqué « quota » dans EASYPHARM' AS motif, 0 AS rang FROM nomenclature n
+                WHERE n.archive = false AND n.disponibilite = 'quota'
+                UNION ALL
+                SELECT id_nom, 'En rupture depuis ' || jours || ' jours sans livraison ; vendu ' || jours_vente
+                               || ' jours sur les 6 mois d''avant', 1
+                FROM candidats WHERE jours_vente >= 6
+            ) c
+            ORDER BY id_nom, rang
+            ON CONFLICT (id_nom) DO NOTHING
+        """), {"jour": jour})
+        return r.rowcount or 0
+
+    async def tensions(self) -> list[dict]:
+        r = await self.db.execute(text("""
+            SELECT t.id_nom, n.nom, COALESCE(mv.stock_actuel, 0) AS stock, t.tension, t.confirme, t.source,
+                   t.motif, t.detecte_le, t.modifie_par
+            FROM produits_tension t JOIN nomenclature n ON n.id = t.id_nom
+            LEFT JOIN mv_stock_produits mv ON mv.id_nom = t.id_nom
+            ORDER BY t.confirme, n.nom
+        """))
+        return [dict(x._mapping) for x in r]
+
+    async def tension(self, id_nom: int) -> Optional[dict]:
+        r = (await self.db.execute(text(
+            "SELECT id_nom, tension, confirme, source, motif FROM produits_tension WHERE id_nom = :p"),
+            {"p": id_nom})).first()
+        return dict(r._mapping) if r else None
+
+    async def regler_tension(self, id_nom: int, tension: bool, qui: str) -> None:
+        await self.db.execute(text("""
+            INSERT INTO produits_tension (id_nom, tension, confirme, source, modifie_le, modifie_par)
+            VALUES (:p, :t, true, 'saisie', now(), :qui)
+            ON CONFLICT (id_nom) DO UPDATE SET tension = :t, confirme = true, modifie_le = now(), modifie_par = :qui
+        """), {"p": id_nom, "t": tension, "qui": qui})

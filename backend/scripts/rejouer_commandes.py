@@ -102,6 +102,14 @@ async def main() -> int:
     resultats[f"{POLITIQUES[0].nom} + génériques"] = [
         simuler(pr, donnees.dates, donnees.debut_rejeu, donnees.calendrier, donnees.ouvert, POLITIQUES[0])
         for pr in groupes]
+    # Mini / maxi (2026-11-16) : couvertures des réglages, taille d'ordonnance,
+    # lot habituel minimal, génériques. Les tensions ne sont pas rejouées
+    # (inconnues dans le passé) ; les génériques gardés ne mettent pas leur
+    # stock en commun dans le rejeu (ils le font dans la proposition du soir).
+    from dataclasses import replace as _remplacer
+    minmax = _remplacer(donnees.politique_minmax, nom="5. mini-maxi + génériques")
+    resultats[minmax.nom] = [simuler(pr, donnees.dates, donnees.debut_rejeu, donnees.calendrier, donnees.ouvert,
+                                     minmax) for pr in groupes]
     duree = time.monotonic() - depart
 
     ecrire("# Rejeu des commandes\n")
@@ -117,6 +125,10 @@ async def main() -> int:
            f"({donnees.nombre_generiques} gardées par DCI non chronique)")
     ecrire(f"- produits saisonniers reconnus : {sum(1 for pr in donnees.produits if pr.saison is not None)}")
     ecrire(f"- durée : {duree:.0f} s")
+    ecrire(f"- mini-maxi : couvertures A {donnees.politique_minmax.couverture_a} j, B "
+           f"{donnees.politique_minmax.couverture_b} j, C {donnees.politique_minmax.couverture_c} j ; "
+           f"{sum(1 for pr in donnees.produits if pr.lot > 0)} produits avec un lot habituel, "
+           f"{sum(1 for pr in donnees.produits if pr.ordonnance > 1)} vendus par ordonnances de plus d'une boîte")
     ecrire("\nPolitiques : Z = taux de service par classe (A 95 %, B 90 %, C 85 %), « sobre » = Z × 0,5 ; "
            "plancher = au moins 1 boîte de réserve ; « rares » = intermittents et sporadiques ; "
            "un produit lent est gardé en stock (1 boîte) s'il s'est vendu dans les 6 mois, ou 2 mois.")

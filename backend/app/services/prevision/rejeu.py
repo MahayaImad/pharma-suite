@@ -34,7 +34,7 @@ import numpy as np
 
 from app.services.prevision import modele as m
 from app.services.prevision.proposition import (  # noqa: F401  (réexportés)
-    POLITIQUE, RARES, VENDREDI, Politique, decider, jour_de_commande_suivant,
+    MINMAX, POLITIQUE, RARES, VENDREDI, Politique, decider, decider_minmax, jour_de_commande_suivant,
 )
 
 RECLASSEMENT_JOURS = 7       # le type de demande est recalculé chaque semaine
@@ -65,6 +65,13 @@ class Produit:
     # (part × ventes de la marque remplacée, indice du jour d'épuisement).
     demande_propre: Optional[np.ndarray] = None
     reports: list = field(default_factory=list)
+    # Mini / maxi : taille habituelle d'une vente (P80 des lignes de vente),
+    # lot habituel de vos réceptions (médiane), tension confirmée, durée de
+    # vie habituelle à réception (jours).
+    ordonnance: float = 1.0
+    lot: int = 0
+    tension: bool = False
+    vie_jours: Optional[int] = None
 
     def serie_prevision(self, jour: int) -> np.ndarray:
         """Série sur laquelle se prévoit la demande au jour [jour]."""
@@ -134,8 +141,13 @@ def simuler(p: Produit, dates: list[date], debut: int, cal: m.Calendrier, ouvert
             classe = m.classer(serie, cens, premiere, d + 1)
 
         en_cours = float(arrivees[d + 1:].sum())
-        dec = decider(serie, cens, ouvert, dates, d, classe, premiere, p.classe_abc, p.delai_ouvres,
-                      cal, stock, en_cours, p.saison, p.ramadan, politique)
+        if politique.minmax:
+            dec = decider_minmax(serie, cens, ouvert, dates, d, classe, premiere, p.classe_abc, p.delai_ouvres,
+                                 cal, stock, en_cours, p.saison, p.ramadan, politique, p.ordonnance, p.lot,
+                                 p.tension, p.vie_jours)
+        else:
+            dec = decider(serie, cens, ouvert, dates, d, classe, premiere, p.classe_abc, p.delai_ouvres,
+                          cal, stock, en_cours, p.saison, p.ramadan, politique)
         arrivee = (dec.arrivee - dates[0]).days
         if dec.quantite > 0 and arrivee < len(arrivees):
             arrivees[arrivee] += dec.quantite

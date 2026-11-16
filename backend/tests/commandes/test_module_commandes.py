@@ -30,7 +30,8 @@ JEUDI = date(2026, 11, 12)
 utilisateur = {"username": "titulaire", "role": "admin"}
 TABLES = ("commandes_lignes", "commandes", "fournisseurs_commande", "commandes_valideurs", "fournisseurs",
           "sorties_produits", "entrees_produits", "nomenclature", "familles", "sync_status",
-          "historique_stock_jour", "produits_consommables", "gardes", "generiques_groupes", "generiques_choix")
+          "historique_stock_jour", "produits_consommables", "gardes", "generiques_groupes", "generiques_choix",
+          "produits_tension")
 
 
 @pytest_asyncio.fixture
@@ -300,7 +301,8 @@ async def test_changer_de_grossiste(api):
 
 
 async def test_changer_de_generique(api):
-    await api.db.execute(text("UPDATE nomenclature SET de_equiv = '04B044' WHERE id IN (1, 5)"))
+    # Classe chronique (toutes les marques) : ALPHA reste proposé seul.
+    await api.db.execute(text("UPDATE nomenclature SET de_equiv = '14A224' WHERE id IN (1, 5)"))
     await api.db.execute(text("UPDATE nomenclature SET de_equiv = '06M198' WHERE id = 3"))
     await api.db.commit()
     vue = (await api.post("/commandes/preparer")).json()["data"]
@@ -327,3 +329,52 @@ async def test_detail_du_calcul(api):
     # Historique : stock nul les jours sans vente → ces jours sont exclus, le rythme ne bouge pas
     r = await api.get("/commandes/calcul/999")
     assert r.status_code == 404
+
+
+async def test_generiques_interchangeables_calcules_ensemble(api):
+    """ALPHA (4/j) et EPSILON (1/j), même DCI d'AINS, les deux gardées : le
+    stock d'EPSILON (100) couvre le groupe, rien n'est commandé ; une fois
+    les deux à zéro, la quantité du groupe est répartie selon les ventes."""
+    await api.db.execute(text("UPDATE nomenclature SET de_equiv = '04B044' WHERE id IN (1, 5)"))
+    await api.db.commit()
+    lignes = {l["nom"]: l for p in (await _jour(api))["paniers"] for l in p["lignes"]}
+    assert "ALPHA" not in lignes and "EPSILON" not in lignes
+
+    await api.db.execute(text("UPDATE entrees_produits SET stock = 0 WHERE id_nom IN (1, 5)"))
+    await api.db.execute(text("REFRESH MATERIALIZED VIEW mv_stock_produits"))
+    await api.db.execute(text("UPDATE sync_status SET last_sync_at = now() WHERE table_name = 'mv_stock_produits'"))
+    await api.db.commit()
+    lignes = {l["nom"]: l for p in (await _jour(api))["paniers"] for l in p["lignes"]}
+    a, e = lignes["ALPHA"], lignes["EPSILON"]
+    assert a["raison"]["groupe"] == e["raison"]["groupe"] == "04B044"
+    assert a["qte"] > e["qte"] > 0
+    assert a["raison"]["part"] == pytest.approx(0.8, abs=0.02)
+
+
+async def test_produits_en_tension_detectes_puis_confirmes(api):
+    """DELTA (1/j) en rupture depuis 20 jours sans livraison : proposé ; GAMMA
+    marqué quota dans EASYPHARM : proposé. Une fois confirmé, la tension
+    allonge la couverture."""
+    await api.db.execute(text("""
+        INSERT INTO historique_stock_jour (id_nom, date, stock_eod, source)
+        SELECT 4, CAST(:j AS date) - k, CASE WHEN k > 20 THEN 5 ELSE 0 END, 'photo'
+        FROM generate_series(1, 200) k"""), {"j": JEUDI})
+    await api.db.execute(text("UPDATE nomenclature SET disponibilite = 'quota' WHERE id = 3"))
+    await api.db.commit()
+    ts = {t["nom"]: t for t in (await api.get("/commandes/tensions")).json()["data"]}
+    assert {"DELTA", "GAMMA"} <= set(ts) and "ALPHA" not in ts
+    assert not ts["DELTA"]["confirme"] and "21 jours sans livraison" in ts["DELTA"]["motif"]
+    assert "quota" in ts["GAMMA"]["motif"]
+
+    avant = next(l for p in (await _jour(api))["paniers"] for l in p["lignes"] if l["nom"] == "GAMMA")
+    r = await api.put("/commandes/tensions/3", json={"tension": True})
+    assert r.status_code == 200 and r.json()["data"]["confirme"]
+    apres = next(l for p in (await _jour(api))["paniers"] for l in p["lignes"] if l["nom"] == "GAMMA")
+    assert apres["raison"]["tension"] and apres["raison"]["couverture"] == 60
+    assert apres["qte"] > avant["qte"]
+    # Écarté : jamais reproposé
+    await api.put("/commandes/tensions/4", json={"tension": False})
+    ts = {t["nom"]: t for t in (await api.get("/commandes/tensions")).json()["data"]}
+    assert ts["DELTA"]["confirme"] and not ts["DELTA"]["tension"]
+    utilisateur.update(username="karim", role="employee")
+    assert (await api.put("/commandes/tensions/3", json={"tension": False})).status_code == 403
