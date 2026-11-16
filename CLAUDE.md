@@ -204,11 +204,15 @@ router au passage.
   baseline : `demandes_conge`, `historique_stock_jour`, `holidays`,
   `presences_overrides`, `sms_logs`, `task_assignments`, `task_templates`.
   Ne jamais supposer que les modèles décrivent le schéma en entier.
-- **CORS `allow_origins=["*"]`** avec `allow_credentials=True` dans `main.py`.
-- **`app/core/config.py` porte des secrets par défaut fonctionnels**
-  (`secret_key`, `sync_agent_password`). Une clé API Anthropic y a été
-  committée en clair dans le commit initial : elle est à révoquer et l'entrée
-  doit être vidée et lue depuis `.env`.
+- **CORS fermé par défaut** (`CORS_ORIGINS`, liste séparée par des virgules,
+  vide en production) : l'application web passe par nginx sur la même
+  origine. En développement Flutter web, y mettre l'origine du navigateur.
+- **Aucun secret n'a de valeur par défaut** dans `app/core/config.py`
+  (corrigé le 2026-11-17). L'API refuse de démarrer sans `DB_PASSWORD`,
+  `SECRET_KEY` (32 caractères au moins) et `SYNC_AGENT_PASSWORD` ;
+  `ANTHROPIC_API_KEY` vide désactive le chatbot. **La clé Anthropic committée
+  dans le commit initial reste dans l'historique Git : elle doit être
+  révoquée dans la console Anthropic.**
 - **`_calc_enveloppe_prime` renvoie un `float`** (`performance.py`), alors que
   tout le reste de la chaîne est en `Decimal`.
 - **Le score de prime est *distributif*, pas absolu.** `performance.py` calcule

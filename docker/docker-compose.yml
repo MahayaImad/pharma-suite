@@ -64,9 +64,12 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans docker/.env}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY manquant dans docker/.env}
       SYNC_AGENT_PASSWORD: ${SYNC_AGENT_PASSWORD:?SYNC_AGENT_PASSWORD manquant dans docker/.env}
-      # Vide par défaut : neutralise la clé committée par erreur dans
-      # app/core/config.py. Le chatbot n'est pas déployable en production.
+      # Vide par défaut : chatbot désactivé (non déployable en production
+      # tant que ses résultats sortent du réseau local, voir CLAUDE.md).
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Origines autorisées à appeler l'API depuis un navigateur ; vide en
+      # production (l'application web passe par nginx, même origine).
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:

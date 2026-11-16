@@ -93,6 +93,11 @@ async def lifespan(app: FastAPI):
     # Les deux mécanismes ont longtemps coexisté, ce qui faisait échouer
     # 5 migrations sur une base neuve (la colonne existait déjà). Toute
     # modification de schéma passe désormais par une migration.
+    manquants = settings.secrets_manquants()
+    if manquants:
+        raise RuntimeError(
+            "Secrets manquants dans l'environnement (docker/.env) : " + ", ".join(manquants)
+            + ". L'API ne démarre pas sans eux.")
     logger.info("Démarrage de l'application.")
 
     # Remet en queue les SMS pending laissés par un redémarrage précédent
@@ -152,7 +157,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # Liste fermée (CORS_ORIGINS), vide par défaut : l'application web passe
+    # par nginx sur la même origine, l'application Android n'est pas concernée.
+    allow_origins=settings.origines_cors,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
