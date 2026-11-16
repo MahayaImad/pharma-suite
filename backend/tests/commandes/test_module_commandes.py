@@ -25,6 +25,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.modules.commandes import service
 from app.api.v1.stock import router as stock_router
+from app.modules.alertes.router import router as alertes_router
 from app.modules.commandes.router import router
 
 JEUDI = date(2026, 11, 12)
@@ -80,6 +81,7 @@ async def api(monkeypatch):
         app = FastAPI()
         app.include_router(router)
         app.include_router(stock_router)
+        app.include_router(alertes_router)
 
         async def _db():
             yield db

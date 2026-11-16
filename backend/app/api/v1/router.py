@@ -9,6 +9,7 @@ from app.api.v1.sms import router as sms_router
 from app.api.v1.tasks import router as tasks_router
 from app.api.v1.grh_presence import router as grh_presence_router
 from app.api.v1.grh_employes import router as grh_employes_router
+from app.modules.alertes.router import router as alertes_router
 from app.modules.calendrier.router import router as calendrier_router
 from app.modules.commandes.router import router as commandes_router
 
@@ -31,5 +32,6 @@ router.include_router(sms_router)
 router.include_router(tasks_router)
 router.include_router(grh_presence_router)
 router.include_router(grh_employes_router)
+router.include_router(alertes_router)
 router.include_router(calendrier_router)
 router.include_router(commandes_router)
