@@ -496,3 +496,71 @@ class CommandesService:
         await self.repo.commit()
         vider_cache()
         return await self.generiques(id_nom)
+
+    # ── Détail d'un calcul ──
+    async def calcul(self, id_nom: int) -> dict:
+        """Pourquoi cette quantité : d'où vient le rythme (fenêtre, jours
+        ouverts, jours exclus pour rupture, ventes reprises d'un générique),
+        à comparer à la moyenne sur 12 mois, et la décision du soir."""
+        import numpy as np
+        from app.services.prevision import modele as m
+        from app.services.prevision.rejeu import censure
+
+        jour_c = jour_de_commande()
+        donnees = await self._donnees(jour_c)
+        infos = await self.repo.produits([p.id for p in donnees.produits])
+        stocks = {i: float(x["stock"]) for i, x in infos.items()}
+        produits, statuts = appliquer_generiques(donnees, stocks)
+        p = next((x for x in produits if x.id == id_nom), None)
+        if p is None:
+            raise ErreurCommandes("introuvable", "Produit hors du calcul (archivé, inactif ou consommable).", 404)
+        n = len(donnees.dates) - 1
+        propre = (p.demande if p.demande_propre is None else p.demande_propre).copy()
+        propre[n] = 0.0
+        serie = p.serie_prevision(n).copy()
+        serie[n] = 0.0
+        cens = censure(serie, p.stock_hist)
+        cens[n] = True
+        ventes_idx = np.flatnonzero(serie[:n] > 0)
+        premiere = int(ventes_idx[0]) if ventes_idx.size else None
+        classe = m.classer(serie, cens, premiere, n)
+        fenetre = m.FENETRE_COURTE if classe.type in ("regulier", "irregulier") else m.FENETRE_LONGUE
+        debut = max(0, n - fenetre)
+        if classe.type == "nouveau" and premiere is not None:
+            debut = max(debut, premiere)
+        ouv = donnees.ouvert[debut:n]
+        cw = cens[debut:n]
+        garde = (~cw) & ouv
+        stock_w = p.stock_hist[debut:n]
+        an = slice(max(0, n - 365), n)
+        jours_ouverts_an = int(donnees.ouvert[an].sum())
+        ventes_an = float(propre[an].sum())
+        reprises = []
+        for h, j in p.reports:
+            if n >= j:
+                reprises.append(float(h[debut:n][garde].sum()))
+        dec = proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour_c),
+                            generiques=False).get(id_nom)
+        grands = sorted(((donnees.dates[debut + i], float(v)) for i, v in enumerate(serie[debut:n]) if v > 0),
+                        key=lambda x: -x[1])[:5]
+        st = statuts.get(id_nom)
+        return {
+            "id_nom": id_nom, "nom": infos.get(id_nom, {}).get("nom"), "type": classe.type,
+            "jours_vente_12m": classe.jours_vente,
+            "fenetre_jours": n - debut, "debut_fenetre": donnees.dates[debut],
+            "jours_ouverts": int(ouv.sum()),
+            "jours_exclus_rupture": int((cw & ouv).sum()),
+            "jours_retenus": int(garde.sum()),
+            "jours_stock_nul": int(np.nansum(stock_w <= 0)),
+            "jours_sans_historique": int(np.isnan(stock_w).sum()),
+            "vendu_fenetre": float(propre[debut:n].sum()),
+            "vendu_jours_retenus": float(propre[debut:n][garde].sum()),
+            "repris_generiques": round(sum(reprises), 2),
+            "rythme": round(float(serie[debut:n][garde].mean()) if garde.any() else 0.0, 3),
+            "ventes_12m": ventes_an,
+            "moyenne_12m_jour_ouvert": round(ventes_an / jours_ouverts_an, 3) if jours_ouverts_an else 0.0,
+            "cmm": round(ventes_an / 12, 1),
+            "plus_grosses_ventes": [{"date": d, "qte": q} for d, q in grands],
+            "generique": None if st is None else {"code": st.code, "mode": st.mode, "garde": st.garde},
+            "decision": None if dec is None else raison(dec) | {"quantite": dec.quantite},
+        }

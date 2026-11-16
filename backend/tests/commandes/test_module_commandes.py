@@ -315,3 +315,15 @@ async def test_changer_de_generique(api):
     assert "ALPHA" not in lignes
     assert lignes["EPSILON"]["qte"] == qte and lignes["EPSILON"]["raison"]["remplace"] == "ALPHA"
     assert lignes["EPSILON"]["qte_proposee"] is None
+
+
+async def test_detail_du_calcul(api):
+    d = (await api.get("/commandes/calcul/1")).json()["data"]
+    assert d["type"] == "regulier" and d["fenetre_jours"] == 56
+    assert d["rythme"] == pytest.approx(4.0)
+    assert d["jours_exclus_rupture"] == 0 and d["jours_retenus"] == d["jours_ouverts"]
+    assert d["moyenne_12m_jour_ouvert"] == pytest.approx(4.0, rel=0.02)
+    assert d["decision"]["quantite"] > 0 and len(d["plus_grosses_ventes"]) == 5
+    # Historique : stock nul les jours sans vente → ces jours sont exclus, le rythme ne bouge pas
+    r = await api.get("/commandes/calcul/999")
+    assert r.status_code == 404

@@ -3871,4 +3871,328 @@ as bool,
 
 }
 
+
+/// @nodoc
+mixin _$DetailCalcul {
+
+@JsonKey(name: 'id_nom') int get idNom; String? get nom; String get type;@JsonKey(name: 'jours_vente_12m') int get joursVente12m;@JsonKey(name: 'fenetre_jours') int get fenetreJours;@JsonKey(name: 'jours_ouverts') int get joursOuverts;@JsonKey(name: 'jours_exclus_rupture') int get joursExclusRupture;@JsonKey(name: 'jours_retenus') int get joursRetenus;@JsonKey(name: 'jours_stock_nul') int get joursStockNul;@JsonKey(name: 'vendu_fenetre') double get venduFenetre;@JsonKey(name: 'vendu_jours_retenus') double get venduJoursRetenus;@JsonKey(name: 'repris_generiques') double get reprisGeneriques; double get rythme;@JsonKey(name: 'ventes_12m') double get ventes12m;@JsonKey(name: 'moyenne_12m_jour_ouvert') double get moyenne12m; double get cmm;@JsonKey(name: 'plus_grosses_ventes') List<Map<String, dynamic>> get plusGrossesVentes;
+/// Create a copy of DetailCalcul
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DetailCalculCopyWith<DetailCalcul> get copyWith => _$DetailCalculCopyWithImpl<DetailCalcul>(this as DetailCalcul, _$identity);
+
+  /// Serializes this DetailCalcul to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as DetailCalcul;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DetailCalcul&&(identical(other.idNom, _this.idNom) || other.idNom == _this.idNom)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.joursVente12m, _this.joursVente12m) || other.joursVente12m == _this.joursVente12m)&&(identical(other.fenetreJours, _this.fenetreJours) || other.fenetreJours == _this.fenetreJours)&&(identical(other.joursOuverts, _this.joursOuverts) || other.joursOuverts == _this.joursOuverts)&&(identical(other.joursExclusRupture, _this.joursExclusRupture) || other.joursExclusRupture == _this.joursExclusRupture)&&(identical(other.joursRetenus, _this.joursRetenus) || other.joursRetenus == _this.joursRetenus)&&(identical(other.joursStockNul, _this.joursStockNul) || other.joursStockNul == _this.joursStockNul)&&(identical(other.venduFenetre, _this.venduFenetre) || other.venduFenetre == _this.venduFenetre)&&(identical(other.venduJoursRetenus, _this.venduJoursRetenus) || other.venduJoursRetenus == _this.venduJoursRetenus)&&(identical(other.reprisGeneriques, _this.reprisGeneriques) || other.reprisGeneriques == _this.reprisGeneriques)&&(identical(other.rythme, _this.rythme) || other.rythme == _this.rythme)&&(identical(other.ventes12m, _this.ventes12m) || other.ventes12m == _this.ventes12m)&&(identical(other.moyenne12m, _this.moyenne12m) || other.moyenne12m == _this.moyenne12m)&&(identical(other.cmm, _this.cmm) || other.cmm == _this.cmm)&&const DeepCollectionEquality().equals(other.plusGrossesVentes, _this.plusGrossesVentes));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as DetailCalcul;
+  return Object.hash(runtimeType,_this.idNom,_this.nom,_this.type,_this.joursVente12m,_this.fenetreJours,_this.joursOuverts,_this.joursExclusRupture,_this.joursRetenus,_this.joursStockNul,_this.venduFenetre,_this.venduJoursRetenus,_this.reprisGeneriques,_this.rythme,_this.ventes12m,_this.moyenne12m,_this.cmm,const DeepCollectionEquality().hash(_this.plusGrossesVentes));
+}
+
+@override
+String toString() {
+  final _this = this as DetailCalcul;
+  return 'DetailCalcul(idNom: ${_this.idNom}, nom: ${_this.nom}, type: ${_this.type}, joursVente12m: ${_this.joursVente12m}, fenetreJours: ${_this.fenetreJours}, joursOuverts: ${_this.joursOuverts}, joursExclusRupture: ${_this.joursExclusRupture}, joursRetenus: ${_this.joursRetenus}, joursStockNul: ${_this.joursStockNul}, venduFenetre: ${_this.venduFenetre}, venduJoursRetenus: ${_this.venduJoursRetenus}, reprisGeneriques: ${_this.reprisGeneriques}, rythme: ${_this.rythme}, ventes12m: ${_this.ventes12m}, moyenne12m: ${_this.moyenne12m}, cmm: ${_this.cmm}, plusGrossesVentes: ${_this.plusGrossesVentes})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DetailCalculCopyWith<$Res>  {
+  factory $DetailCalculCopyWith(DetailCalcul value, $Res Function(DetailCalcul) _then) = _$DetailCalculCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'id_nom') int idNom, String? nom, String type,@JsonKey(name: 'jours_vente_12m') int joursVente12m,@JsonKey(name: 'fenetre_jours') int fenetreJours,@JsonKey(name: 'jours_ouverts') int joursOuverts,@JsonKey(name: 'jours_exclus_rupture') int joursExclusRupture,@JsonKey(name: 'jours_retenus') int joursRetenus,@JsonKey(name: 'jours_stock_nul') int joursStockNul,@JsonKey(name: 'vendu_fenetre') double venduFenetre,@JsonKey(name: 'vendu_jours_retenus') double venduJoursRetenus,@JsonKey(name: 'repris_generiques') double reprisGeneriques, double rythme,@JsonKey(name: 'ventes_12m') double ventes12m,@JsonKey(name: 'moyenne_12m_jour_ouvert') double moyenne12m, double cmm,@JsonKey(name: 'plus_grosses_ventes') List<Map<String, dynamic>> plusGrossesVentes
+});
+
+
+
+
+}
+/// @nodoc
+class _$DetailCalculCopyWithImpl<$Res>
+    implements $DetailCalculCopyWith<$Res> {
+  _$DetailCalculCopyWithImpl(this._self, this._then);
+
+  final DetailCalcul _self;
+  final $Res Function(DetailCalcul) _then;
+
+/// Create a copy of DetailCalcul
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? idNom = null,Object? nom = freezed,Object? type = null,Object? joursVente12m = null,Object? fenetreJours = null,Object? joursOuverts = null,Object? joursExclusRupture = null,Object? joursRetenus = null,Object? joursStockNul = null,Object? venduFenetre = null,Object? venduJoursRetenus = null,Object? reprisGeneriques = null,Object? rythme = null,Object? ventes12m = null,Object? moyenne12m = null,Object? cmm = null,Object? plusGrossesVentes = null,}) {
+  return _then(DetailCalcul(
+idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,joursVente12m: null == joursVente12m ? _self.joursVente12m : joursVente12m // ignore: cast_nullable_to_non_nullable
+as int,fenetreJours: null == fenetreJours ? _self.fenetreJours : fenetreJours // ignore: cast_nullable_to_non_nullable
+as int,joursOuverts: null == joursOuverts ? _self.joursOuverts : joursOuverts // ignore: cast_nullable_to_non_nullable
+as int,joursExclusRupture: null == joursExclusRupture ? _self.joursExclusRupture : joursExclusRupture // ignore: cast_nullable_to_non_nullable
+as int,joursRetenus: null == joursRetenus ? _self.joursRetenus : joursRetenus // ignore: cast_nullable_to_non_nullable
+as int,joursStockNul: null == joursStockNul ? _self.joursStockNul : joursStockNul // ignore: cast_nullable_to_non_nullable
+as int,venduFenetre: null == venduFenetre ? _self.venduFenetre : venduFenetre // ignore: cast_nullable_to_non_nullable
+as double,venduJoursRetenus: null == venduJoursRetenus ? _self.venduJoursRetenus : venduJoursRetenus // ignore: cast_nullable_to_non_nullable
+as double,reprisGeneriques: null == reprisGeneriques ? _self.reprisGeneriques : reprisGeneriques // ignore: cast_nullable_to_non_nullable
+as double,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
+as double,ventes12m: null == ventes12m ? _self.ventes12m : ventes12m // ignore: cast_nullable_to_non_nullable
+as double,moyenne12m: null == moyenne12m ? _self.moyenne12m : moyenne12m // ignore: cast_nullable_to_non_nullable
+as double,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
+as double,plusGrossesVentes: null == plusGrossesVentes ? _self.plusGrossesVentes : plusGrossesVentes // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [DetailCalcul].
+extension DetailCalculPatterns on DetailCalcul {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DetailCalcul value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DetailCalcul() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DetailCalcul value)  $default,){
+final _that = this;
+switch (_that) {
+case _DetailCalcul():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DetailCalcul value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DetailCalcul() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String type, @JsonKey(name: 'jours_vente_12m')  int joursVente12m, @JsonKey(name: 'fenetre_jours')  int fenetreJours, @JsonKey(name: 'jours_ouverts')  int joursOuverts, @JsonKey(name: 'jours_exclus_rupture')  int joursExclusRupture, @JsonKey(name: 'jours_retenus')  int joursRetenus, @JsonKey(name: 'jours_stock_nul')  int joursStockNul, @JsonKey(name: 'vendu_fenetre')  double venduFenetre, @JsonKey(name: 'vendu_jours_retenus')  double venduJoursRetenus, @JsonKey(name: 'repris_generiques')  double reprisGeneriques,  double rythme, @JsonKey(name: 'ventes_12m')  double ventes12m, @JsonKey(name: 'moyenne_12m_jour_ouvert')  double moyenne12m,  double cmm, @JsonKey(name: 'plus_grosses_ventes')  List<Map<String, dynamic>> plusGrossesVentes)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DetailCalcul() when $default != null:
+return $default(_that.idNom,_that.nom,_that.type,_that.joursVente12m,_that.fenetreJours,_that.joursOuverts,_that.joursExclusRupture,_that.joursRetenus,_that.joursStockNul,_that.venduFenetre,_that.venduJoursRetenus,_that.reprisGeneriques,_that.rythme,_that.ventes12m,_that.moyenne12m,_that.cmm,_that.plusGrossesVentes);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String type, @JsonKey(name: 'jours_vente_12m')  int joursVente12m, @JsonKey(name: 'fenetre_jours')  int fenetreJours, @JsonKey(name: 'jours_ouverts')  int joursOuverts, @JsonKey(name: 'jours_exclus_rupture')  int joursExclusRupture, @JsonKey(name: 'jours_retenus')  int joursRetenus, @JsonKey(name: 'jours_stock_nul')  int joursStockNul, @JsonKey(name: 'vendu_fenetre')  double venduFenetre, @JsonKey(name: 'vendu_jours_retenus')  double venduJoursRetenus, @JsonKey(name: 'repris_generiques')  double reprisGeneriques,  double rythme, @JsonKey(name: 'ventes_12m')  double ventes12m, @JsonKey(name: 'moyenne_12m_jour_ouvert')  double moyenne12m,  double cmm, @JsonKey(name: 'plus_grosses_ventes')  List<Map<String, dynamic>> plusGrossesVentes)  $default,) {final _that = this;
+switch (_that) {
+case _DetailCalcul():
+return $default(_that.idNom,_that.nom,_that.type,_that.joursVente12m,_that.fenetreJours,_that.joursOuverts,_that.joursExclusRupture,_that.joursRetenus,_that.joursStockNul,_that.venduFenetre,_that.venduJoursRetenus,_that.reprisGeneriques,_that.rythme,_that.ventes12m,_that.moyenne12m,_that.cmm,_that.plusGrossesVentes);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  String type, @JsonKey(name: 'jours_vente_12m')  int joursVente12m, @JsonKey(name: 'fenetre_jours')  int fenetreJours, @JsonKey(name: 'jours_ouverts')  int joursOuverts, @JsonKey(name: 'jours_exclus_rupture')  int joursExclusRupture, @JsonKey(name: 'jours_retenus')  int joursRetenus, @JsonKey(name: 'jours_stock_nul')  int joursStockNul, @JsonKey(name: 'vendu_fenetre')  double venduFenetre, @JsonKey(name: 'vendu_jours_retenus')  double venduJoursRetenus, @JsonKey(name: 'repris_generiques')  double reprisGeneriques,  double rythme, @JsonKey(name: 'ventes_12m')  double ventes12m, @JsonKey(name: 'moyenne_12m_jour_ouvert')  double moyenne12m,  double cmm, @JsonKey(name: 'plus_grosses_ventes')  List<Map<String, dynamic>> plusGrossesVentes)?  $default,) {final _that = this;
+switch (_that) {
+case _DetailCalcul() when $default != null:
+return $default(_that.idNom,_that.nom,_that.type,_that.joursVente12m,_that.fenetreJours,_that.joursOuverts,_that.joursExclusRupture,_that.joursRetenus,_that.joursStockNul,_that.venduFenetre,_that.venduJoursRetenus,_that.reprisGeneriques,_that.rythme,_that.ventes12m,_that.moyenne12m,_that.cmm,_that.plusGrossesVentes);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _DetailCalcul implements DetailCalcul {
+  const _DetailCalcul({@JsonKey(name: 'id_nom') required this.idNom, this.nom, this.type = '', @JsonKey(name: 'jours_vente_12m') this.joursVente12m = 0, @JsonKey(name: 'fenetre_jours') this.fenetreJours = 0, @JsonKey(name: 'jours_ouverts') this.joursOuverts = 0, @JsonKey(name: 'jours_exclus_rupture') this.joursExclusRupture = 0, @JsonKey(name: 'jours_retenus') this.joursRetenus = 0, @JsonKey(name: 'jours_stock_nul') this.joursStockNul = 0, @JsonKey(name: 'vendu_fenetre') this.venduFenetre = 0, @JsonKey(name: 'vendu_jours_retenus') this.venduJoursRetenus = 0, @JsonKey(name: 'repris_generiques') this.reprisGeneriques = 0, this.rythme = 0, @JsonKey(name: 'ventes_12m') this.ventes12m = 0, @JsonKey(name: 'moyenne_12m_jour_ouvert') this.moyenne12m = 0, this.cmm = 0, @JsonKey(name: 'plus_grosses_ventes')  List<Map<String, dynamic>> plusGrossesVentes = const <Map<String, dynamic>>[]}): _plusGrossesVentes = plusGrossesVentes;
+  factory _DetailCalcul.fromJson(Map<String, dynamic> json) => _$DetailCalculFromJson(json);
+
+@override@JsonKey(name: 'id_nom') final  int idNom;
+@override final  String? nom;
+@override@JsonKey() final  String type;
+@override@JsonKey(name: 'jours_vente_12m') final  int joursVente12m;
+@override@JsonKey(name: 'fenetre_jours') final  int fenetreJours;
+@override@JsonKey(name: 'jours_ouverts') final  int joursOuverts;
+@override@JsonKey(name: 'jours_exclus_rupture') final  int joursExclusRupture;
+@override@JsonKey(name: 'jours_retenus') final  int joursRetenus;
+@override@JsonKey(name: 'jours_stock_nul') final  int joursStockNul;
+@override@JsonKey(name: 'vendu_fenetre') final  double venduFenetre;
+@override@JsonKey(name: 'vendu_jours_retenus') final  double venduJoursRetenus;
+@override@JsonKey(name: 'repris_generiques') final  double reprisGeneriques;
+@override@JsonKey() final  double rythme;
+@override@JsonKey(name: 'ventes_12m') final  double ventes12m;
+@override@JsonKey(name: 'moyenne_12m_jour_ouvert') final  double moyenne12m;
+@override@JsonKey() final  double cmm;
+ final  List<Map<String, dynamic>> _plusGrossesVentes;
+@override@JsonKey(name: 'plus_grosses_ventes') List<Map<String, dynamic>> get plusGrossesVentes {
+  if (_plusGrossesVentes is EqualUnmodifiableListView) return _plusGrossesVentes;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_plusGrossesVentes);
+}
+
+
+/// Create a copy of DetailCalcul
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DetailCalculCopyWith<_DetailCalcul> get copyWith => __$DetailCalculCopyWithImpl<_DetailCalcul>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$DetailCalculToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DetailCalcul&&(identical(other.idNom, idNom) || other.idNom == idNom)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.type, type) || other.type == type)&&(identical(other.joursVente12m, joursVente12m) || other.joursVente12m == joursVente12m)&&(identical(other.fenetreJours, fenetreJours) || other.fenetreJours == fenetreJours)&&(identical(other.joursOuverts, joursOuverts) || other.joursOuverts == joursOuverts)&&(identical(other.joursExclusRupture, joursExclusRupture) || other.joursExclusRupture == joursExclusRupture)&&(identical(other.joursRetenus, joursRetenus) || other.joursRetenus == joursRetenus)&&(identical(other.joursStockNul, joursStockNul) || other.joursStockNul == joursStockNul)&&(identical(other.venduFenetre, venduFenetre) || other.venduFenetre == venduFenetre)&&(identical(other.venduJoursRetenus, venduJoursRetenus) || other.venduJoursRetenus == venduJoursRetenus)&&(identical(other.reprisGeneriques, reprisGeneriques) || other.reprisGeneriques == reprisGeneriques)&&(identical(other.rythme, rythme) || other.rythme == rythme)&&(identical(other.ventes12m, ventes12m) || other.ventes12m == ventes12m)&&(identical(other.moyenne12m, moyenne12m) || other.moyenne12m == moyenne12m)&&(identical(other.cmm, cmm) || other.cmm == cmm)&&const DeepCollectionEquality().equals(other.plusGrossesVentes, _plusGrossesVentes));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,idNom,nom,type,joursVente12m,fenetreJours,joursOuverts,joursExclusRupture,joursRetenus,joursStockNul,venduFenetre,venduJoursRetenus,reprisGeneriques,rythme,ventes12m,moyenne12m,cmm,const DeepCollectionEquality().hash(_plusGrossesVentes));
+}
+
+@override
+String toString() {
+    return 'DetailCalcul(idNom: $idNom, nom: $nom, type: $type, joursVente12m: $joursVente12m, fenetreJours: $fenetreJours, joursOuverts: $joursOuverts, joursExclusRupture: $joursExclusRupture, joursRetenus: $joursRetenus, joursStockNul: $joursStockNul, venduFenetre: $venduFenetre, venduJoursRetenus: $venduJoursRetenus, reprisGeneriques: $reprisGeneriques, rythme: $rythme, ventes12m: $ventes12m, moyenne12m: $moyenne12m, cmm: $cmm, plusGrossesVentes: $plusGrossesVentes)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DetailCalculCopyWith<$Res> implements $DetailCalculCopyWith<$Res> {
+  factory _$DetailCalculCopyWith(_DetailCalcul value, $Res Function(_DetailCalcul) _then) = __$DetailCalculCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'id_nom') int idNom, String? nom, String type,@JsonKey(name: 'jours_vente_12m') int joursVente12m,@JsonKey(name: 'fenetre_jours') int fenetreJours,@JsonKey(name: 'jours_ouverts') int joursOuverts,@JsonKey(name: 'jours_exclus_rupture') int joursExclusRupture,@JsonKey(name: 'jours_retenus') int joursRetenus,@JsonKey(name: 'jours_stock_nul') int joursStockNul,@JsonKey(name: 'vendu_fenetre') double venduFenetre,@JsonKey(name: 'vendu_jours_retenus') double venduJoursRetenus,@JsonKey(name: 'repris_generiques') double reprisGeneriques, double rythme,@JsonKey(name: 'ventes_12m') double ventes12m,@JsonKey(name: 'moyenne_12m_jour_ouvert') double moyenne12m, double cmm,@JsonKey(name: 'plus_grosses_ventes') List<Map<String, dynamic>> plusGrossesVentes
+});
+
+
+
+
+}
+/// @nodoc
+class __$DetailCalculCopyWithImpl<$Res>
+    implements _$DetailCalculCopyWith<$Res> {
+  __$DetailCalculCopyWithImpl(this._self, this._then);
+
+  final _DetailCalcul _self;
+  final $Res Function(_DetailCalcul) _then;
+
+/// Create a copy of DetailCalcul
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? idNom = null,Object? nom = freezed,Object? type = null,Object? joursVente12m = null,Object? fenetreJours = null,Object? joursOuverts = null,Object? joursExclusRupture = null,Object? joursRetenus = null,Object? joursStockNul = null,Object? venduFenetre = null,Object? venduJoursRetenus = null,Object? reprisGeneriques = null,Object? rythme = null,Object? ventes12m = null,Object? moyenne12m = null,Object? cmm = null,Object? plusGrossesVentes = null,}) {
+  return _then(_DetailCalcul(
+idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,joursVente12m: null == joursVente12m ? _self.joursVente12m : joursVente12m // ignore: cast_nullable_to_non_nullable
+as int,fenetreJours: null == fenetreJours ? _self.fenetreJours : fenetreJours // ignore: cast_nullable_to_non_nullable
+as int,joursOuverts: null == joursOuverts ? _self.joursOuverts : joursOuverts // ignore: cast_nullable_to_non_nullable
+as int,joursExclusRupture: null == joursExclusRupture ? _self.joursExclusRupture : joursExclusRupture // ignore: cast_nullable_to_non_nullable
+as int,joursRetenus: null == joursRetenus ? _self.joursRetenus : joursRetenus // ignore: cast_nullable_to_non_nullable
+as int,joursStockNul: null == joursStockNul ? _self.joursStockNul : joursStockNul // ignore: cast_nullable_to_non_nullable
+as int,venduFenetre: null == venduFenetre ? _self.venduFenetre : venduFenetre // ignore: cast_nullable_to_non_nullable
+as double,venduJoursRetenus: null == venduJoursRetenus ? _self.venduJoursRetenus : venduJoursRetenus // ignore: cast_nullable_to_non_nullable
+as double,reprisGeneriques: null == reprisGeneriques ? _self.reprisGeneriques : reprisGeneriques // ignore: cast_nullable_to_non_nullable
+as double,rythme: null == rythme ? _self.rythme : rythme // ignore: cast_nullable_to_non_nullable
+as double,ventes12m: null == ventes12m ? _self.ventes12m : ventes12m // ignore: cast_nullable_to_non_nullable
+as double,moyenne12m: null == moyenne12m ? _self.moyenne12m : moyenne12m // ignore: cast_nullable_to_non_nullable
+as double,cmm: null == cmm ? _self.cmm : cmm // ignore: cast_nullable_to_non_nullable
+as double,plusGrossesVentes: null == plusGrossesVentes ? _self._plusGrossesVentes : plusGrossesVentes // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>,
+  ));
+}
+
+
+}
+
 // dart format on

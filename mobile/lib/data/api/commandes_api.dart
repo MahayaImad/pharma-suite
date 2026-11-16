@@ -39,6 +39,9 @@ abstract interface class CommandesApi {
   Future<void> ajouterValideur(String username);
   Future<void> retirerValideur(String username);
 
+  /// Pourquoi cette quantité : détail du calcul d'un produit.
+  Future<DetailCalcul> calcul(int idNom);
+
   /// Marques de même DCI qu'un produit, et lesquelles sont commandées.
   Future<GroupeGenerique> generiques(int idNom);
 
@@ -146,6 +149,12 @@ class CommandesApiDio implements CommandesApi {
   @override
   Future<void> retirerValideur(String username) =>
       _appel(() => _dio.delete('/commandes/reglages/valideurs/${Uri.encodeComponent(username)}'), (_) {});
+
+  @override
+  Future<DetailCalcul> calcul(int idNom) => _appel(
+    () => _dio.get('/commandes/calcul/$idNom', options: _long),
+    (d) => DetailCalcul.fromJson(d as Map<String, dynamic>),
+  );
 
   GroupeGenerique _groupe(Object? d) => GroupeGenerique.fromJson(d as Map<String, dynamic>);
 

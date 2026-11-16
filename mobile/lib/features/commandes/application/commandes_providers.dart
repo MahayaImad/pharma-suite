@@ -102,3 +102,8 @@ final generiquesProvider = FutureProvider.family<GroupeGenerique, int>(
   (ref, id) => ref.watch(commandesApiProvider).generiques(id),
   retry: (_, _) => null,
 );
+
+final calculProvider = FutureProvider.family<DetailCalcul, int>(
+  (ref, id) => ref.watch(commandesApiProvider).calcul(id),
+  retry: (_, _) => null,
+);

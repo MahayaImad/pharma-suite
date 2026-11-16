@@ -97,6 +97,12 @@ async def bon(id_commande: int, svc: CommandesService = Depends(_service)):
     return await _repondre(svc.bon(id_commande))
 
 
+@router.get("/calcul/{id_nom}")
+async def calcul(id_nom: int, svc: CommandesService = Depends(_service)):
+    """Détail du calcul de la quantité proposée pour un produit."""
+    return await _repondre(svc.calcul(id_nom))
+
+
 @router.get("/generiques/{id_nom}")
 async def generiques(id_nom: int, svc: CommandesService = Depends(_service)):
     """Marques de même DCI que ce produit : lesquelles sont commandées."""

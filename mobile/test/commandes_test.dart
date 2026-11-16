@@ -320,4 +320,14 @@ void main() {
     expect(api.appels.last, 'choix 2 exclure');
     expect(find.text('Non recommandé'), findsNWidgets(2));
   });
+
+  testWidgets('pourquoi cette quantité : rythme comparé à la moyenne sur 12 mois', (tester) async {
+    await _lancer(tester, FausseCommandesApi(), depart: '/commandes/1');
+    await _toucher(tester, find.byKey(const ValueKey('ligne-11')));
+    await _toucher(tester, find.byKey(const ValueKey('action-ligne-calcul')));
+    expect(find.byKey(const ValueKey('detail-calcul')), findsOneWidget);
+    expect(find.text('6 / jour'), findsOneWidget);
+    expect(find.text('1 / jour'), findsOneWidget);
+    expect(find.textContaining('6 fois la moyenne sur 12 mois'), findsOneWidget);
+  });
 }

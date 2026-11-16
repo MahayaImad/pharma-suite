@@ -315,4 +315,22 @@ class FausseCommandesApi implements CommandesApi {
     );
     return _journee;
   }
+
+  @override
+  Future<DetailCalcul> calcul(int idNom) async => const DetailCalcul(
+    idNom: 11,
+    nom: 'PARACETAMOL 1G CPR B/8',
+    type: 'intermittent',
+    fenetreJours: 182,
+    joursOuverts: 156,
+    joursExclusRupture: 130,
+    joursRetenus: 26,
+    joursStockNul: 140,
+    venduFenetre: 156,
+    venduJoursRetenus: 156,
+    rythme: 6,
+    ventes12m: 312,
+    moyenne12m: 1.0,
+    cmm: 26,
+  );
 }

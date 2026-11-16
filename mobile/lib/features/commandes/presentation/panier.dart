@@ -556,7 +556,6 @@ class _GeneriquesDe extends ConsumerWidget {
 /// Actions d'une ligne (appui sur la ligne ; seul accès sur portable) :
 /// changer de générique, changer de grossiste, retirer.
 Future<void> _actionsLigne(BuildContext context, WidgetRef ref, Panier panier, LigneCommande ligne) async {
-  if (!panier.modifiable) return;
   final choix = await showModalBottomSheet<String>(
     context: context,
     showDragHandle: true,
@@ -579,25 +578,33 @@ Future<void> _actionsLigne(BuildContext context, WidgetRef ref, Panier panier, L
               style: TextStyle(fontSize: 12, color: c.couleurs.encre3),
             ),
           ),
-          if (ligne.codeDci != null)
+          ListTile(
+            key: const ValueKey('action-ligne-calcul'),
+            leading: const Icon(Icons.calculate_outlined),
+            title: const Text('Pourquoi cette quantité ?'),
+            onTap: () => Navigator.pop(c, 'calcul'),
+          ),
+          if (panier.modifiable && ligne.codeDci != null)
             ListTile(
               key: const ValueKey('action-ligne-generique'),
               leading: const Icon(Icons.swap_horiz_rounded),
               title: const Text('Changer de générique'),
               onTap: () => Navigator.pop(c, 'generique'),
             ),
-          ListTile(
-            key: const ValueKey('action-ligne-grossiste'),
-            leading: const Icon(Icons.local_shipping_outlined),
-            title: const Text('Changer de grossiste'),
-            onTap: () => Navigator.pop(c, 'grossiste'),
-          ),
-          ListTile(
-            key: const ValueKey('action-ligne-retirer'),
-            leading: const Icon(Icons.delete_outline),
-            title: const Text('Retirer de la commande'),
-            onTap: () => Navigator.pop(c, 'retirer'),
-          ),
+          if (panier.modifiable) ...[
+            ListTile(
+              key: const ValueKey('action-ligne-grossiste'),
+              leading: const Icon(Icons.local_shipping_outlined),
+              title: const Text('Changer de grossiste'),
+              onTap: () => Navigator.pop(c, 'grossiste'),
+            ),
+            ListTile(
+              key: const ValueKey('action-ligne-retirer'),
+              leading: const Icon(Icons.delete_outline),
+              title: const Text('Retirer de la commande'),
+              onTap: () => Navigator.pop(c, 'retirer'),
+            ),
+          ],
           const SizedBox(height: 8),
         ],
       ),
@@ -605,6 +612,13 @@ Future<void> _actionsLigne(BuildContext context, WidgetRef ref, Panier panier, L
   );
   if (!context.mounted || choix == null) return;
   switch (choix) {
+    case 'calcul':
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (c) => _DetailCalcul(ligne: ligne),
+      );
     case 'generique':
       final m = await showModalBottomSheet<MembreGenerique>(
         context: context,
@@ -633,6 +647,114 @@ Future<void> _actionsLigne(BuildContext context, WidgetRef ref, Panier panier, L
       } catch (e) {
         if (context.mounted) montrerErreur(context, e);
       }
+  }
+}
+
+/// « Pourquoi cette quantité ? » : d'où vient le rythme, comparé à la
+/// moyenne sur 12 mois.
+class _DetailCalcul extends ConsumerWidget {
+  const _DetailCalcul({required this.ligne});
+  final LigneCommande ligne;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SafeArea(
+      child: ref
+          .watch(calculProvider(ligne.idNom))
+          .when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+            ),
+            error: (e, _) => Padding(padding: const EdgeInsets.all(20), child: Text(ErreurApi.depuis(e).message)),
+            data: (d) {
+              final ecart = d.moyenne12m > 0 ? d.rythme / d.moyenne12m : 0.0;
+              final fort = ecart >= 1.8;
+              Widget l(String titre, String valeur, {String? detail, bool accent = false}) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(titre, style: TextStyle(color: context.couleurs.encre2)),
+                          if (detail != null)
+                            Text(detail, style: TextStyle(fontSize: 12, color: context.couleurs.encre3)),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      valeur,
+                      style: TextStyle(fontWeight: FontWeight.w700, color: accent ? context.etats.alerte : null),
+                    ),
+                  ],
+                ),
+              );
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  key: const ValueKey('detail-calcul'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      libelleProduit(d.nom ?? ligne.nom ?? ''),
+                      style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Type ${libelleTypeDemande(d.type)} · ${d.joursVente12m} jours de vente sur 12 mois',
+                      style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
+                    ),
+                    const SizedBox(height: 10),
+                    l(
+                      'Rythme utilisé',
+                      '${decimal(d.rythme, chiffres: 2)} / jour',
+                      detail: '${decimal(d.venduJoursRetenus)} vendus sur ${d.joursRetenus} jours retenus',
+                      accent: fort,
+                    ),
+                    l(
+                      'Moyenne sur 12 mois',
+                      '${decimal(d.moyenne12m, chiffres: 2)} / jour',
+                      detail: '${decimal(d.ventes12m)} vendus · CMM ${decimal(d.cmm)}',
+                    ),
+                    const Divider(),
+                    l('Fenêtre', '${d.fenetreJours} jours', detail: '${d.joursOuverts} jours ouverts'),
+                    l(
+                      'Jours exclus (rupture)',
+                      '${d.joursExclusRupture}',
+                      detail: 'stock nul dans l\'historique ${d.joursStockNul} j : la demande y est inconnue',
+                      accent: d.joursExclusRupture > d.joursRetenus,
+                    ),
+                    if (d.reprisGeneriques > 0) l('Repris de génériques remplacés', decimal(d.reprisGeneriques)),
+                    if (d.plusGrossesVentes.isNotEmpty)
+                      l(
+                        'Plus grosses ventes',
+                        '',
+                        detail: [for (final v in d.plusGrossesVentes) '${v['date']} : ${decimal(v['qte'] as num)}']
+                            .join(' · '),
+                      ),
+                    if (fort)
+                      Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.etats.alerteDoux,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Le rythme est ${decimal(ecart)} fois la moyenne sur 12 mois'
+                          '${d.joursExclusRupture > d.joursRetenus ? ' : la plupart des jours sont exclus pour rupture, il ne reste presque que des jours de vente.' : '.'}',
+                          style: TextStyle(fontSize: 13, color: context.etats.alerte),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+    );
   }
 }
 

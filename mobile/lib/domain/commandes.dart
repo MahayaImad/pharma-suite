@@ -383,3 +383,31 @@ abstract class AjoutCommande with _$AjoutCommande {
 
   factory AjoutCommande.fromJson(Map<String, dynamic> json) => _$AjoutCommandeFromJson(json);
 }
+
+/// Détail du calcul d'une quantité proposée (`GET /commandes/calcul/{id}`).
+@freezed
+abstract class DetailCalcul with _$DetailCalcul {
+  const factory DetailCalcul({
+    @JsonKey(name: 'id_nom') required int idNom,
+    String? nom,
+    @Default('') String type,
+    @JsonKey(name: 'jours_vente_12m') @Default(0) int joursVente12m,
+    @JsonKey(name: 'fenetre_jours') @Default(0) int fenetreJours,
+    @JsonKey(name: 'jours_ouverts') @Default(0) int joursOuverts,
+    @JsonKey(name: 'jours_exclus_rupture') @Default(0) int joursExclusRupture,
+    @JsonKey(name: 'jours_retenus') @Default(0) int joursRetenus,
+    @JsonKey(name: 'jours_stock_nul') @Default(0) int joursStockNul,
+    @JsonKey(name: 'vendu_fenetre') @Default(0) double venduFenetre,
+    @JsonKey(name: 'vendu_jours_retenus') @Default(0) double venduJoursRetenus,
+    @JsonKey(name: 'repris_generiques') @Default(0) double reprisGeneriques,
+    @Default(0) double rythme,
+    @JsonKey(name: 'ventes_12m') @Default(0) double ventes12m,
+    @JsonKey(name: 'moyenne_12m_jour_ouvert') @Default(0) double moyenne12m,
+    @Default(0) double cmm,
+    @JsonKey(name: 'plus_grosses_ventes')
+    @Default(<Map<String, dynamic>>[])
+    List<Map<String, dynamic>> plusGrossesVentes,
+  }) = _DetailCalcul;
+
+  factory DetailCalcul.fromJson(Map<String, dynamic> json) => _$DetailCalculFromJson(json);
+}

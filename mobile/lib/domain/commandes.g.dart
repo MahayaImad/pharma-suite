@@ -276,3 +276,45 @@ Map<String, dynamic> _$AjoutCommandeToJson(_AjoutCommande instance) => <String, 
   'qte': instance.qte,
   'deja_present': instance.dejaPresent,
 };
+
+_DetailCalcul _$DetailCalculFromJson(Map<String, dynamic> json) => _DetailCalcul(
+  idNom: (json['id_nom'] as num).toInt(),
+  nom: json['nom'] as String?,
+  type: json['type'] as String? ?? '',
+  joursVente12m: (json['jours_vente_12m'] as num?)?.toInt() ?? 0,
+  fenetreJours: (json['fenetre_jours'] as num?)?.toInt() ?? 0,
+  joursOuverts: (json['jours_ouverts'] as num?)?.toInt() ?? 0,
+  joursExclusRupture: (json['jours_exclus_rupture'] as num?)?.toInt() ?? 0,
+  joursRetenus: (json['jours_retenus'] as num?)?.toInt() ?? 0,
+  joursStockNul: (json['jours_stock_nul'] as num?)?.toInt() ?? 0,
+  venduFenetre: (json['vendu_fenetre'] as num?)?.toDouble() ?? 0,
+  venduJoursRetenus: (json['vendu_jours_retenus'] as num?)?.toDouble() ?? 0,
+  reprisGeneriques: (json['repris_generiques'] as num?)?.toDouble() ?? 0,
+  rythme: (json['rythme'] as num?)?.toDouble() ?? 0,
+  ventes12m: (json['ventes_12m'] as num?)?.toDouble() ?? 0,
+  moyenne12m: (json['moyenne_12m_jour_ouvert'] as num?)?.toDouble() ?? 0,
+  cmm: (json['cmm'] as num?)?.toDouble() ?? 0,
+  plusGrossesVentes:
+      (json['plus_grosses_ventes'] as List<dynamic>?)?.map((e) => e as Map<String, dynamic>).toList() ??
+      const <Map<String, dynamic>>[],
+);
+
+Map<String, dynamic> _$DetailCalculToJson(_DetailCalcul instance) => <String, dynamic>{
+  'id_nom': instance.idNom,
+  'nom': instance.nom,
+  'type': instance.type,
+  'jours_vente_12m': instance.joursVente12m,
+  'fenetre_jours': instance.fenetreJours,
+  'jours_ouverts': instance.joursOuverts,
+  'jours_exclus_rupture': instance.joursExclusRupture,
+  'jours_retenus': instance.joursRetenus,
+  'jours_stock_nul': instance.joursStockNul,
+  'vendu_fenetre': instance.venduFenetre,
+  'vendu_jours_retenus': instance.venduJoursRetenus,
+  'repris_generiques': instance.reprisGeneriques,
+  'rythme': instance.rythme,
+  'ventes_12m': instance.ventes12m,
+  'moyenne_12m_jour_ouvert': instance.moyenne12m,
+  'cmm': instance.cmm,
+  'plus_grosses_ventes': instance.plusGrossesVentes,
+};
