@@ -398,21 +398,25 @@ class CommandesService:
         await self.repo.commit()
         return await self.journee(jour_de_commande())
 
-    async def ajouter_produit(self, id_nom: int, qte: Optional[int] = None) -> dict:
+    async def ajouter_produit(self, id_nom: int, qte: Optional[int] = None,
+                              id_fournisseur: Optional[int] = None) -> dict:
         """« Commander » depuis le Stock : ajoute le produit au brouillon du
         jour de son fournisseur principal (créé au besoin). Sans quantité, la
         quantité proposée ce soir, au moins 1 ; un produit déjà dans le
-        brouillon garde sa quantité."""
+        brouillon garde sa quantité. Avec un fournisseur (« autre grossiste »
+        d'un produit non livré), c'est son brouillon qui le reçoit."""
         jour = jour_de_commande()
         info = (await self.repo.produits([id_nom])).get(id_nom)
         if info is None:
             raise ErreurCommandes("produit", "Produit inconnu.", 404)
         if info.get("psychotrope"):
             raise ErreurCommandes("psychotrope", "Psychotrope : à commander dans EASYPHARM (bon spécial).", 409)
-        id_f = info.get("id_fournisseur")
+        id_f = id_fournisseur or info.get("id_fournisseur")
         fournisseurs = await self.repo.fournisseurs(jour)
         if id_f is None or id_f not in fournisseurs:
             raise ErreurCommandes("sans_fournisseur", "Aucun achat connu : fournisseur introuvable.", 409)
+        if id_fournisseur is not None and not fournisseurs[id_f].get("actif"):
+            raise ErreurCommandes("fournisseur_inactif", "Ce fournisseur n'est pas actif.", 409)
         f = fournisseurs[id_f]
         id_c = await self._brouillon(jour, id_f, fournisseurs)
         existante = next((l for l in await self.repo.lignes([id_c]) if l["id_nom"] == id_nom), None)
@@ -671,7 +675,8 @@ class CommandesService:
                 "livraison_prevue": l["livraison_prevue"], "lignes": []})
             c["lignes"].append({
                 "id_nom": l["id_nom"], "nom": l["nom"], "qte": l["qte"], "recu": l["recu"], "reste": l["reste"],
-                "recu_le": l["recu_le"], "etat": l["etat"], "prix_achat": l["prix_achat"]})
+                "recu_le": l["recu_le"], "etat": l["etat"], "prix_achat": l["prix_achat"],
+                "stock": int(l["stock"] or 0), "tension": l["tension"]})
         services: dict[int, dict] = {}
         for c in commandes.values():
             etats = [x["etat"] for x in c["lignes"]]

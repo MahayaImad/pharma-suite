@@ -205,6 +205,12 @@ budget se règle dans Calendrier et réglages (0 = pas de budget).
 - **« Commander »** (écran Stock et fiche produit) : ajoute le produit au
   brouillon du jour de son grossiste. Le panier proposé de ce grossiste est
   préparé au besoin.
+- **Livraisons** (onglet de l'écran Commandes, `/commandes/livraisons`) :
+  tuiles (non livrés, partiels, attendus, taux de service), liste par produit
+  filtrable, taux de service de chaque grossiste. « Autre grossiste » ajoute
+  le reste à recevoir au brouillon du jour d'un autre grossiste actif
+  (`POST /commandes/ajouter` avec `id_fournisseur`). L'onglet porte le nombre
+  de produits à vérifier.
 - **Écran Stock aligné** : dès que le calcul des commandes est prêt, le Stock
   utilise les mêmes seuils que le panier. « À commander » = ce que le panier
   propose ; la jauge et la fiche montrent le point de commande (mini), le
@@ -268,6 +274,5 @@ encore été rejouée sur les données réelles.
 
 1. Rejouer la stratégie mini / maxi sur les données réelles.
 2. Grossiste préféré par produit.
-3. Rapprocher les réceptions EASYPHARM des commandes.
-4. Vue Alertes.
-5. Modèle de fondation en concurrence dans le rejeu (service `ml/`).
+3. Vue Alertes.
+4. Modèle de fondation en concurrence dans le rejeu (service `ml/`).

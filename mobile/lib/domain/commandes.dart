@@ -475,3 +475,113 @@ abstract class Tension with _$Tension {
 
   factory Tension.fromJson(Map<String, dynamic> json) => _$TensionFromJson(json);
 }
+
+// ── Suivi des livraisons ───────────────────────────────────────────────────
+
+/// Où en est une ligne commandée, d'après les réceptions d'EASYPHARM.
+enum EtatLivraison {
+  @JsonValue('manquante')
+  manquante('Non livrés', 'Manquant'),
+  @JsonValue('partielle')
+  partielle('Partiels', 'Partiel'),
+  @JsonValue('attendue')
+  attendue('Attendus', 'Attendu'),
+  @JsonValue('livree')
+  livree('Livrés', 'Livré');
+
+  const EtatLivraison(this.pluriel, this.libelle);
+  final String pluriel;
+  final String libelle;
+}
+
+@freezed
+abstract class LigneSuivie with _$LigneSuivie {
+  const factory LigneSuivie({
+    @JsonKey(name: 'id_nom') required int idNom,
+    String? nom,
+    @Default(0) int qte,
+    @Default(0) int recu,
+    @Default(0) int reste,
+    @JsonKey(name: 'recu_le') DateTime? recuLe,
+    @Default(EtatLivraison.attendue) EtatLivraison etat,
+    @Default(0) int stock,
+
+    /// « proposee » (à confirmer), « confirmee », ou null.
+    String? tension,
+  }) = _LigneSuivie;
+
+  factory LigneSuivie.fromJson(Map<String, dynamic> json) => _$LigneSuivieFromJson(json);
+}
+
+@freezed
+abstract class CommandeSuivie with _$CommandeSuivie {
+  const factory CommandeSuivie({
+    required int id,
+    required DateTime jour,
+    required FournisseurPanier fournisseur,
+    @JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue,
+    @Default(EtatLivraison.attendue) EtatLivraison etat,
+    @Default(<LigneSuivie>[]) List<LigneSuivie> lignes,
+  }) = _CommandeSuivie;
+
+  factory CommandeSuivie.fromJson(Map<String, dynamic> json) => _$CommandeSuivieFromJson(json);
+}
+
+/// Taux de service d'un grossiste sur les commandes dont la date est passée.
+@freezed
+abstract class ServiceFournisseur with _$ServiceFournisseur {
+  const factory ServiceFournisseur({
+    required int id,
+    String? nom,
+    @Default(0) int commandes,
+    @Default(0) int lignes,
+    @Default(0) int qte,
+    @Default(0) int recu,
+    @JsonKey(name: 'taux_lignes') int? tauxLignes,
+    @JsonKey(name: 'taux_quantite') int? tauxQuantite,
+  }) = _ServiceFournisseur;
+
+  factory ServiceFournisseur.fromJson(Map<String, dynamic> json) => _$ServiceFournisseurFromJson(json);
+}
+
+/// Une ligne suivie et la commande dont elle vient.
+typedef LigneLivraison = ({LigneSuivie ligne, CommandeSuivie commande});
+
+/// Commandes envoyées, rapprochées des réceptions (`GET /commandes/suivi`).
+@freezed
+abstract class SuiviLivraisons with _$SuiviLivraisons {
+  const SuiviLivraisons._();
+
+  const factory SuiviLivraisons({
+    required DateTime jour,
+    @Default(30) int jours,
+    @JsonKey(name: 'donnees_du') DateTime? donneesDu,
+    @Default(<CommandeSuivie>[]) List<CommandeSuivie> commandes,
+    @Default(<ServiceFournisseur>[]) List<ServiceFournisseur> fournisseurs,
+  }) = _SuiviLivraisons;
+
+  factory SuiviLivraisons.fromJson(Map<String, dynamic> json) => _$SuiviLivraisonsFromJson(json);
+
+  /// Les lignes dans cet état, commandes les plus récentes d'abord. Un
+  /// produit non livré ou partiel n'apparaît qu'une fois : sa commande la
+  /// plus récente (les anciennes sont déjà reproposées).
+  List<LigneLivraison> lignesDe(EtatLivraison etat) {
+    final vus = <int>{};
+    return [
+      for (final c in commandes)
+        for (final l in c.lignes)
+          if (l.etat == etat && (etat == EtatLivraison.livree || etat == EtatLivraison.attendue || vus.add(l.idNom)))
+            (ligne: l, commande: c),
+    ];
+  }
+
+  /// À vérifier : produits non livrés ou livrés en partie.
+  int get aVerifier => lignesDe(EtatLivraison.manquante).length + lignesDe(EtatLivraison.partielle).length;
+
+  /// Quantités reçues ÷ commandées, tous grossistes, en % ; null sans commande échue.
+  int? get tauxService {
+    final qte = fournisseurs.fold<int>(0, (s, f) => s + f.qte);
+    if (qte == 0) return null;
+    return (100 * fournisseurs.fold<int>(0, (s, f) => s + f.recu) / qte).round();
+  }
+}

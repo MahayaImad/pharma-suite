@@ -105,12 +105,17 @@ class CommandesRepository:
         de l'envoi (la commande du samedi part le vendredi soir)."""
         r = await self.db.execute(text("""
             SELECT l.id, l.id_commande, l.id_nom, l.qte, l.prix_achat, n.nom,
+                   COALESCE(mv.stock_actuel, 0) AS stock,
+                   CASE WHEN t.id_nom IS NULL THEN NULL WHEN NOT t.confirme THEN 'proposee'
+                        WHEN t.tension THEN 'confirmee' END AS tension,
                    c.jour, c.id_fournisseur, c.statut, c.livraison_prevue, f.fournisseur,
                    LEAST(c.jour, CAST(COALESCE(c.envoye_le, c.valide_le, c.cree_le)
                                       AT TIME ZONE 'Africa/Algiers' AS date)) AS depuis_envoi
             FROM commandes_lignes l JOIN commandes c ON c.id = l.id_commande
             LEFT JOIN nomenclature n ON n.id = l.id_nom
             LEFT JOIN fournisseurs f ON f.id = c.id_fournisseur
+            LEFT JOIN mv_stock_produits mv ON mv.id_nom = l.id_nom
+            LEFT JOIN produits_tension t ON t.id_nom = l.id_nom
             WHERE c.statut IN ('validee', 'envoyee') AND c.jour BETWEEN :depuis AND :jour
             ORDER BY c.jour DESC, c.id, n.nom
         """), {"depuis": depuis, "jour": jour})

@@ -50,7 +50,7 @@ async def preparer(svc: CommandesService = Depends(_service)):
 @router.post("/ajouter")
 async def ajouter_produit(saisie: s.AjoutProduit, svc: CommandesService = Depends(_service)):
     """« Commander » depuis le Stock : au brouillon du jour du fournisseur principal."""
-    return await _repondre(svc.ajouter_produit(saisie.id_nom, saisie.qte))
+    return await _repondre(svc.ajouter_produit(saisie.id_nom, saisie.qte, saisie.id_fournisseur))
 
 
 @router.post("/lignes/{id_nom}/deplacer")

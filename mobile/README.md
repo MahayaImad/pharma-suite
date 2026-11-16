@@ -25,6 +25,10 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   Aïd par année (« à vérifier » jusqu'à validation), jours fériés, et les
   constantes du calcul des commandes, dont le budget mensuel. Lecture pour
   tous, modification par le titulaire.
+- **Livraisons** (`/commandes/livraisons`, onglet de l'écran Commandes) :
+  réceptions d'EASYPHARM rapprochées des commandes envoyées ; tuiles, liste
+  par produit (non livrés, partiels, attendus, livrés), taux de service par
+  grossiste, « Autre grossiste » pour recommander ailleurs.
 - **Commandes** (`/commandes`, `/commandes/:fournisseur`), design « épuré,
   deux volets » : ⇄ change une ligne de générique (même DCI) ; sur PC, la
   poignée ⋮⋮ glisse une ligne sur un autre grossiste ; sur portable, un appui

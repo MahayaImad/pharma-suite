@@ -96,6 +96,9 @@ String decimal(num valeur, {int chiffres = 1}) {
 const _jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
 /// « dimanche 15/11 ».
+/// « 14/11 ».
+String jourMois(DateTime d) => '${_deux(d.day)}/${_deux(d.month)}';
+
 String jourEtDate(DateTime d) => '${_jours[d.weekday - 1]} ${_deux(d.day)}/${_deux(d.month)}';
 
 const _unites = {'mg', 'g', 'kg', 'ml', 'l', 'ui', 'mcg', 'µg', 'cl', 'mmol'};

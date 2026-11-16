@@ -266,10 +266,22 @@ class FausseCommandesApi implements CommandesApi {
   }
 
   @override
-  Future<AjoutCommande> ajouter(int idNom) async {
-    appels.add('ajouter $idNom');
+  Future<AjoutCommande> ajouter(int idNom, {int? qte, int? idFournisseur}) async {
+    appels.add(['ajouter $idNom', ?qte, ?idFournisseur].join(' '));
     if (panne) throw const ErreurApi('Psychotrope : à commander dans EASYPHARM (bon spécial).');
+    if (idFournisseur != null) {
+      return AjoutCommande(idCommande: 101, idFournisseur: idFournisseur, fournisseur: 'PARA BELLA', qte: qte ?? 1);
+    }
     return AjoutCommande(idCommande: 100, idFournisseur: 1, fournisseur: 'GROSSISTE ATLAS', qte: 4);
+  }
+
+  /// Suivi des livraisons renvoyé par [suivi] ; vide par défaut.
+  SuiviLivraisons livraisons = SuiviLivraisons(jour: DateTime(2026, 11, 16));
+
+  @override
+  Future<SuiviLivraisons> suivi() async {
+    if (panne) throw const ErreurApi("Le serveur de l'officine ne répond pas.", reseau: true);
+    return livraisons;
   }
 
   @override

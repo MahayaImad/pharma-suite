@@ -9,6 +9,7 @@ import '../../../domain/commandes.dart';
 import '../../../domain/format.dart';
 import '../../stock/presentation/elements_stock.dart' show MessageErreur, MessageVide;
 import '../application/commandes_providers.dart';
+import 'ecran_livraisons.dart';
 import 'panier.dart';
 
 /// Largeur à partir de laquelle le panier s'ouvre à côté des fournisseurs.
@@ -93,6 +94,7 @@ class _Fournisseurs extends ConsumerWidget {
         padding: EdgeInsets.fromLTRB(large ? 20 : 16, 14, large ? 20 : 16, 32),
         children: [
           _EnTete(journee: journee.value),
+          const OngletsCommandes(livraisons: false),
           ...journee.when(
             skipLoadingOnReload: true,
             loading: () => [const _Chargement()],

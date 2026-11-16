@@ -117,3 +117,8 @@ final tensionProduitProvider = FutureProvider.family<Tension, int>(
   (ref, id) => ref.watch(commandesApiProvider).tension(id),
   retry: (_, _) => null,
 );
+
+final suiviProvider = FutureProvider<SuiviLivraisons>(
+  (ref) => ref.watch(commandesApiProvider).suivi(),
+  retry: (_, _) => null,
+);

@@ -14,7 +14,11 @@ abstract interface class CommandesApi {
 
   /// « Commander » depuis le Stock : au brouillon du jour du fournisseur
   /// principal, à la quantité proposée ce soir (au moins 1).
-  Future<AjoutCommande> ajouter(int idNom);
+  /// Avec [idFournisseur] et [qte] : chez cet autre grossiste (produit non livré).
+  Future<AjoutCommande> ajouter(int idNom, {int? qte, int? idFournisseur});
+
+  /// Commandes envoyées des derniers jours, rapprochées des réceptions.
+  Future<SuiviLivraisons> suivi();
 
   /// Change le grossiste d'une ligne ; renvoie la journée à jour.
   Future<JourneeCommandes> deplacer(int idNom, int de, int vers);
@@ -96,10 +100,18 @@ class CommandesApiDio implements CommandesApi {
   Future<JourneeCommandes> preparer() => _appel(() => _dio.post('/commandes/preparer', options: _long), _journee);
 
   @override
-  Future<AjoutCommande> ajouter(int idNom) => _appel(
-    () => _dio.post('/commandes/ajouter', data: {'id_nom': idNom}, options: _long),
+  Future<AjoutCommande> ajouter(int idNom, {int? qte, int? idFournisseur}) => _appel(
+    () => _dio.post(
+      '/commandes/ajouter',
+      data: {'id_nom': idNom, 'qte': ?qte, 'id_fournisseur': ?idFournisseur},
+      options: _long,
+    ),
     (d) => AjoutCommande.fromJson(d as Map<String, dynamic>),
   );
+
+  @override
+  Future<SuiviLivraisons> suivi() =>
+      _appel(() => _dio.get('/commandes/suivi'), (d) => SuiviLivraisons.fromJson(d as Map<String, dynamic>));
 
   @override
   Future<JourneeCommandes> deplacer(int idNom, int de, int vers) => _appel(

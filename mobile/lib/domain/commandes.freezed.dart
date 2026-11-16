@@ -4562,4 +4562,1194 @@ as String?,
 
 }
 
+
+/// @nodoc
+mixin _$LigneSuivie {
+
+@JsonKey(name: 'id_nom') int get idNom; String? get nom; int get qte; int get recu; int get reste;@JsonKey(name: 'recu_le') DateTime? get recuLe; EtatLivraison get etat; int get stock;/// « proposee » (à confirmer), « confirmee », ou null.
+ String? get tension;
+/// Create a copy of LigneSuivie
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LigneSuivieCopyWith<LigneSuivie> get copyWith => _$LigneSuivieCopyWithImpl<LigneSuivie>(this as LigneSuivie, _$identity);
+
+  /// Serializes this LigneSuivie to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as LigneSuivie;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LigneSuivie&&(identical(other.idNom, _this.idNom) || other.idNom == _this.idNom)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.qte, _this.qte) || other.qte == _this.qte)&&(identical(other.recu, _this.recu) || other.recu == _this.recu)&&(identical(other.reste, _this.reste) || other.reste == _this.reste)&&(identical(other.recuLe, _this.recuLe) || other.recuLe == _this.recuLe)&&(identical(other.etat, _this.etat) || other.etat == _this.etat)&&(identical(other.stock, _this.stock) || other.stock == _this.stock)&&(identical(other.tension, _this.tension) || other.tension == _this.tension));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as LigneSuivie;
+  return Object.hash(runtimeType,_this.idNom,_this.nom,_this.qte,_this.recu,_this.reste,_this.recuLe,_this.etat,_this.stock,_this.tension);
+}
+
+@override
+String toString() {
+  final _this = this as LigneSuivie;
+  return 'LigneSuivie(idNom: ${_this.idNom}, nom: ${_this.nom}, qte: ${_this.qte}, recu: ${_this.recu}, reste: ${_this.reste}, recuLe: ${_this.recuLe}, etat: ${_this.etat}, stock: ${_this.stock}, tension: ${_this.tension})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LigneSuivieCopyWith<$Res>  {
+  factory $LigneSuivieCopyWith(LigneSuivie value, $Res Function(LigneSuivie) _then) = _$LigneSuivieCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'id_nom') int idNom, String? nom, int qte, int recu, int reste,@JsonKey(name: 'recu_le') DateTime? recuLe, EtatLivraison etat, int stock, String? tension
+});
+
+
+
+
+}
+/// @nodoc
+class _$LigneSuivieCopyWithImpl<$Res>
+    implements $LigneSuivieCopyWith<$Res> {
+  _$LigneSuivieCopyWithImpl(this._self, this._then);
+
+  final LigneSuivie _self;
+  final $Res Function(LigneSuivie) _then;
+
+/// Create a copy of LigneSuivie
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? idNom = null,Object? nom = freezed,Object? qte = null,Object? recu = null,Object? reste = null,Object? recuLe = freezed,Object? etat = null,Object? stock = null,Object? tension = freezed,}) {
+  return _then(LigneSuivie(
+idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,qte: null == qte ? _self.qte : qte // ignore: cast_nullable_to_non_nullable
+as int,recu: null == recu ? _self.recu : recu // ignore: cast_nullable_to_non_nullable
+as int,reste: null == reste ? _self.reste : reste // ignore: cast_nullable_to_non_nullable
+as int,recuLe: freezed == recuLe ? _self.recuLe : recuLe // ignore: cast_nullable_to_non_nullable
+as DateTime?,etat: null == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
+as EtatLivraison,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,tension: freezed == tension ? _self.tension : tension // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [LigneSuivie].
+extension LigneSuiviePatterns on LigneSuivie {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _LigneSuivie value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _LigneSuivie() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _LigneSuivie value)  $default,){
+final _that = this;
+switch (_that) {
+case _LigneSuivie():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _LigneSuivie value)?  $default,){
+final _that = this;
+switch (_that) {
+case _LigneSuivie() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  int qte,  int recu,  int reste, @JsonKey(name: 'recu_le')  DateTime? recuLe,  EtatLivraison etat,  int stock,  String? tension)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _LigneSuivie() when $default != null:
+return $default(_that.idNom,_that.nom,_that.qte,_that.recu,_that.reste,_that.recuLe,_that.etat,_that.stock,_that.tension);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  int qte,  int recu,  int reste, @JsonKey(name: 'recu_le')  DateTime? recuLe,  EtatLivraison etat,  int stock,  String? tension)  $default,) {final _that = this;
+switch (_that) {
+case _LigneSuivie():
+return $default(_that.idNom,_that.nom,_that.qte,_that.recu,_that.reste,_that.recuLe,_that.etat,_that.stock,_that.tension);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id_nom')  int idNom,  String? nom,  int qte,  int recu,  int reste, @JsonKey(name: 'recu_le')  DateTime? recuLe,  EtatLivraison etat,  int stock,  String? tension)?  $default,) {final _that = this;
+switch (_that) {
+case _LigneSuivie() when $default != null:
+return $default(_that.idNom,_that.nom,_that.qte,_that.recu,_that.reste,_that.recuLe,_that.etat,_that.stock,_that.tension);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _LigneSuivie implements LigneSuivie {
+  const _LigneSuivie({@JsonKey(name: 'id_nom') required this.idNom, this.nom, this.qte = 0, this.recu = 0, this.reste = 0, @JsonKey(name: 'recu_le') this.recuLe, this.etat = EtatLivraison.attendue, this.stock = 0, this.tension});
+  factory _LigneSuivie.fromJson(Map<String, dynamic> json) => _$LigneSuivieFromJson(json);
+
+@override@JsonKey(name: 'id_nom') final  int idNom;
+@override final  String? nom;
+@override@JsonKey() final  int qte;
+@override@JsonKey() final  int recu;
+@override@JsonKey() final  int reste;
+@override@JsonKey(name: 'recu_le') final  DateTime? recuLe;
+@override@JsonKey() final  EtatLivraison etat;
+@override@JsonKey() final  int stock;
+/// « proposee » (à confirmer), « confirmee », ou null.
+@override final  String? tension;
+
+/// Create a copy of LigneSuivie
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LigneSuivieCopyWith<_LigneSuivie> get copyWith => __$LigneSuivieCopyWithImpl<_LigneSuivie>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LigneSuivieToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LigneSuivie&&(identical(other.idNom, idNom) || other.idNom == idNom)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.qte, qte) || other.qte == qte)&&(identical(other.recu, recu) || other.recu == recu)&&(identical(other.reste, reste) || other.reste == reste)&&(identical(other.recuLe, recuLe) || other.recuLe == recuLe)&&(identical(other.etat, etat) || other.etat == etat)&&(identical(other.stock, stock) || other.stock == stock)&&(identical(other.tension, tension) || other.tension == tension));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,idNom,nom,qte,recu,reste,recuLe,etat,stock,tension);
+}
+
+@override
+String toString() {
+    return 'LigneSuivie(idNom: $idNom, nom: $nom, qte: $qte, recu: $recu, reste: $reste, recuLe: $recuLe, etat: $etat, stock: $stock, tension: $tension)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LigneSuivieCopyWith<$Res> implements $LigneSuivieCopyWith<$Res> {
+  factory _$LigneSuivieCopyWith(_LigneSuivie value, $Res Function(_LigneSuivie) _then) = __$LigneSuivieCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'id_nom') int idNom, String? nom, int qte, int recu, int reste,@JsonKey(name: 'recu_le') DateTime? recuLe, EtatLivraison etat, int stock, String? tension
+});
+
+
+
+
+}
+/// @nodoc
+class __$LigneSuivieCopyWithImpl<$Res>
+    implements _$LigneSuivieCopyWith<$Res> {
+  __$LigneSuivieCopyWithImpl(this._self, this._then);
+
+  final _LigneSuivie _self;
+  final $Res Function(_LigneSuivie) _then;
+
+/// Create a copy of LigneSuivie
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? idNom = null,Object? nom = freezed,Object? qte = null,Object? recu = null,Object? reste = null,Object? recuLe = freezed,Object? etat = null,Object? stock = null,Object? tension = freezed,}) {
+  return _then(_LigneSuivie(
+idNom: null == idNom ? _self.idNom : idNom // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,qte: null == qte ? _self.qte : qte // ignore: cast_nullable_to_non_nullable
+as int,recu: null == recu ? _self.recu : recu // ignore: cast_nullable_to_non_nullable
+as int,reste: null == reste ? _self.reste : reste // ignore: cast_nullable_to_non_nullable
+as int,recuLe: freezed == recuLe ? _self.recuLe : recuLe // ignore: cast_nullable_to_non_nullable
+as DateTime?,etat: null == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
+as EtatLivraison,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as int,tension: freezed == tension ? _self.tension : tension // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$CommandeSuivie {
+
+ int get id; DateTime get jour; FournisseurPanier get fournisseur;@JsonKey(name: 'livraison_prevue') DateTime? get livraisonPrevue; EtatLivraison get etat; List<LigneSuivie> get lignes;
+/// Create a copy of CommandeSuivie
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CommandeSuivieCopyWith<CommandeSuivie> get copyWith => _$CommandeSuivieCopyWithImpl<CommandeSuivie>(this as CommandeSuivie, _$identity);
+
+  /// Serializes this CommandeSuivie to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as CommandeSuivie;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommandeSuivie&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.jour, _this.jour) || other.jour == _this.jour)&&(identical(other.fournisseur, _this.fournisseur) || other.fournisseur == _this.fournisseur)&&(identical(other.livraisonPrevue, _this.livraisonPrevue) || other.livraisonPrevue == _this.livraisonPrevue)&&(identical(other.etat, _this.etat) || other.etat == _this.etat)&&const DeepCollectionEquality().equals(other.lignes, _this.lignes));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as CommandeSuivie;
+  return Object.hash(runtimeType,_this.id,_this.jour,_this.fournisseur,_this.livraisonPrevue,_this.etat,const DeepCollectionEquality().hash(_this.lignes));
+}
+
+@override
+String toString() {
+  final _this = this as CommandeSuivie;
+  return 'CommandeSuivie(id: ${_this.id}, jour: ${_this.jour}, fournisseur: ${_this.fournisseur}, livraisonPrevue: ${_this.livraisonPrevue}, etat: ${_this.etat}, lignes: ${_this.lignes})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CommandeSuivieCopyWith<$Res>  {
+  factory $CommandeSuivieCopyWith(CommandeSuivie value, $Res Function(CommandeSuivie) _then) = _$CommandeSuivieCopyWithImpl;
+@useResult
+$Res call({
+ int id, DateTime jour, FournisseurPanier fournisseur,@JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue, EtatLivraison etat, List<LigneSuivie> lignes
+});
+
+
+$FournisseurPanierCopyWith<$Res> get fournisseur;
+
+}
+/// @nodoc
+class _$CommandeSuivieCopyWithImpl<$Res>
+    implements $CommandeSuivieCopyWith<$Res> {
+  _$CommandeSuivieCopyWithImpl(this._self, this._then);
+
+  final CommandeSuivie _self;
+  final $Res Function(CommandeSuivie) _then;
+
+/// Create a copy of CommandeSuivie
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? jour = null,Object? fournisseur = null,Object? livraisonPrevue = freezed,Object? etat = null,Object? lignes = null,}) {
+  return _then(CommandeSuivie(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,jour: null == jour ? _self.jour : jour // ignore: cast_nullable_to_non_nullable
+as DateTime,fournisseur: null == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
+as FournisseurPanier,livraisonPrevue: freezed == livraisonPrevue ? _self.livraisonPrevue : livraisonPrevue // ignore: cast_nullable_to_non_nullable
+as DateTime?,etat: null == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
+as EtatLivraison,lignes: null == lignes ? _self.lignes : lignes // ignore: cast_nullable_to_non_nullable
+as List<LigneSuivie>,
+  ));
+}
+/// Create a copy of CommandeSuivie
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FournisseurPanierCopyWith<$Res> get fournisseur {
+  
+  return $FournisseurPanierCopyWith<$Res>(_self.fournisseur, (value) {
+    return _then(_self.copyWith(fournisseur: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [CommandeSuivie].
+extension CommandeSuiviePatterns on CommandeSuivie {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CommandeSuivie value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CommandeSuivie() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CommandeSuivie value)  $default,){
+final _that = this;
+switch (_that) {
+case _CommandeSuivie():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CommandeSuivie value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CommandeSuivie() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  List<LigneSuivie> lignes)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CommandeSuivie() when $default != null:
+return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.lignes);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  List<LigneSuivie> lignes)  $default,) {final _that = this;
+switch (_that) {
+case _CommandeSuivie():
+return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.lignes);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  DateTime jour,  FournisseurPanier fournisseur, @JsonKey(name: 'livraison_prevue')  DateTime? livraisonPrevue,  EtatLivraison etat,  List<LigneSuivie> lignes)?  $default,) {final _that = this;
+switch (_that) {
+case _CommandeSuivie() when $default != null:
+return $default(_that.id,_that.jour,_that.fournisseur,_that.livraisonPrevue,_that.etat,_that.lignes);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _CommandeSuivie implements CommandeSuivie {
+  const _CommandeSuivie({required this.id, required this.jour, required this.fournisseur, @JsonKey(name: 'livraison_prevue') this.livraisonPrevue, this.etat = EtatLivraison.attendue,  List<LigneSuivie> lignes = const <LigneSuivie>[]}): _lignes = lignes;
+  factory _CommandeSuivie.fromJson(Map<String, dynamic> json) => _$CommandeSuivieFromJson(json);
+
+@override final  int id;
+@override final  DateTime jour;
+@override final  FournisseurPanier fournisseur;
+@override@JsonKey(name: 'livraison_prevue') final  DateTime? livraisonPrevue;
+@override@JsonKey() final  EtatLivraison etat;
+ final  List<LigneSuivie> _lignes;
+@override@JsonKey() List<LigneSuivie> get lignes {
+  if (_lignes is EqualUnmodifiableListView) return _lignes;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_lignes);
+}
+
+
+/// Create a copy of CommandeSuivie
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CommandeSuivieCopyWith<_CommandeSuivie> get copyWith => __$CommandeSuivieCopyWithImpl<_CommandeSuivie>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CommandeSuivieToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommandeSuivie&&(identical(other.id, id) || other.id == id)&&(identical(other.jour, jour) || other.jour == jour)&&(identical(other.fournisseur, fournisseur) || other.fournisseur == fournisseur)&&(identical(other.livraisonPrevue, livraisonPrevue) || other.livraisonPrevue == livraisonPrevue)&&(identical(other.etat, etat) || other.etat == etat)&&const DeepCollectionEquality().equals(other.lignes, _lignes));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,jour,fournisseur,livraisonPrevue,etat,const DeepCollectionEquality().hash(_lignes));
+}
+
+@override
+String toString() {
+    return 'CommandeSuivie(id: $id, jour: $jour, fournisseur: $fournisseur, livraisonPrevue: $livraisonPrevue, etat: $etat, lignes: $lignes)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CommandeSuivieCopyWith<$Res> implements $CommandeSuivieCopyWith<$Res> {
+  factory _$CommandeSuivieCopyWith(_CommandeSuivie value, $Res Function(_CommandeSuivie) _then) = __$CommandeSuivieCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, DateTime jour, FournisseurPanier fournisseur,@JsonKey(name: 'livraison_prevue') DateTime? livraisonPrevue, EtatLivraison etat, List<LigneSuivie> lignes
+});
+
+
+@override $FournisseurPanierCopyWith<$Res> get fournisseur;
+
+}
+/// @nodoc
+class __$CommandeSuivieCopyWithImpl<$Res>
+    implements _$CommandeSuivieCopyWith<$Res> {
+  __$CommandeSuivieCopyWithImpl(this._self, this._then);
+
+  final _CommandeSuivie _self;
+  final $Res Function(_CommandeSuivie) _then;
+
+/// Create a copy of CommandeSuivie
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? jour = null,Object? fournisseur = null,Object? livraisonPrevue = freezed,Object? etat = null,Object? lignes = null,}) {
+  return _then(_CommandeSuivie(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,jour: null == jour ? _self.jour : jour // ignore: cast_nullable_to_non_nullable
+as DateTime,fournisseur: null == fournisseur ? _self.fournisseur : fournisseur // ignore: cast_nullable_to_non_nullable
+as FournisseurPanier,livraisonPrevue: freezed == livraisonPrevue ? _self.livraisonPrevue : livraisonPrevue // ignore: cast_nullable_to_non_nullable
+as DateTime?,etat: null == etat ? _self.etat : etat // ignore: cast_nullable_to_non_nullable
+as EtatLivraison,lignes: null == lignes ? _self._lignes : lignes // ignore: cast_nullable_to_non_nullable
+as List<LigneSuivie>,
+  ));
+}
+
+/// Create a copy of CommandeSuivie
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FournisseurPanierCopyWith<$Res> get fournisseur {
+  
+  return $FournisseurPanierCopyWith<$Res>(_self.fournisseur, (value) {
+    return _then(_self.copyWith(fournisseur: value));
+  });
+}
+}
+
+
+/// @nodoc
+mixin _$ServiceFournisseur {
+
+ int get id; String? get nom; int get commandes; int get lignes; int get qte; int get recu;@JsonKey(name: 'taux_lignes') int? get tauxLignes;@JsonKey(name: 'taux_quantite') int? get tauxQuantite;
+/// Create a copy of ServiceFournisseur
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ServiceFournisseurCopyWith<ServiceFournisseur> get copyWith => _$ServiceFournisseurCopyWithImpl<ServiceFournisseur>(this as ServiceFournisseur, _$identity);
+
+  /// Serializes this ServiceFournisseur to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ServiceFournisseur;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ServiceFournisseur&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.commandes, _this.commandes) || other.commandes == _this.commandes)&&(identical(other.lignes, _this.lignes) || other.lignes == _this.lignes)&&(identical(other.qte, _this.qte) || other.qte == _this.qte)&&(identical(other.recu, _this.recu) || other.recu == _this.recu)&&(identical(other.tauxLignes, _this.tauxLignes) || other.tauxLignes == _this.tauxLignes)&&(identical(other.tauxQuantite, _this.tauxQuantite) || other.tauxQuantite == _this.tauxQuantite));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ServiceFournisseur;
+  return Object.hash(runtimeType,_this.id,_this.nom,_this.commandes,_this.lignes,_this.qte,_this.recu,_this.tauxLignes,_this.tauxQuantite);
+}
+
+@override
+String toString() {
+  final _this = this as ServiceFournisseur;
+  return 'ServiceFournisseur(id: ${_this.id}, nom: ${_this.nom}, commandes: ${_this.commandes}, lignes: ${_this.lignes}, qte: ${_this.qte}, recu: ${_this.recu}, tauxLignes: ${_this.tauxLignes}, tauxQuantite: ${_this.tauxQuantite})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ServiceFournisseurCopyWith<$Res>  {
+  factory $ServiceFournisseurCopyWith(ServiceFournisseur value, $Res Function(ServiceFournisseur) _then) = _$ServiceFournisseurCopyWithImpl;
+@useResult
+$Res call({
+ int id, String? nom, int commandes, int lignes, int qte, int recu,@JsonKey(name: 'taux_lignes') int? tauxLignes,@JsonKey(name: 'taux_quantite') int? tauxQuantite
+});
+
+
+
+
+}
+/// @nodoc
+class _$ServiceFournisseurCopyWithImpl<$Res>
+    implements $ServiceFournisseurCopyWith<$Res> {
+  _$ServiceFournisseurCopyWithImpl(this._self, this._then);
+
+  final ServiceFournisseur _self;
+  final $Res Function(ServiceFournisseur) _then;
+
+/// Create a copy of ServiceFournisseur
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = freezed,Object? commandes = null,Object? lignes = null,Object? qte = null,Object? recu = null,Object? tauxLignes = freezed,Object? tauxQuantite = freezed,}) {
+  return _then(ServiceFournisseur(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,commandes: null == commandes ? _self.commandes : commandes // ignore: cast_nullable_to_non_nullable
+as int,lignes: null == lignes ? _self.lignes : lignes // ignore: cast_nullable_to_non_nullable
+as int,qte: null == qte ? _self.qte : qte // ignore: cast_nullable_to_non_nullable
+as int,recu: null == recu ? _self.recu : recu // ignore: cast_nullable_to_non_nullable
+as int,tauxLignes: freezed == tauxLignes ? _self.tauxLignes : tauxLignes // ignore: cast_nullable_to_non_nullable
+as int?,tauxQuantite: freezed == tauxQuantite ? _self.tauxQuantite : tauxQuantite // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ServiceFournisseur].
+extension ServiceFournisseurPatterns on ServiceFournisseur {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ServiceFournisseur value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ServiceFournisseur() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ServiceFournisseur value)  $default,){
+final _that = this;
+switch (_that) {
+case _ServiceFournisseur():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ServiceFournisseur value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ServiceFournisseur() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? nom,  int commandes,  int lignes,  int qte,  int recu, @JsonKey(name: 'taux_lignes')  int? tauxLignes, @JsonKey(name: 'taux_quantite')  int? tauxQuantite)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ServiceFournisseur() when $default != null:
+return $default(_that.id,_that.nom,_that.commandes,_that.lignes,_that.qte,_that.recu,_that.tauxLignes,_that.tauxQuantite);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? nom,  int commandes,  int lignes,  int qte,  int recu, @JsonKey(name: 'taux_lignes')  int? tauxLignes, @JsonKey(name: 'taux_quantite')  int? tauxQuantite)  $default,) {final _that = this;
+switch (_that) {
+case _ServiceFournisseur():
+return $default(_that.id,_that.nom,_that.commandes,_that.lignes,_that.qte,_that.recu,_that.tauxLignes,_that.tauxQuantite);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? nom,  int commandes,  int lignes,  int qte,  int recu, @JsonKey(name: 'taux_lignes')  int? tauxLignes, @JsonKey(name: 'taux_quantite')  int? tauxQuantite)?  $default,) {final _that = this;
+switch (_that) {
+case _ServiceFournisseur() when $default != null:
+return $default(_that.id,_that.nom,_that.commandes,_that.lignes,_that.qte,_that.recu,_that.tauxLignes,_that.tauxQuantite);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ServiceFournisseur implements ServiceFournisseur {
+  const _ServiceFournisseur({required this.id, this.nom, this.commandes = 0, this.lignes = 0, this.qte = 0, this.recu = 0, @JsonKey(name: 'taux_lignes') this.tauxLignes, @JsonKey(name: 'taux_quantite') this.tauxQuantite});
+  factory _ServiceFournisseur.fromJson(Map<String, dynamic> json) => _$ServiceFournisseurFromJson(json);
+
+@override final  int id;
+@override final  String? nom;
+@override@JsonKey() final  int commandes;
+@override@JsonKey() final  int lignes;
+@override@JsonKey() final  int qte;
+@override@JsonKey() final  int recu;
+@override@JsonKey(name: 'taux_lignes') final  int? tauxLignes;
+@override@JsonKey(name: 'taux_quantite') final  int? tauxQuantite;
+
+/// Create a copy of ServiceFournisseur
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ServiceFournisseurCopyWith<_ServiceFournisseur> get copyWith => __$ServiceFournisseurCopyWithImpl<_ServiceFournisseur>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ServiceFournisseurToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ServiceFournisseur&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.commandes, commandes) || other.commandes == commandes)&&(identical(other.lignes, lignes) || other.lignes == lignes)&&(identical(other.qte, qte) || other.qte == qte)&&(identical(other.recu, recu) || other.recu == recu)&&(identical(other.tauxLignes, tauxLignes) || other.tauxLignes == tauxLignes)&&(identical(other.tauxQuantite, tauxQuantite) || other.tauxQuantite == tauxQuantite));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,nom,commandes,lignes,qte,recu,tauxLignes,tauxQuantite);
+}
+
+@override
+String toString() {
+    return 'ServiceFournisseur(id: $id, nom: $nom, commandes: $commandes, lignes: $lignes, qte: $qte, recu: $recu, tauxLignes: $tauxLignes, tauxQuantite: $tauxQuantite)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ServiceFournisseurCopyWith<$Res> implements $ServiceFournisseurCopyWith<$Res> {
+  factory _$ServiceFournisseurCopyWith(_ServiceFournisseur value, $Res Function(_ServiceFournisseur) _then) = __$ServiceFournisseurCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, String? nom, int commandes, int lignes, int qte, int recu,@JsonKey(name: 'taux_lignes') int? tauxLignes,@JsonKey(name: 'taux_quantite') int? tauxQuantite
+});
+
+
+
+
+}
+/// @nodoc
+class __$ServiceFournisseurCopyWithImpl<$Res>
+    implements _$ServiceFournisseurCopyWith<$Res> {
+  __$ServiceFournisseurCopyWithImpl(this._self, this._then);
+
+  final _ServiceFournisseur _self;
+  final $Res Function(_ServiceFournisseur) _then;
+
+/// Create a copy of ServiceFournisseur
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = freezed,Object? commandes = null,Object? lignes = null,Object? qte = null,Object? recu = null,Object? tauxLignes = freezed,Object? tauxQuantite = freezed,}) {
+  return _then(_ServiceFournisseur(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,nom: freezed == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
+as String?,commandes: null == commandes ? _self.commandes : commandes // ignore: cast_nullable_to_non_nullable
+as int,lignes: null == lignes ? _self.lignes : lignes // ignore: cast_nullable_to_non_nullable
+as int,qte: null == qte ? _self.qte : qte // ignore: cast_nullable_to_non_nullable
+as int,recu: null == recu ? _self.recu : recu // ignore: cast_nullable_to_non_nullable
+as int,tauxLignes: freezed == tauxLignes ? _self.tauxLignes : tauxLignes // ignore: cast_nullable_to_non_nullable
+as int?,tauxQuantite: freezed == tauxQuantite ? _self.tauxQuantite : tauxQuantite // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$SuiviLivraisons {
+
+ DateTime get jour; int get jours;@JsonKey(name: 'donnees_du') DateTime? get donneesDu; List<CommandeSuivie> get commandes; List<ServiceFournisseur> get fournisseurs;
+/// Create a copy of SuiviLivraisons
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SuiviLivraisonsCopyWith<SuiviLivraisons> get copyWith => _$SuiviLivraisonsCopyWithImpl<SuiviLivraisons>(this as SuiviLivraisons, _$identity);
+
+  /// Serializes this SuiviLivraisons to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as SuiviLivraisons;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuiviLivraisons&&(identical(other.jour, _this.jour) || other.jour == _this.jour)&&(identical(other.jours, _this.jours) || other.jours == _this.jours)&&(identical(other.donneesDu, _this.donneesDu) || other.donneesDu == _this.donneesDu)&&const DeepCollectionEquality().equals(other.commandes, _this.commandes)&&const DeepCollectionEquality().equals(other.fournisseurs, _this.fournisseurs));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as SuiviLivraisons;
+  return Object.hash(runtimeType,_this.jour,_this.jours,_this.donneesDu,const DeepCollectionEquality().hash(_this.commandes),const DeepCollectionEquality().hash(_this.fournisseurs));
+}
+
+@override
+String toString() {
+  final _this = this as SuiviLivraisons;
+  return 'SuiviLivraisons(jour: ${_this.jour}, jours: ${_this.jours}, donneesDu: ${_this.donneesDu}, commandes: ${_this.commandes}, fournisseurs: ${_this.fournisseurs})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SuiviLivraisonsCopyWith<$Res>  {
+  factory $SuiviLivraisonsCopyWith(SuiviLivraisons value, $Res Function(SuiviLivraisons) _then) = _$SuiviLivraisonsCopyWithImpl;
+@useResult
+$Res call({
+ DateTime jour, int jours,@JsonKey(name: 'donnees_du') DateTime? donneesDu, List<CommandeSuivie> commandes, List<ServiceFournisseur> fournisseurs
+});
+
+
+
+
+}
+/// @nodoc
+class _$SuiviLivraisonsCopyWithImpl<$Res>
+    implements $SuiviLivraisonsCopyWith<$Res> {
+  _$SuiviLivraisonsCopyWithImpl(this._self, this._then);
+
+  final SuiviLivraisons _self;
+  final $Res Function(SuiviLivraisons) _then;
+
+/// Create a copy of SuiviLivraisons
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? jour = null,Object? jours = null,Object? donneesDu = freezed,Object? commandes = null,Object? fournisseurs = null,}) {
+  return _then(SuiviLivraisons(
+jour: null == jour ? _self.jour : jour // ignore: cast_nullable_to_non_nullable
+as DateTime,jours: null == jours ? _self.jours : jours // ignore: cast_nullable_to_non_nullable
+as int,donneesDu: freezed == donneesDu ? _self.donneesDu : donneesDu // ignore: cast_nullable_to_non_nullable
+as DateTime?,commandes: null == commandes ? _self.commandes : commandes // ignore: cast_nullable_to_non_nullable
+as List<CommandeSuivie>,fournisseurs: null == fournisseurs ? _self.fournisseurs : fournisseurs // ignore: cast_nullable_to_non_nullable
+as List<ServiceFournisseur>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SuiviLivraisons].
+extension SuiviLivraisonsPatterns on SuiviLivraisons {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SuiviLivraisons value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SuiviLivraisons() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SuiviLivraisons value)  $default,){
+final _that = this;
+switch (_that) {
+case _SuiviLivraisons():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SuiviLivraisons value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SuiviLivraisons() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime jour,  int jours, @JsonKey(name: 'donnees_du')  DateTime? donneesDu,  List<CommandeSuivie> commandes,  List<ServiceFournisseur> fournisseurs)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SuiviLivraisons() when $default != null:
+return $default(_that.jour,_that.jours,_that.donneesDu,_that.commandes,_that.fournisseurs);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime jour,  int jours, @JsonKey(name: 'donnees_du')  DateTime? donneesDu,  List<CommandeSuivie> commandes,  List<ServiceFournisseur> fournisseurs)  $default,) {final _that = this;
+switch (_that) {
+case _SuiviLivraisons():
+return $default(_that.jour,_that.jours,_that.donneesDu,_that.commandes,_that.fournisseurs);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime jour,  int jours, @JsonKey(name: 'donnees_du')  DateTime? donneesDu,  List<CommandeSuivie> commandes,  List<ServiceFournisseur> fournisseurs)?  $default,) {final _that = this;
+switch (_that) {
+case _SuiviLivraisons() when $default != null:
+return $default(_that.jour,_that.jours,_that.donneesDu,_that.commandes,_that.fournisseurs);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _SuiviLivraisons extends SuiviLivraisons {
+  const _SuiviLivraisons({required this.jour, this.jours = 30, @JsonKey(name: 'donnees_du') this.donneesDu,  List<CommandeSuivie> commandes = const <CommandeSuivie>[],  List<ServiceFournisseur> fournisseurs = const <ServiceFournisseur>[]}): _commandes = commandes,_fournisseurs = fournisseurs,super._();
+  factory _SuiviLivraisons.fromJson(Map<String, dynamic> json) => _$SuiviLivraisonsFromJson(json);
+
+@override final  DateTime jour;
+@override@JsonKey() final  int jours;
+@override@JsonKey(name: 'donnees_du') final  DateTime? donneesDu;
+ final  List<CommandeSuivie> _commandes;
+@override@JsonKey() List<CommandeSuivie> get commandes {
+  if (_commandes is EqualUnmodifiableListView) return _commandes;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_commandes);
+}
+
+ final  List<ServiceFournisseur> _fournisseurs;
+@override@JsonKey() List<ServiceFournisseur> get fournisseurs {
+  if (_fournisseurs is EqualUnmodifiableListView) return _fournisseurs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_fournisseurs);
+}
+
+
+/// Create a copy of SuiviLivraisons
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SuiviLivraisonsCopyWith<_SuiviLivraisons> get copyWith => __$SuiviLivraisonsCopyWithImpl<_SuiviLivraisons>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$SuiviLivraisonsToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SuiviLivraisons&&(identical(other.jour, jour) || other.jour == jour)&&(identical(other.jours, jours) || other.jours == jours)&&(identical(other.donneesDu, donneesDu) || other.donneesDu == donneesDu)&&const DeepCollectionEquality().equals(other.commandes, _commandes)&&const DeepCollectionEquality().equals(other.fournisseurs, _fournisseurs));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,jour,jours,donneesDu,const DeepCollectionEquality().hash(_commandes),const DeepCollectionEquality().hash(_fournisseurs));
+}
+
+@override
+String toString() {
+    return 'SuiviLivraisons(jour: $jour, jours: $jours, donneesDu: $donneesDu, commandes: $commandes, fournisseurs: $fournisseurs)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SuiviLivraisonsCopyWith<$Res> implements $SuiviLivraisonsCopyWith<$Res> {
+  factory _$SuiviLivraisonsCopyWith(_SuiviLivraisons value, $Res Function(_SuiviLivraisons) _then) = __$SuiviLivraisonsCopyWithImpl;
+@override @useResult
+$Res call({
+ DateTime jour, int jours,@JsonKey(name: 'donnees_du') DateTime? donneesDu, List<CommandeSuivie> commandes, List<ServiceFournisseur> fournisseurs
+});
+
+
+
+
+}
+/// @nodoc
+class __$SuiviLivraisonsCopyWithImpl<$Res>
+    implements _$SuiviLivraisonsCopyWith<$Res> {
+  __$SuiviLivraisonsCopyWithImpl(this._self, this._then);
+
+  final _SuiviLivraisons _self;
+  final $Res Function(_SuiviLivraisons) _then;
+
+/// Create a copy of SuiviLivraisons
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? jour = null,Object? jours = null,Object? donneesDu = freezed,Object? commandes = null,Object? fournisseurs = null,}) {
+  return _then(_SuiviLivraisons(
+jour: null == jour ? _self.jour : jour // ignore: cast_nullable_to_non_nullable
+as DateTime,jours: null == jours ? _self.jours : jours // ignore: cast_nullable_to_non_nullable
+as int,donneesDu: freezed == donneesDu ? _self.donneesDu : donneesDu // ignore: cast_nullable_to_non_nullable
+as DateTime?,commandes: null == commandes ? _self._commandes : commandes // ignore: cast_nullable_to_non_nullable
+as List<CommandeSuivie>,fournisseurs: null == fournisseurs ? _self._fournisseurs : fournisseurs // ignore: cast_nullable_to_non_nullable
+as List<ServiceFournisseur>,
+  ));
+}
+
+
+}
+
 // dart format on

@@ -472,6 +472,12 @@ async def test_suivi_des_livraisons(api):
     assert [(l["nom"], l["etat"], l["recu"]) for l in ancienne["lignes"]] == [
         ("BETA", "manquante", 0), ("EPSILON", "partielle", 4), ("ALPHA", "livree", 20)]
     assert float(ancienne["montant"]) == 3500 and float(ancienne["montant_recu"]) == 2400
+    assert ancienne["lignes"][0]["stock"] == 0 and ancienne["lignes"][0]["tension"] is None
+    # « Autre grossiste » : le reste de BETA... psychotrope, refusé ; EPSILON part chez PARA B.
+    r = await api.post("/commandes/ajouter", json={"id_nom": 5, "qte": 6, "id_fournisseur": 2})
+    assert r.status_code == 200 and r.json()["data"]["fournisseur"] == "PARA B" and r.json()["data"]["qte"] == 6
+    assert (await api.post("/commandes/ajouter", json={"id_nom": 5, "qte": 6, "id_fournisseur": 3})).status_code == 409
+    s = (await api.get("/commandes/suivi")).json()["data"]
     (f,) = s["fournisseurs"]
     assert (f["nom"], f["commandes"], f["lignes"], f["taux_lignes"], f["taux_quantite"]) == (
         "GROSSISTE A", 1, 3, 33, 69)

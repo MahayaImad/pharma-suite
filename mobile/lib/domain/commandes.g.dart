@@ -368,3 +368,98 @@ Map<String, dynamic> _$TensionToJson(_Tension instance) => <String, dynamic>{
   'source': instance.source,
   'motif': instance.motif,
 };
+
+_LigneSuivie _$LigneSuivieFromJson(Map<String, dynamic> json) => _LigneSuivie(
+  idNom: (json['id_nom'] as num).toInt(),
+  nom: json['nom'] as String?,
+  qte: (json['qte'] as num?)?.toInt() ?? 0,
+  recu: (json['recu'] as num?)?.toInt() ?? 0,
+  reste: (json['reste'] as num?)?.toInt() ?? 0,
+  recuLe: json['recu_le'] == null ? null : DateTime.parse(json['recu_le'] as String),
+  etat: $enumDecodeNullable(_$EtatLivraisonEnumMap, json['etat']) ?? EtatLivraison.attendue,
+  stock: (json['stock'] as num?)?.toInt() ?? 0,
+  tension: json['tension'] as String?,
+);
+
+Map<String, dynamic> _$LigneSuivieToJson(_LigneSuivie instance) => <String, dynamic>{
+  'id_nom': instance.idNom,
+  'nom': instance.nom,
+  'qte': instance.qte,
+  'recu': instance.recu,
+  'reste': instance.reste,
+  'recu_le': instance.recuLe?.toIso8601String(),
+  'etat': _$EtatLivraisonEnumMap[instance.etat]!,
+  'stock': instance.stock,
+  'tension': instance.tension,
+};
+
+const _$EtatLivraisonEnumMap = {
+  EtatLivraison.manquante: 'manquante',
+  EtatLivraison.partielle: 'partielle',
+  EtatLivraison.attendue: 'attendue',
+  EtatLivraison.livree: 'livree',
+};
+
+_CommandeSuivie _$CommandeSuivieFromJson(Map<String, dynamic> json) => _CommandeSuivie(
+  id: (json['id'] as num).toInt(),
+  jour: DateTime.parse(json['jour'] as String),
+  fournisseur: FournisseurPanier.fromJson(json['fournisseur'] as Map<String, dynamic>),
+  livraisonPrevue: json['livraison_prevue'] == null ? null : DateTime.parse(json['livraison_prevue'] as String),
+  etat: $enumDecodeNullable(_$EtatLivraisonEnumMap, json['etat']) ?? EtatLivraison.attendue,
+  lignes:
+      (json['lignes'] as List<dynamic>?)?.map((e) => LigneSuivie.fromJson(e as Map<String, dynamic>)).toList() ??
+      const <LigneSuivie>[],
+);
+
+Map<String, dynamic> _$CommandeSuivieToJson(_CommandeSuivie instance) => <String, dynamic>{
+  'id': instance.id,
+  'jour': instance.jour.toIso8601String(),
+  'fournisseur': instance.fournisseur,
+  'livraison_prevue': instance.livraisonPrevue?.toIso8601String(),
+  'etat': _$EtatLivraisonEnumMap[instance.etat]!,
+  'lignes': instance.lignes,
+};
+
+_ServiceFournisseur _$ServiceFournisseurFromJson(Map<String, dynamic> json) => _ServiceFournisseur(
+  id: (json['id'] as num).toInt(),
+  nom: json['nom'] as String?,
+  commandes: (json['commandes'] as num?)?.toInt() ?? 0,
+  lignes: (json['lignes'] as num?)?.toInt() ?? 0,
+  qte: (json['qte'] as num?)?.toInt() ?? 0,
+  recu: (json['recu'] as num?)?.toInt() ?? 0,
+  tauxLignes: (json['taux_lignes'] as num?)?.toInt(),
+  tauxQuantite: (json['taux_quantite'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$ServiceFournisseurToJson(_ServiceFournisseur instance) => <String, dynamic>{
+  'id': instance.id,
+  'nom': instance.nom,
+  'commandes': instance.commandes,
+  'lignes': instance.lignes,
+  'qte': instance.qte,
+  'recu': instance.recu,
+  'taux_lignes': instance.tauxLignes,
+  'taux_quantite': instance.tauxQuantite,
+};
+
+_SuiviLivraisons _$SuiviLivraisonsFromJson(Map<String, dynamic> json) => _SuiviLivraisons(
+  jour: DateTime.parse(json['jour'] as String),
+  jours: (json['jours'] as num?)?.toInt() ?? 30,
+  donneesDu: json['donnees_du'] == null ? null : DateTime.parse(json['donnees_du'] as String),
+  commandes:
+      (json['commandes'] as List<dynamic>?)?.map((e) => CommandeSuivie.fromJson(e as Map<String, dynamic>)).toList() ??
+      const <CommandeSuivie>[],
+  fournisseurs:
+      (json['fournisseurs'] as List<dynamic>?)
+          ?.map((e) => ServiceFournisseur.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <ServiceFournisseur>[],
+);
+
+Map<String, dynamic> _$SuiviLivraisonsToJson(_SuiviLivraisons instance) => <String, dynamic>{
+  'jour': instance.jour.toIso8601String(),
+  'jours': instance.jours,
+  'donnees_du': instance.donneesDu?.toIso8601String(),
+  'commandes': instance.commandes,
+  'fournisseurs': instance.fournisseurs,
+};

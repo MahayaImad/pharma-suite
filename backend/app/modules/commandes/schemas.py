@@ -31,6 +31,7 @@ class ModeGroupe(BaseModel):
 class AjoutProduit(BaseModel):
     id_nom: int
     qte: Optional[int] = Field(None, ge=1, le=100000, description="None : quantité proposée ce soir (au moins 1)")
+    id_fournisseur: Optional[int] = Field(None, description="None : fournisseur principal du produit")
 
 
 class Deplacement(BaseModel):
