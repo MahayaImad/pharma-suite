@@ -47,7 +47,9 @@ backend/
     └── services/             # sms_queue, stock_segmentation, purchase_engine/
 
 docs/
-└── 02-sync-contrat.md        # contrat de l'agent EASYPHARM, reconstitué depuis le code
+├── 02-sync-contrat.md        # contrat de l'agent EASYPHARM, reconstitué depuis le code
+├── 05-stock-guide.md         # indicateurs du stock, méthode de prévision
+└── 06-commandes.md           # module Commandes : cycle, mini / maxi, génériques, tensions
 ```
 
 Le produit s'appelle **PharmaSuite**. Le nom « synergo » est mort : il ne doit
