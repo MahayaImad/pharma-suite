@@ -57,9 +57,9 @@ void main() {
 
   testWidgets('la navigation change d\'écran', (tester) async {
     await _lancer(tester, taille: _portable);
-    await tester.tap(find.text('Alertes'));
+    await tester.tap(find.text('Inventaire'));
     await tester.pumpAndSettle();
-    expect(find.text('Ruptures, seuils et péremptions à traiter.'), findsOneWidget);
+    expect(find.text("L'inventaire tournant et ses écarts."), findsOneWidget);
   });
 
   testWidgets('sur portable : les préférences s\'ouvrent en plein écran et se referment', (tester) async {

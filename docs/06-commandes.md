@@ -287,5 +287,4 @@ encore été rejouée sur les données réelles.
 **À faire**
 
 1. Rejouer la stratégie mini / maxi sur les données réelles.
-2. Vue Alertes.
-3. Modèle de fondation en concurrence dans le rejeu (service `ml/`).
+2. Modèle de fondation en concurrence dans le rejeu (service `ml/`).

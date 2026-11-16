@@ -48,6 +48,11 @@ def _rythme(cmm: float) -> str:
     return f"{round(cmm)} vente{_s(round(cmm))} par mois" if cmm >= 1 else "ventes rares"
 
 
+def _nom(brut: Optional[str]) -> str:
+    """Nom de grossiste lisible dans une phrase : « MEDI-EST DISTRIBUTION » → « Medi-Est Distribution »."""
+    return (brut or "le grossiste").title() if (brut or "").isupper() else (brut or "le grossiste")
+
+
 def _jm(jour) -> str:
     return f"{jour.day:02d}/{jour.month:02d}"
 
@@ -99,8 +104,8 @@ class AlertesService:
         ruptures = [p for p in a_traiter["a_commander"] if p["stock"] <= 0]
         for p in ruptures[:RUPTURES_DETAILLEES]:
             c = manquants.get(p["id"])
-            suite = (f"non livré par {c['fournisseur']['nom']} le {_jm(c['livraison_prevue'])}" if c
-                     else (f"en cours chez {attendus[p['id']]['fournisseur']['nom']}" if p["id"] in attendus
+            suite = (f"non livré par {_nom(c['fournisseur']['nom'])} le {_jm(c['livraison_prevue'])}" if c
+                     else (f"en cours chez {_nom(attendus[p['id']]['fournisseur']['nom'])}" if p["id"] in attendus
                            else "rien en cours"))
             ajouter(f"rupture-{p['id']}", "stock", AUJOURDHUI, "rupture", "en rupture",
                     f"{_rythme(p['cmm'])} · {suite}", {"sorte": "commander", "libelle": "Commander"}, p["id"],

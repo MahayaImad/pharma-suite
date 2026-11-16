@@ -32,7 +32,7 @@ async def test_alertes_par_urgence_avec_leur_action(api):
 
     gamma = par_id["rupture-3"]
     assert (gamma["niveau"], gamma["type"], gamma["action"]["sorte"]) == ("aujourdhui", "stock", "commander")
-    assert (gamma["sujet"], gamma["titre"]) == ("GAMMA", "en rupture") and "non livré par PARA B le 11/11" in gamma["detail"]
+    assert (gamma["sujet"], gamma["titre"]) == ("GAMMA", "en rupture") and "non livré par Para B le 11/11" in gamma["detail"]
     assert "2 ventes par jour" in gamma["detail"]
 
     livraison = par_id[f"livraison-{id_c}"]

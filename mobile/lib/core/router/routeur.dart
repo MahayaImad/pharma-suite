@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/alertes/presentation/ecran_alertes.dart';
 import '../../features/commandes/presentation/ecran_commandes.dart';
 import '../../features/commandes/presentation/ecran_fournisseurs.dart';
 import '../../features/commandes/presentation/ecran_livraisons.dart';
@@ -17,7 +18,6 @@ import '../widgets/ecran_a_venir.dart';
 
 const _descriptions = <String, String>{
   '/accueil': "La vue d'ensemble de l'officine.",
-  '/alertes': 'Ruptures, seuils et péremptions à traiter.',
   '/inventaire': "L'inventaire tournant et ses écarts.",
 };
 
@@ -81,7 +81,11 @@ GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte,
             ),
           ],
         ),
-        for (final d in destinations.where((d) => d.chemin != '/stock' && d.chemin != '/commandes'))
+        GoRoute(
+          path: '/alertes',
+          pageBuilder: (context, etat) => const NoTransitionPage(child: EcranAlertes()),
+        ),
+        for (final d in destinations.where((d) => !const ['/stock', '/commandes', '/alertes'].contains(d.chemin)))
           GoRoute(
             path: d.chemin,
             pageBuilder: (context, etat) => NoTransitionPage(
