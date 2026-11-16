@@ -242,6 +242,10 @@ budget se règle dans Calendrier et réglages (0 = pas de budget).
 **Exécution sur le serveur.** Le calcul tourne dans un fil à part, un seul à
 la fois. Il est préparé toutes les 15 minutes et gardé en cache jusqu'au
 prochain rafraîchissement du stock, pour que l'API continue de répondre.
+La liste des fournisseurs (qui relit toutes les réceptions) est gardée de la
+même façon, et renouvelée à un réglage ou quand une commande est validée,
+envoyée, rouverte ou annulée. La détection des produits en tension ne tourne
+qu'une fois par rafraîchissement du stock.
 
 ## 11. Outils
 

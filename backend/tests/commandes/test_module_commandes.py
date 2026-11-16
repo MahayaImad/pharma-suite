@@ -204,6 +204,7 @@ async def test_fournisseur_sans_commande_depuis_30_jours_inactif_par_defaut(api)
         "INSERT INTO entrees_produits (id, id_nom, id_fournisseur, date_entree, stock, qte_entree, prix_achat) "
         "VALUES (98, 4, 3, '2026-11-01', 0, 5, 100)"))   # livré il y a 11 jours
     await api.db.commit()
+    service.vider_cache()   # une réception arrive avec une synchronisation, qui renouvelle le cache
     fs = {f["nom"]: f for f in (await api.get("/commandes/reglages/fournisseurs")).json()["data"]}
     assert (fs["ANCIEN C"]["actif"], fs["ANCIEN C"]["auto"]) == (True, True)
 
@@ -529,3 +530,31 @@ async def test_grossiste_prefere_retenu_pour_les_soirs_suivants(api):
     await api.put("/commandes/reglages/fournisseurs/2", json={"type": "para", "actif": True, "whatsapp": None})
     assert (await api.put("/commandes/preferes/1", json={"id_fournisseur": None})).status_code == 200
     assert chez(await _jour(api)) == "GROSSISTE A"
+
+
+async def test_fournisseurs_et_detection_des_tensions_gardes_en_cache(api, monkeypatch):
+    """La liste des fournisseurs et la détection des tensions ne sont relancées
+    qu'après un rafraîchissement du stock, un réglage ou une commande validée."""
+    from app.modules.commandes.repository import CommandesRepository
+    appels = {"fournisseurs": 0, "detecter_tensions": 0}
+    for nom in appels:
+        origine = getattr(CommandesRepository, nom)
+
+        def compte(nom=nom, origine=origine):
+            async def f(self, *a, **k):
+                appels[nom] += 1
+                return await origine(self, *a, **k)
+            return f
+        monkeypatch.setattr(CommandesRepository, nom, compte())
+    for _ in range(3):
+        await _jour(api)
+        await api.get("/commandes/reglages/fournisseurs")
+        await api.get("/commandes/tensions")
+    assert appels == {"fournisseurs": 1, "detecter_tensions": 1}
+    await api.put("/commandes/reglages/fournisseurs/2", json={"type": "para", "actif": False, "whatsapp": None})
+    vue = await _jour(api)
+    assert appels["fournisseurs"] == 2 and "PARA B" not in [p["fournisseur"]["nom"] for p in vue["paniers"]]
+    await api.db.execute(text("UPDATE sync_status SET last_sync_at = now() + interval '1 minute'"))
+    await api.db.commit()
+    await api.get("/commandes/tensions")
+    assert appels["detecter_tensions"] == 2

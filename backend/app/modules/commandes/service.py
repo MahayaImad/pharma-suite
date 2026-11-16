@@ -73,9 +73,19 @@ _en_cours: dict[tuple, asyncio.Future] = {}
 _decisions: dict[tuple, tuple] = {}
 
 
+# Fournisseurs et leur réglage (la requête relit toutes les réceptions) : gardés
+# jusqu'au prochain rafraîchissement du stock, à un réglage ou à une commande
+# validée, envoyée, rouverte ou annulée. Une seule entrée.
+_fournisseurs: dict[tuple, dict[int, dict]] = {}
+# Détection des tensions déjà faite pour ces données : (jour, données du).
+_tensions_detectees: set[tuple] = set()
+
+
 def vider_cache() -> None:
     _cache.clear()
     _decisions.clear()
+    _fournisseurs.clear()
+    _tensions_detectees.clear()
 
 
 async def seuils_si_prets(db: AsyncSession) -> Optional[dict[int, Decision]]:
@@ -194,6 +204,15 @@ class CommandesService:
     async def peut_valider(self) -> bool:
         return self.utilisateur.get("role") == "admin" or self.qui in await self.repo.valideurs()
 
+    async def _fournisseurs(self, jour: date) -> dict[int, dict]:
+        """Fournisseurs et réglages, gardés tant que rien ne les change."""
+        cle = (jour, await self.repo.donnees_du())
+        if cle not in _fournisseurs:
+            resultat = await self.repo.fournisseurs(jour)
+            _fournisseurs.clear()
+            _fournisseurs[cle] = resultat
+        return _fournisseurs[cle]
+
     # ── Calcul ──
     async def _donnees(self, jour: date) -> Donnees:
         return await donnees_du_calcul(jour, await self.repo.donnees_du())
@@ -218,7 +237,7 @@ class CommandesService:
                     reprises.setdefault(k, []).append(id_nom)
         decisions = await asyncio.to_thread(proposer_tous, replace(donnees, produits=produits), stocks, en_cours,
                                             None, False, statuts)
-        resultat = (_regle_para(decisions, infos, await self.repo.fournisseurs(jour)), infos, reprises)
+        resultat = (_regle_para(decisions, infos, await self._fournisseurs(jour)), infos, reprises)
         _decisions.clear()
         _decisions[cle] = resultat
         return resultat
@@ -251,7 +270,7 @@ class CommandesService:
             "peut_valider": await self.peut_valider(), "ferme": jour.weekday() == VENDREDI,
             "paniers": [], "psychotropes": [], "sans_fournisseur": [],
         }
-        fournisseurs = await self.repo.fournisseurs(jour)
+        fournisseurs = await self._fournisseurs(jour)
         commandes = {c["id_fournisseur"]: c for c in await self.repo.commandes_du_jour(jour)}
         lignes_enregistrees: dict[int, list[dict]] = {}
         if commandes:
@@ -359,7 +378,7 @@ class CommandesService:
         if de == vers:
             raise ErreurCommandes("meme_fournisseur", "C'est déjà ce fournisseur.")
         jour = jour_de_commande()
-        fournisseurs = await self.repo.fournisseurs(jour)
+        fournisseurs = await self._fournisseurs(jour)
         source = await self._brouillon(jour, de, fournisseurs)
         ligne = next((l for l in await self.repo.lignes([source]) if l["id_nom"] == id_nom), None)
         if ligne is None:
@@ -379,7 +398,7 @@ class CommandesService:
         if id_nom not in await self.repo.produits([id_nom]):
             raise ErreurCommandes("produit", "Produit inconnu.", 404)
         if id_fournisseur is not None:
-            f = (await self.repo.fournisseurs(jour_de_commande())).get(id_fournisseur)
+            f = (await self._fournisseurs(jour_de_commande())).get(id_fournisseur)
             if f is None or not f.get("actif"):
                 raise ErreurCommandes("fournisseur_inactif", "Ce fournisseur n'est pas actif.", 409)
         await self.repo.preferer(id_nom, id_fournisseur, self.qui)
@@ -427,7 +446,7 @@ class CommandesService:
         if info.get("psychotrope"):
             raise ErreurCommandes("psychotrope", "Psychotrope : à commander dans EASYPHARM (bon spécial).", 409)
         id_f = id_fournisseur or info.get("id_fournisseur")
-        fournisseurs = await self.repo.fournisseurs(jour)
+        fournisseurs = await self._fournisseurs(jour)
         if id_f is None or id_f not in fournisseurs:
             raise ErreurCommandes("sans_fournisseur", "Aucun achat connu : fournisseur introuvable.", 409)
         if id_fournisseur is not None and not fournisseurs[id_f].get("actif"):
@@ -482,6 +501,7 @@ class CommandesService:
             raise ErreurCommandes("vide", "La commande n'a aucune ligne.")
         await self.repo.changer_statut(id_commande, "brouillon", "validee", self.qui)
         await self.repo.commit()
+        _fournisseurs.clear()
 
     async def rouvrir(self, id_commande: int) -> None:
         """Repasse une commande validée (pas encore envoyée) en brouillon."""
@@ -490,6 +510,7 @@ class CommandesService:
         await self._commande(id_commande, ("validee",))
         await self.repo.changer_statut(id_commande, "validee", "brouillon", self.qui)
         await self.repo.commit()
+        _fournisseurs.clear()
 
     async def envoyer(self, id_commande: int) -> dict:
         """Marque la commande envoyée et rend le bon à coller dans WhatsApp."""
@@ -497,6 +518,7 @@ class CommandesService:
         bon = await self.bon(id_commande)
         await self.repo.changer_statut(id_commande, "validee", "envoyee", self.qui)
         await self.repo.commit()
+        _fournisseurs.clear()
         return bon
 
     async def annuler(self, id_commande: int) -> None:
@@ -505,6 +527,7 @@ class CommandesService:
             raise ErreurCommandes("interdit", "Réservé au titulaire et aux employés désignés.", 403)
         await self.repo.changer_statut(id_commande, c["statut"], "annulee", self.qui)
         await self.repo.commit()
+        _fournisseurs.clear()
 
     async def bon(self, id_commande: int) -> dict:
         """Bon de commande en texte : produit et boîtes, sans prix (le
@@ -512,7 +535,7 @@ class CommandesService:
         c = await self._commande(id_commande, ("brouillon", "validee", "envoyee"))
         lignes = await self.repo.lignes([id_commande])
         infos = await self.repo.produits([l["id_nom"] for l in lignes]) if lignes else {}
-        f = (await self.repo.fournisseurs(aujourdhui())).get(c["id_fournisseur"], {})
+        f = (await self._fournisseurs(aujourdhui())).get(c["id_fournisseur"], {})
         noms = sorted(((infos.get(l["id_nom"], {}).get("nom") or f"Produit {l['id_nom']}"), l["qte"]) for l in lignes)
         j = c["jour"]
         texte = "\n".join(
@@ -526,7 +549,7 @@ class CommandesService:
     async def fournisseurs(self) -> list[dict]:
         """Tous les fournisseurs : actifs d'abord. `auto` : pas encore réglé
         par le titulaire (actif s'il a livré dans les 30 derniers jours)."""
-        tous = (await self.repo.fournisseurs(aujourdhui())).values()
+        tous = (await self._fournisseurs(aujourdhui())).values()
         return sorted(
             ({"id": f["id"], "nom": f["nom"], "type": f["type"], "actif": f["actif"], "auto": not f["regle"],
               "whatsapp": f["whatsapp"] or f["mobile"], "telephone": f["telephone"],
@@ -537,10 +560,11 @@ class CommandesService:
     async def regler_fournisseur(self, id_fournisseur: int, type_: str, actif: bool,
                                  whatsapp: Optional[str]) -> None:
         qui = self._admin()
-        if id_fournisseur not in await self.repo.fournisseurs(aujourdhui()):
+        if id_fournisseur not in await self._fournisseurs(aujourdhui()):
             raise ErreurCommandes("introuvable", "Fournisseur inconnu.", 404)
         await self.repo.regler_fournisseur(id_fournisseur, type_, actif, whatsapp, qui)
         await self.repo.commit()
+        _fournisseurs.clear()
         _decisions.clear()
 
     async def valideurs(self) -> list[str]:
@@ -646,7 +670,7 @@ class CommandesService:
                 reprises.append(float(h[debut:n][garde].sum()))
         dec = _regle_para(proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour_c),
                                         generiques=False, statuts=statuts),
-                          infos, await self.repo.fournisseurs(jour_c)).get(id_nom)
+                          infos, await self._fournisseurs(jour_c)).get(id_nom)
         grands = sorted(((donnees.dates[debut + i], float(v)) for i, v in enumerate(serie[debut:n]) if v > 0),
                         key=lambda x: -x[1])[:5]
         st = statuts.get(id_nom)
@@ -727,10 +751,15 @@ class CommandesService:
 
     # ── Produits en tension ──
     async def tensions(self) -> list[dict]:
-        """Détecte puis liste : à confirmer d'abord, puis les décidés."""
-        await self.repo.detecter_tensions(aujourdhui())
-        await self.repo.proposer_tensions_non_livrees(aujourdhui())
-        await self.repo.commit()
+        """Détecte puis liste : à confirmer d'abord, puis les décidés. La
+        détection (lourde) ne tourne qu'une fois par rafraîchissement du stock."""
+        cle = (aujourdhui(), await self.repo.donnees_du())
+        if cle not in _tensions_detectees:
+            await self.repo.detecter_tensions(aujourdhui())
+            await self.repo.proposer_tensions_non_livrees(aujourdhui())
+            await self.repo.commit()
+            _tensions_detectees.clear()
+            _tensions_detectees.add(cle)
         return await self.repo.tensions()
 
     async def tension(self, id_nom: int) -> dict:
