@@ -44,6 +44,12 @@ class JourneeController extends AsyncNotifier<JourneeCommandes> {
   Future<void> deplacer(LigneCommande ligne, int de, int vers) async =>
       state = AsyncData(await _api.deplacer(ligne.idNom, de, vers));
 
+  /// Retient ce grossiste pour le produit (null : l'oublier), puis relit la journée.
+  Future<void> preferer(int idNom, int? idFournisseur) async {
+    await _api.preferer(idNom, idFournisseur);
+    await _relire();
+  }
+
   /// Remplace une ligne par un autre générique de la même DCI.
   Future<void> remplacer(Panier panier, LigneCommande ligne, int par) async {
     panier = await brouillonDe(panier);

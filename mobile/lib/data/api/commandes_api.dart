@@ -23,6 +23,9 @@ abstract interface class CommandesApi {
   /// Change le grossiste d'une ligne ; renvoie la journée à jour.
   Future<JourneeCommandes> deplacer(int idNom, int de, int vers);
 
+  /// Retient le grossiste préféré d'un produit ; null : celui du dernier achat.
+  Future<void> preferer(int idNom, int? idFournisseur);
+
   /// Remplace une ligne d'un brouillon par un autre générique (même DCI).
   Future<JourneeCommandes> remplacer(int idCommande, int idNom, int par);
 
@@ -118,6 +121,10 @@ class CommandesApiDio implements CommandesApi {
     () => _dio.post('/commandes/lignes/$idNom/deplacer', data: {'de': de, 'vers': vers}, options: _long),
     _journee,
   );
+
+  @override
+  Future<void> preferer(int idNom, int? idFournisseur) =>
+      _appel(() => _dio.put('/commandes/preferes/$idNom', data: {'id_fournisseur': idFournisseur}), (_) {});
 
   @override
   Future<JourneeCommandes> remplacer(int idCommande, int idNom, int par) => _appel(

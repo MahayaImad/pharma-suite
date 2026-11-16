@@ -285,6 +285,19 @@ class FausseCommandesApi implements CommandesApi {
   }
 
   @override
+  Future<void> preferer(int idNom, int? idFournisseur) async {
+    appels.add('preferer $idNom $idFournisseur');
+    paniers = [
+      for (final p in paniers)
+        p.copyWith(
+          lignes: [
+            for (final l in p.lignes) l.idNom == idNom ? l.copyWith(grossistePrefere: idFournisseur != null) : l,
+          ],
+        ),
+    ];
+  }
+
+  @override
   Future<JourneeCommandes> deplacer(int idNom, int de, int vers) async {
     appels.add('deplacer $idNom $de $vers');
     final source = paniers.firstWhere((p) => p.fournisseur.id == de);

@@ -234,6 +234,7 @@ class CommandesService:
         return {"id_nom": id_nom, "nom": info.get("nom"), "famille": info.get("famille"),
                 "classe_abc": info.get("segment_abc"), "stock": int(info.get("stock") or 0),
                 "code_dci": g.normaliser(info.get("de_equiv")),
+                "grossiste_prefere": info.get("id_fournisseur_prefere") is not None,
                 "qte": qte, "qte_proposee": qte_proposee, "prix_achat": prix,
                 "montant": (prix * qte).quantize(Decimal("0.01")), "raison": raison_}
 
@@ -371,6 +372,20 @@ class CommandesService:
         await self.repo.retirer_ligne(source, id_nom)
         await self.repo.commit()
         return await self.journee(jour)
+
+    async def preferer(self, id_nom: int, id_fournisseur: Optional[int]) -> dict:
+        """Grossiste préféré d'un produit : il y sera proposé les soirs
+        suivants. None : retour au fournisseur du dernier achat."""
+        if id_nom not in await self.repo.produits([id_nom]):
+            raise ErreurCommandes("produit", "Produit inconnu.", 404)
+        if id_fournisseur is not None:
+            f = (await self.repo.fournisseurs(jour_de_commande())).get(id_fournisseur)
+            if f is None or not f.get("actif"):
+                raise ErreurCommandes("fournisseur_inactif", "Ce fournisseur n'est pas actif.", 409)
+        await self.repo.preferer(id_nom, id_fournisseur, self.qui)
+        await self.repo.commit()
+        _decisions.clear()   # le fournisseur des produits fait partie des décisions gardées
+        return {"id_nom": id_nom, "id_fournisseur": id_fournisseur}
 
     async def remplacer(self, id_commande: int, id_nom: int, par: int) -> dict:
         """Change de générique : la ligne passe à une autre marque de même code

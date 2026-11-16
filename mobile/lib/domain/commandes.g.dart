@@ -69,6 +69,7 @@ _LigneCommande _$LigneCommandeFromJson(Map<String, dynamic> json) => _LigneComma
   raison: json['raison'] == null ? null : Raison.fromJson(json['raison'] as Map<String, dynamic>),
   fournisseur: json['fournisseur'] as String?,
   codeDci: json['code_dci'] as String?,
+  grossistePrefere: json['grossiste_prefere'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$LigneCommandeToJson(_LigneCommande instance) => <String, dynamic>{
@@ -84,6 +85,7 @@ Map<String, dynamic> _$LigneCommandeToJson(_LigneCommande instance) => <String, 
   'raison': instance.raison,
   'fournisseur': instance.fournisseur,
   'code_dci': instance.codeDci,
+  'grossiste_prefere': instance.grossistePrefere,
 };
 
 _FournisseurPanier _$FournisseurPanierFromJson(Map<String, dynamic> json) => _FournisseurPanier(

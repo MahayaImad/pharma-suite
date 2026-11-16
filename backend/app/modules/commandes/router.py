@@ -97,6 +97,12 @@ async def bon(id_commande: int, svc: CommandesService = Depends(_service)):
     return await _repondre(svc.bon(id_commande))
 
 
+@router.put("/preferes/{id_nom}")
+async def preferer(id_nom: int, saisie: s.Preference, svc: CommandesService = Depends(_service)):
+    """Grossiste préféré d'un produit (None : celui du dernier achat)."""
+    return await _repondre(svc.preferer(id_nom, saisie.id_fournisseur))
+
+
 @router.get("/suivi")
 async def suivi(jours: int = Query(30, ge=1, le=45), svc: CommandesService = Depends(_service)):
     """Livraisons : commandes envoyées, rapprochées des réceptions d'EASYPHARM."""

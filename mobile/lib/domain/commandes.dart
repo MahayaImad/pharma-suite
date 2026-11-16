@@ -95,6 +95,9 @@ abstract class LigneCommande with _$LigneCommande {
 
     /// Code DCI : présent si le produit peut avoir des génériques.
     @JsonKey(name: 'code_dci') String? codeDci,
+
+    /// Ce grossiste a été retenu pour ce produit (sinon : celui du dernier achat).
+    @JsonKey(name: 'grossiste_prefere') @Default(false) bool grossistePrefere,
   }) = _LigneCommande;
 
   factory LigneCommande.fromJson(Map<String, dynamic> json) => _$LigneCommandeFromJson(json);

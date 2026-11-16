@@ -451,17 +451,7 @@ class LigneFournisseur extends ConsumerWidget {
   Future<void> _deposer(BuildContext context, WidgetRef ref, LigneTiree t) async {
     try {
       await ref.read(journeeProvider.notifier).deplacer(t.ligne, t.de, panier.fournisseur.id);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                '${libelleProduit(t.ligne.nom ?? '')} passe chez ${libelleProduit(panier.fournisseur.nom ?? '')}.',
-              ),
-            ),
-          );
-      }
+      if (context.mounted) annoncerDeplacement(context, ref, t.ligne, panier.fournisseur);
     } catch (e) {
       if (context.mounted) montrerErreur(context, e);
     }
@@ -663,4 +653,32 @@ void montrerErreur(BuildContext context, Object erreur) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(ErreurApi.depuis(erreur).message)));
+}
+
+/// Après un changement de grossiste : le dit, et propose de retenir ce
+/// grossiste pour les soirs suivants (sinon le changement ne vaut que ce soir).
+void annoncerDeplacement(BuildContext context, WidgetRef ref, LigneCommande ligne, FournisseurPanier vers) {
+  final messager = ScaffoldMessenger.of(context);
+  final chez = libelleProduit(vers.nom ?? '');
+  messager
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 8),
+        content: Text('${libelleProduit(ligne.nom ?? '')} passe chez $chez, pour ce soir. Le retenir pour la suite ?'),
+        action: SnackBarAction(
+          label: 'Toujours',
+          onPressed: () async {
+            try {
+              await ref.read(journeeProvider.notifier).preferer(ligne.idNom, vers.id);
+              messager.showSnackBar(
+                SnackBar(content: Text('${libelleProduit(ligne.nom ?? '')} sera désormais commandé chez $chez.')),
+              );
+            } catch (e) {
+              messager.showSnackBar(SnackBar(content: Text(ErreurApi.depuis(e).message)));
+            }
+          },
+        ),
+      ),
+    );
 }

@@ -123,8 +123,14 @@ Règle du 2026-11-15 (`prevision/generiques.py`).
 
 ## 5. Les grossistes
 
-- **Grossiste d'un produit** : celui de son dernier achat (hors avoirs et
-  échanges), au dernier prix d'achat.
+- **Grossiste d'un produit** : son **grossiste préféré** s'il y en a un
+  (table `produits_fournisseur_prefere`, migration 016), sinon celui de son
+  dernier achat (hors avoirs et échanges) ; au dernier prix d'achat.
+- **Retenir un grossiste** : changer le grossiste d'une ligne ne vaut que
+  pour le soir ; le message qui suit propose « Toujours » pour le retenir
+  (`PUT /commandes/preferes/{id}`). On l'oublie depuis les actions de la
+  ligne (« Ne plus préférer ce grossiste »). Un grossiste désactivé par le
+  titulaire n'est plus suivi.
 - **Actif ou inactif** : sans réglage du titulaire, un grossiste est actif
   s'il a livré ou reçu une commande dans les 30 derniers jours. Un grossiste
   inactif n'a pas de panier ; ses produits sont listés « sans fournisseur
@@ -267,12 +273,9 @@ encore été rejouée sur les données réelles.
   - le stock commun d'une DCI n'y est pas mis en commun.
 - **Demande des jours de rupture** : inconnue, donc sous-estimée, aussi bien
   dans le calcul que dans la mesure.
-- **Changement de grossiste** : il ne vaut que pour le jour ; il n'y a pas
-  encore de « grossiste préféré » retenu par produit.
 
 **À faire**
 
 1. Rejouer la stratégie mini / maxi sur les données réelles.
-2. Grossiste préféré par produit.
-3. Vue Alertes.
-4. Modèle de fondation en concurrence dans le rejeu (service `ml/`).
+2. Vue Alertes.
+3. Modèle de fondation en concurrence dans le rejeu (service `ml/`).

@@ -245,6 +245,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(api.appels.last, 'deplacer 12 1 2');
     expect(find.byKey(const ValueKey('ligne-12')), findsNothing);
+    // Le changement ne vaut que ce soir, sauf si on retient ce grossiste.
+    expect(find.textContaining('pour ce soir'), findsOneWidget);
+    await tester.tap(find.text('Toujours'));
+    await tester.pumpAndSettle();
+    expect(api.appels, contains('preferer 12 2'));
+    expect(find.textContaining('sera désormais commandé chez'), findsOneWidget);
+  });
+
+  testWidgets('grossiste préféré : signalé sur la ligne, on peut l\'oublier', (tester) async {
+    final api = FausseCommandesApi();
+    await api.preferer(12, 1);
+    await _lancer(tester, api, depart: '/commandes/1');
+    await _toucher(tester, find.byKey(const ValueKey('ligne-12')));
+    expect(find.textContaining('(grossiste préféré)'), findsOneWidget);
+    await _toucher(tester, find.byKey(const ValueKey('action-ligne-oublier')));
+    expect(api.appels, contains('preferer 12 null'));
+    await _toucher(tester, find.byKey(const ValueKey('ligne-12')));
+    expect(find.byKey(const ValueKey('action-ligne-oublier')), findsNothing);
   });
 
   testWidgets('employé non désigné : pas de bouton « Valider »', (tester) async {

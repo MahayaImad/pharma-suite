@@ -548,54 +548,66 @@ Future<void> _actionsLigne(BuildContext context, WidgetRef ref, Panier panier, L
   final choix = await showModalBottomSheet<String>(
     context: context,
     showDragHandle: true,
+    isScrollControlled: true,
     builder: (c) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 2),
-            child: Text(
-              libelleProduit(ligne.nom ?? ''),
-              style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 2),
+              child: Text(
+                libelleProduit(ligne.nom ?? ''),
+                style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w700, fontSize: 16),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              '${ligne.qte} boîte${ligne.qte > 1 ? 's' : ''} · ${libelleProduit(panier.fournisseur.nom ?? '')}',
-              style: TextStyle(fontSize: 12, color: c.couleurs.encre3),
-            ),
-          ),
-          ListTile(
-            key: const ValueKey('action-ligne-calcul'),
-            leading: const Icon(Icons.calculate_outlined),
-            title: const Text('Pourquoi cette quantité ?'),
-            onTap: () => Navigator.pop(c, 'calcul'),
-          ),
-          if (panier.modifiable && ligne.codeDci != null)
-            ListTile(
-              key: const ValueKey('action-ligne-generique'),
-              leading: const Icon(Icons.swap_horiz_rounded),
-              title: const Text('Changer de générique'),
-              onTap: () => Navigator.pop(c, 'generique'),
-            ),
-          if (panier.modifiable) ...[
-            ListTile(
-              key: const ValueKey('action-ligne-grossiste'),
-              leading: const Icon(Icons.local_shipping_outlined),
-              title: const Text('Changer de grossiste'),
-              onTap: () => Navigator.pop(c, 'grossiste'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                '${ligne.qte} boîte${ligne.qte > 1 ? 's' : ''} · ${libelleProduit(panier.fournisseur.nom ?? '')}'
+                '${ligne.grossistePrefere ? ' (grossiste préféré)' : ''}',
+                style: TextStyle(fontSize: 12, color: c.couleurs.encre3),
+              ),
             ),
             ListTile(
-              key: const ValueKey('action-ligne-retirer'),
-              leading: const Icon(Icons.delete_outline),
-              title: const Text('Retirer de la commande'),
-              onTap: () => Navigator.pop(c, 'retirer'),
+              key: const ValueKey('action-ligne-calcul'),
+              leading: const Icon(Icons.calculate_outlined),
+              title: const Text('Pourquoi cette quantité ?'),
+              onTap: () => Navigator.pop(c, 'calcul'),
             ),
+            if (panier.modifiable && ligne.codeDci != null)
+              ListTile(
+                key: const ValueKey('action-ligne-generique'),
+                leading: const Icon(Icons.swap_horiz_rounded),
+                title: const Text('Changer de générique'),
+                onTap: () => Navigator.pop(c, 'generique'),
+              ),
+            if (panier.modifiable) ...[
+              ListTile(
+                key: const ValueKey('action-ligne-grossiste'),
+                leading: const Icon(Icons.local_shipping_outlined),
+                title: const Text('Changer de grossiste'),
+                onTap: () => Navigator.pop(c, 'grossiste'),
+              ),
+              if (ligne.grossistePrefere)
+                ListTile(
+                  key: const ValueKey('action-ligne-oublier'),
+                  leading: const Icon(Icons.push_pin_outlined),
+                  title: const Text('Ne plus préférer ce grossiste'),
+                  subtitle: const Text('Retour au grossiste du dernier achat, dès demain'),
+                  onTap: () => Navigator.pop(c, 'oublier'),
+                ),
+              ListTile(
+                key: const ValueKey('action-ligne-retirer'),
+                leading: const Icon(Icons.delete_outline),
+                title: const Text('Retirer de la commande'),
+                onTap: () => Navigator.pop(c, 'retirer'),
+              ),
+            ],
+            const SizedBox(height: 8),
           ],
-          const SizedBox(height: 8),
-        ],
+        ),
       ),
     ),
   );
@@ -627,6 +639,14 @@ Future<void> _actionsLigne(BuildContext context, WidgetRef ref, Panier panier, L
       if (vers == null) return;
       try {
         await ref.read(journeeProvider.notifier).deplacer(ligne, panier.fournisseur.id, vers);
+        final cible = ref.read(journeeProvider).value?.panier(vers)?.fournisseur;
+        if (context.mounted && cible != null) annoncerDeplacement(context, ref, ligne, cible);
+      } catch (e) {
+        if (context.mounted) montrerErreur(context, e);
+      }
+    case 'oublier':
+      try {
+        await ref.read(journeeProvider.notifier).preferer(ligne.idNom, null);
       } catch (e) {
         if (context.mounted) montrerErreur(context, e);
       }

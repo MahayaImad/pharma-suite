@@ -32,7 +32,7 @@ utilisateur = {"username": "titulaire", "role": "admin"}
 TABLES = ("commandes_lignes", "commandes", "fournisseurs_commande", "commandes_valideurs", "fournisseurs",
           "sorties_produits", "entrees_produits", "nomenclature", "familles", "sync_status",
           "historique_stock_jour", "produits_consommables", "gardes", "generiques_groupes", "generiques_choix",
-          "produits_tension")
+          "produits_tension", "produits_fournisseur_prefere")
 
 
 @pytest_asyncio.fixture
@@ -508,3 +508,24 @@ async def test_commande_deux_fois_jamais_livre_propose_en_tension(api):
     ts = {t["nom"]: t for t in (await api.get("/commandes/tensions")).json()["data"]}
     assert "jamais livré" in ts["EPSILON"]["motif"] and not ts["EPSILON"]["confirme"]
     assert "ALPHA" not in ts   # une seule fois : pas assez
+
+
+async def test_grossiste_prefere_retenu_pour_les_soirs_suivants(api):
+    """ALPHA vient de GROSSISTE A ; préféré chez PARA B, il y est proposé, et
+    revient chez A quand on oublie la préférence ou que B est désactivé."""
+    def chez(vue):
+        return next(p["fournisseur"]["nom"] for p in vue["paniers"] for l in p["lignes"] if l["nom"] == "ALPHA")
+
+    assert chez(await _jour(api)) == "GROSSISTE A"
+    assert (await api.put("/commandes/preferes/1", json={"id_fournisseur": 3})).status_code == 409   # inactif
+    assert (await api.put("/commandes/preferes/1", json={"id_fournisseur": 2})).status_code == 200
+    vue = await _jour(api)
+    assert chez(vue) == "PARA B"
+    ligne = next(l for l in _panier(vue, "PARA B")["lignes"] if l["nom"] == "ALPHA")
+    assert ligne["grossiste_prefere"] is True
+    await api.put("/commandes/reglages/fournisseurs/2", json={"type": "para", "actif": False, "whatsapp": None})
+    service.vider_cache()
+    assert chez(await _jour(api)) == "GROSSISTE A"
+    await api.put("/commandes/reglages/fournisseurs/2", json={"type": "para", "actif": True, "whatsapp": None})
+    assert (await api.put("/commandes/preferes/1", json={"id_fournisseur": None})).status_code == 200
+    assert chez(await _jour(api)) == "GROSSISTE A"

@@ -39,6 +39,10 @@ class Deplacement(BaseModel):
     vers: int = Field(..., description="nouveau fournisseur")
 
 
+class Preference(BaseModel):
+    id_fournisseur: Optional[int] = Field(None, description="None : oublier le grossiste préféré")
+
+
 class Remplacement(BaseModel):
     par: int = Field(..., description="id_nom du générique qui remplace la ligne")
 

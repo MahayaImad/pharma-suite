@@ -29,14 +29,22 @@ class CommandesRepository:
             "SELECT last_sync_at FROM sync_status WHERE table_name = 'mv_stock_produits'"))).scalar()
 
     async def produits(self, ids: list[int]) -> dict[int, dict]:
-        """Nom, stock, psychotrope et fournisseur principal (dernier achat hors
-        avoirs et échanges) avec son dernier prix d'achat."""
+        """Nom, stock, psychotrope et fournisseur principal avec le dernier prix
+        d'achat. Fournisseur principal : le grossiste préféré s'il y en a un,
+        sinon celui du dernier achat (hors avoirs et échanges)."""
         r = await self.db.execute(text(f"""
             SELECT n.id, n.nom, COALESCE(f.famille, n.famille) AS famille, n.segment_abc, n.de_equiv,
                    COALESCE(n.psychotrope, 0) = 1 AS psychotrope,
                    COALESCE(mv.stock_actuel, 0) AS stock,
-                   der.id_fournisseur, der.prix_achat
+                   COALESCE(pref.id_fournisseur, der.id_fournisseur) AS id_fournisseur, der.prix_achat,
+                   pref.id_fournisseur AS id_fournisseur_prefere
             FROM nomenclature n
+            LEFT JOIN LATERAL (
+                -- Grossiste préféré, sauf s'il a été désactivé par le titulaire.
+                SELECT p.id_fournisseur FROM produits_fournisseur_prefere p
+                LEFT JOIN fournisseurs_commande fc ON fc.id_fournisseur = p.id_fournisseur
+                WHERE p.id_nom = n.id AND NOT (fc.modifie_par IS NOT NULL AND fc.actif = false)
+            ) pref ON true
             JOIN mv_stock_produits mv ON mv.id_nom = n.id
             LEFT JOIN familles f ON f.id = n.id_famille
             LEFT JOIN LATERAL (
@@ -195,6 +203,16 @@ class CommandesRepository:
                 """), {"p": id_nom, "m": f"Commandé {k} fois en {FENETRE_SUIVI} jours, jamais livré"})
                 n += r.rowcount or 0
         return n
+
+    async def preferer(self, id_nom: int, id_fournisseur: Optional[int], qui: str) -> None:
+        """Retient (ou oublie, avec None) le grossiste préféré d'un produit."""
+        if id_fournisseur is None:
+            await self.db.execute(text("DELETE FROM produits_fournisseur_prefere WHERE id_nom = :p"), {"p": id_nom})
+            return
+        await self.db.execute(text("""
+            INSERT INTO produits_fournisseur_prefere (id_nom, id_fournisseur, modifie_par) VALUES (:p, :f, :qui)
+            ON CONFLICT (id_nom) DO UPDATE SET id_fournisseur = :f, modifie_le = now(), modifie_par = :qui
+        """), {"p": id_nom, "f": id_fournisseur, "qui": qui})
 
     # ── Valideurs ──
     async def valideurs(self) -> list[str]:
