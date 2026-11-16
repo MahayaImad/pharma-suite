@@ -724,8 +724,9 @@ class _DetailCalcul extends ConsumerWidget {
                         'Commandé à la demande',
                         '0 en stock',
                         detail:
+                            d.decision?.motif ??
                             'Vente rare et chère : on le commande quand le patient vient (réglage « produit lent '
-                            'et cher »).',
+                                'et cher »).',
                       ),
                     if (d.decision != null && (d.decision!.maxi > 0 || d.decision!.mini > 0)) ...[
                       l(

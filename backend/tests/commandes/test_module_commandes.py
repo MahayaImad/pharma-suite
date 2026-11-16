@@ -378,3 +378,16 @@ async def test_produits_en_tension_detectes_puis_confirmes(api):
     assert ts["DELTA"]["confirme"] and not ts["DELTA"]["tension"]
     utilisateur.update(username="karim", role="employee")
     assert (await api.put("/commandes/tensions/3", json={"tension": False})).status_code == 403
+
+
+async def test_parapharmacie_seulement_classes_a_et_b(api):
+    """GAMMA (grossiste para) passe en classe C : plus proposé ; en classe B : proposé."""
+    await api.db.execute(text("UPDATE nomenclature SET segment_abc = 'C' WHERE id = 3"))
+    await api.db.commit()
+    noms = {l["nom"] for p in (await _jour(api))["paniers"] for l in p["lignes"]}
+    assert "GAMMA" not in noms and "ALPHA" in noms
+    d = (await api.get("/commandes/calcul/3")).json()["data"]
+    assert d["decision"]["quantite"] == 0 and "Parapharmacie" in d["decision"]["motif"]
+    await api.db.execute(text("UPDATE nomenclature SET segment_abc = 'B' WHERE id = 3"))
+    await api.db.commit()
+    assert "GAMMA" in {l["nom"] for p in (await _jour(api))["paniers"] for l in p["lignes"]}

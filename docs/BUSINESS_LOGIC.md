@@ -435,6 +435,9 @@ de la vue, et rendue par `GET /stock/resume` (`donnees_du`, UTC).
   - produit lent **et cher** (une ordonnance vaut plus que `lent_valeur_max_da`,
     5 000 DA) : pas de stock, **commandé à la demande** du patient (Menopur,
     Decapeptyl…), sauf s'il est en tension confirmée ;
+  - **parapharmacie** (fournisseur principal de type « para ») : seules les
+    classes **A et B** sont gardées en stock ; un produit de classe C ou non
+    classé n'est plus proposé (il se commande à la main), sauf en tension ;
   - **génériques interchangeables** : les marques gardées d'une DCI sont
     calculées ensemble (ventes, stock, en cours), puis la quantité est
     répartie selon leur part des ventes.

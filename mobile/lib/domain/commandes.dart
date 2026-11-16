@@ -62,6 +62,9 @@ abstract class Raison with _$Raison {
     /// Produit lent et cher : pas de stock, commandé à la demande.
     @JsonKey(name: 'sur_demande') @Default(false) bool surDemande,
 
+    /// Pourquoi pas de stock (« Parapharmacie de classe C… »).
+    String? motif,
+
     /// Génériques interchangeables calculés ensemble : code DCI, part de la
     /// marque, stock et maxi du groupe.
     String? groupe,

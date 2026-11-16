@@ -111,6 +111,24 @@ async def donnees_du_calcul(jour: date, donnees_du) -> Donnees:
     return await asyncio.shield(tache)
 
 
+def _regle_para(decisions: dict[int, Decision], infos: dict[int, dict], fournisseurs: dict[int, dict]
+                ) -> dict[int, Decision]:
+    """Parapharmacie (arrêté le 2026-11-16) : on ne garde en stock que les
+    classes A et B. Un produit de classe C (ou non classé) dont le
+    fournisseur principal est parapharmaceutique n'est plus proposé — il se
+    commande à la main — sauf s'il est en tension confirmée."""
+    resultat = {}
+    for i, dec in decisions.items():
+        info = infos.get(i, {})
+        f = fournisseurs.get(info.get("id_fournisseur"))
+        if (f and f.get("type") == "para" and (info.get("segment_abc") or "").upper() not in ("A", "B")
+                and not dec.tension and dec.quantite > 0):
+            dec = replace(dec, quantite=0, sur_demande=True,
+                          motif="Parapharmacie de classe C : gardée en stock seulement en classes A et B")
+        resultat[i] = dec
+    return resultat
+
+
 def raison(dec: Decision) -> dict[str, Any]:
     r = {"type": dec.type, "rythme": round(dec.rythme, 3), "jours_couverts": dec.jours_couverts,
          "prevu": round(dec.prevu, 2), "securite": round(dec.securite, 2), "cible": round(dec.cible, 2),
@@ -118,7 +136,7 @@ def raison(dec: Decision) -> dict[str, Any]:
     if dec.maxi > 0 or dec.mini > 0:
         r |= {"mini": round(dec.mini, 1), "maxi": round(dec.maxi, 1), "couverture": dec.couverture,
               "ordonnance": dec.ordonnance, "lot": dec.lot, "tension": dec.tension,
-              "sur_demande": dec.sur_demande}
+              "sur_demande": dec.sur_demande, "motif": dec.motif}
     if dec.groupe:
         r |= {"groupe": dec.groupe, "part": dec.part, "stock_groupe": dec.stock_groupe,
               "maxi_groupe": round(dec.maxi_groupe, 1)}
@@ -173,7 +191,7 @@ class CommandesService:
         en_cours = await self.repo.en_cours(jour)
         decisions = await asyncio.to_thread(proposer_tous, replace(donnees, produits=produits), stocks, en_cours,
                                             None, False, statuts)
-        return decisions, infos, reprises
+        return _regle_para(decisions, infos, await self.repo.fournisseurs(jour)), infos, reprises
 
     async def _statuts_generiques(self, jour: date):
         donnees = await self._donnees(jour)
@@ -588,8 +606,9 @@ class CommandesService:
         for h, j in p.reports:
             if n >= j:
                 reprises.append(float(h[debut:n][garde].sum()))
-        dec = proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour_c),
-                            generiques=False, statuts=statuts).get(id_nom)
+        dec = _regle_para(proposer_tous(replace(donnees, produits=produits), stocks, await self.repo.en_cours(jour_c),
+                                        generiques=False, statuts=statuts),
+                          infos, await self.repo.fournisseurs(jour_c)).get(id_nom)
         grands = sorted(((donnees.dates[debut + i], float(v)) for i, v in enumerate(serie[debut:n]) if v > 0),
                         key=lambda x: -x[1])[:5]
         st = statuts.get(id_nom)

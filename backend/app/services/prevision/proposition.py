@@ -87,7 +87,8 @@ class Decision:
     ordonnance: int = 0        # taille habituelle d'une vente (P80)
     lot: int = 0               # lot habituel appliqué (0 : non)
     tension: bool = False
-    sur_demande: bool = False  # lent et cher : pas de stock, commande à la demande
+    sur_demande: bool = False  # pas de stock, commande à la demande (lent et cher, para C…)
+    motif: Optional[str] = None   # pourquoi pas de stock
     # Génériques interchangeables calculés ensemble (code DCI, part de cette
     # marque, stock et maxi de tout le groupe).
     groupe: Optional[str] = None
