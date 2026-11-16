@@ -147,6 +147,28 @@ Règle du 2026-11-15 (`prevision/generiques.py`).
   marquer un produit soi-même). Un produit écarté n'est jamais reproposé.
 - **Seuls les produits confirmés** changent le calcul.
 
+## 6 bis. Suivi des livraisons
+
+PharmaSuite n'enregistre pas la réception : il la **lit** dans EASYPHARM et
+la rapproche des lignes commandées (`rapprochement.py`, `GET /commandes/suivi`).
+
+- Une entrée EASYPHARM est attribuée à la plus ancienne ligne encore ouverte
+  du **même grossiste** et du **même produit**, envoyée avant elle. Une ligne
+  reste ouverte jusqu'à 7 jours après sa livraison prévue.
+- États d'une ligne : **attendue** (date prévue pas dépassée), **livrée**
+  (tout reçu), **partielle**, **manquante** (rien reçu, date dépassée).
+- **En cours** = seulement le reste à recevoir des lignes attendues. Ce qui
+  est déjà entré dans EASYPHARM n'est plus compté deux fois ; ce qui n'est
+  pas arrivé à la date prévue est **reproposé** le soir même.
+- **Budget engagé** = ce même reste à recevoir.
+- **Taux de service** de chaque grossiste : lignes livrées en entier et
+  quantités reçues, sur les commandes dont la date est passée.
+- Un produit commandé **2 fois en 45 jours sans jamais être livré** est
+  proposé comme produit en tension (à confirmer).
+
+Limite : une réception saisie le jour même de l'envoi n'est pas comptée, et
+un produit livré par un autre grossiste reste « manquant » chez le premier.
+
 ## 7. Budget
 
 Le reste du mois se calcule ainsi :
@@ -241,9 +263,6 @@ encore été rejouée sur les données réelles.
   dans le calcul que dans la mesure.
 - **Changement de grossiste** : il ne vaut que pour le jour ; il n'y a pas
   encore de « grossiste préféré » retenu par produit.
-- **Réception** : elle n'est pas encore rapprochée des commandes (livré
-  complet, partiel ou manquant). Les « en cours » s'arrêtent à la date de
-  livraison prévue.
 
 **À faire**
 

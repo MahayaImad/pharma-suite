@@ -433,3 +433,72 @@ async def test_le_stock_reprend_le_mini_maxi_des_commandes(api):
     assert fiche["commande"]["quantite"] == proposes[1]["qte"]
     assert fiche["stock_maximum"] == alpha["stock_maximum"]
     assert fiche["commande"]["point_commande"] == alpha["point_commande"]
+
+
+async def _commande_envoyee(api, jour, lignes, livraison, fournisseur=1):
+    """Commande envoyée un jour passé : lignes (id_nom, qte) à 100 DA."""
+    id_c = (await api.db.execute(text("""
+        INSERT INTO commandes (client_uuid, jour, id_fournisseur, statut, livraison_prevue, valide_par, valide_le,
+                               envoye_le)
+        VALUES (gen_random_uuid(), :j, :f, 'envoyee', :l, 'titulaire', CAST(:j AS date) + interval '18 hours',
+                CAST(:j AS date) + interval '18 hours') RETURNING id
+    """), {"j": jour, "f": fournisseur, "l": livraison})).scalar()
+    for id_nom, qte in lignes:
+        await api.db.execute(text(
+            "INSERT INTO commandes_lignes (client_uuid, id_commande, id_nom, qte, prix_achat) "
+            "VALUES (gen_random_uuid(), :c, :p, :q, 100)"), {"c": id_c, "p": id_nom, "q": qte})
+    return id_c
+
+
+async def _recu(api, id_, id_nom, jour, qte, fournisseur=1):
+    await api.db.execute(text(
+        "INSERT INTO entrees_produits (id, id_nom, id_fournisseur, date_entree, stock, qte_entree, prix_achat) "
+        "VALUES (:i, :p, :f, :j, 0, :q, 100)"), {"i": id_, "p": id_nom, "f": fournisseur, "j": jour, "q": qte})
+
+
+async def test_suivi_des_livraisons(api):
+    """Commande du mardi 10 livrée le 11 : ALPHA en entier, EPSILON en partie,
+    BETA pas du tout. Commande du mercredi 11 pour le jeudi 12 : attendue."""
+    await _commande_envoyee(api, date(2026, 11, 10), [(1, 20), (5, 10), (2, 5)], date(2026, 11, 11))
+    await _commande_envoyee(api, date(2026, 11, 11), [(1, 30)], date(2026, 11, 12))
+    await _recu(api, 201, 1, date(2026, 11, 11), 20)
+    await _recu(api, 202, 5, date(2026, 11, 11), 4)
+    await api.db.commit()
+    s = (await api.get("/commandes/suivi")).json()["data"]
+    assert s["compte"] == {"attendue": 1, "livree": 0, "partielle": 1, "manquante": 0}
+    recente, ancienne = s["commandes"]
+    assert recente["etat"] == "attendue" and ancienne["etat"] == "partielle"
+    assert ancienne["compte"] == {"attendue": 0, "livree": 1, "partielle": 1, "manquante": 1}
+    assert [(l["nom"], l["etat"], l["recu"]) for l in ancienne["lignes"]] == [
+        ("BETA", "manquante", 0), ("EPSILON", "partielle", 4), ("ALPHA", "livree", 20)]
+    assert float(ancienne["montant"]) == 3500 and float(ancienne["montant_recu"]) == 2400
+    (f,) = s["fournisseurs"]
+    assert (f["nom"], f["commandes"], f["lignes"], f["taux_lignes"], f["taux_quantite"]) == (
+        "GROSSISTE A", 1, 3, 33, 69)
+
+
+async def test_en_cours_et_budget_ne_comptent_que_le_reste_a_recevoir(api):
+    """ALPHA commandé 30 pour dimanche : 12 déjà entrés dans EASYPHARM, il en
+    reste 18 en cours ; le budget engagé ne compte que ces 18."""
+    await _commande_envoyee(api, date(2026, 11, 11), [(1, 30)], date(2026, 11, 15))
+    await api.db.execute(text("UPDATE reglages_stock SET valeur = 100000 WHERE cle = 'budget_mensuel_commandes'"))
+    await api.db.commit()
+    async def en_cours():
+        return (await api.get("/commandes/calcul/1")).json()["data"]["decision"]["en_cours"]
+
+    assert await en_cours() == 30
+    await _recu(api, 203, 1, date(2026, 11, 12), 12)
+    await api.db.commit()
+    assert await en_cours() == 18
+    vue = await _jour(api)
+    assert float(vue["budget"]["engage"]) == 1800
+
+
+async def test_commande_deux_fois_jamais_livre_propose_en_tension(api):
+    for j in (date(2026, 11, 3), date(2026, 11, 8)):
+        await _commande_envoyee(api, j, [(5, 10)], date(j.year, j.month, j.day + 1))
+    await _commande_envoyee(api, date(2026, 11, 8), [(1, 10)], date(2026, 11, 9), fournisseur=2)
+    await api.db.commit()
+    ts = {t["nom"]: t for t in (await api.get("/commandes/tensions")).json()["data"]}
+    assert "jamais livré" in ts["EPSILON"]["motif"] and not ts["EPSILON"]["confirme"]
+    assert "ALPHA" not in ts   # une seule fois : pas assez

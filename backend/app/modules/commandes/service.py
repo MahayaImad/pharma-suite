@@ -31,7 +31,8 @@ from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
-from app.modules.commandes.repository import CommandesRepository
+from app.modules.commandes.rapprochement import ATTENDUE, LIVREE, MANQUANTE, PARTIELLE, etat_commande
+from app.modules.commandes.repository import FENETRE_SUIVI, CommandesRepository
 from app.services import indicateurs_stock as ind
 from app.services.prevision.donnees import Donnees, charger
 from app.services.prevision import generiques as g
@@ -654,10 +655,61 @@ class CommandesService:
             "decision": None if dec is None else raison(dec) | {"quantite": dec.quantite},
         }
 
+    # ── Suivi des livraisons ──
+    async def suivi(self, jours: int = 30) -> dict:
+        """Commandes validées ou envoyées des derniers jours, rapprochées des
+        réceptions d'EASYPHARM : par commande et par ligne (attendue, livrée,
+        partielle, manquante), puis le taux de service de chaque grossiste
+        sur les commandes dont la date de livraison est passée."""
+        jour = aujourdhui()
+        jours = max(1, min(int(jours), FENETRE_SUIVI))
+        commandes: dict[int, dict] = {}
+        for l in await self.repo.suivi(jour - timedelta(days=jours), jour):
+            c = commandes.setdefault(l["id_commande"], {
+                "id": l["id_commande"], "jour": l["jour"], "statut": l["statut"],
+                "fournisseur": {"id": l["id_fournisseur"], "nom": l["fournisseur"]},
+                "livraison_prevue": l["livraison_prevue"], "lignes": []})
+            c["lignes"].append({
+                "id_nom": l["id_nom"], "nom": l["nom"], "qte": l["qte"], "recu": l["recu"], "reste": l["reste"],
+                "recu_le": l["recu_le"], "etat": l["etat"], "prix_achat": l["prix_achat"]})
+        services: dict[int, dict] = {}
+        for c in commandes.values():
+            etats = [x["etat"] for x in c["lignes"]]
+            c["etat"] = etat_commande(etats)
+            c["compte"] = {e: etats.count(e) for e in (ATTENDUE, LIVREE, PARTIELLE, MANQUANTE)}
+            c["montant"] = sum((x["prix_achat"] * x["qte"] for x in c["lignes"]), Decimal(0)).quantize(Decimal("0.01"))
+            c["montant_recu"] = sum((x["prix_achat"] * x["recu"] for x in c["lignes"]),
+                                    Decimal(0)).quantize(Decimal("0.01"))
+            # À voir d'abord : ce qui manque, puis le partiel, l'attendu, le livré.
+            ordre = {MANQUANTE: 0, PARTIELLE: 1, ATTENDUE: 2, LIVREE: 3}
+            c["lignes"].sort(key=lambda x: (ordre[x["etat"]], x["nom"] or ""))
+            if c["etat"] == ATTENDUE:
+                continue
+            f = services.setdefault(c["fournisseur"]["id"], {
+                **c["fournisseur"], "commandes": 0, "lignes": 0, "lignes_livrees": 0, "qte": 0, "recu": 0})
+            f["commandes"] += 1
+            for x in c["lignes"]:
+                if x["etat"] != ATTENDUE:
+                    f["lignes"] += 1
+                    f["lignes_livrees"] += x["etat"] == LIVREE
+                    f["qte"] += x["qte"]
+                    f["recu"] += x["recu"]
+        for f in services.values():
+            f["taux_lignes"] = round(100 * f["lignes_livrees"] / f["lignes"]) if f["lignes"] else None
+            f["taux_quantite"] = round(100 * f["recu"] / f["qte"]) if f["qte"] else None
+        liste = list(commandes.values())
+        return {
+            "jour": jour, "jours": jours, "donnees_du": await self.repo.donnees_du(),
+            "compte": {e: sum(1 for c in liste if c["etat"] == e) for e in (ATTENDUE, LIVREE, PARTIELLE, MANQUANTE)},
+            "commandes": liste,
+            "fournisseurs": sorted(services.values(), key=lambda f: (f["taux_quantite"] or 0, f["nom"] or "")),
+        }
+
     # ── Produits en tension ──
     async def tensions(self) -> list[dict]:
         """Détecte puis liste : à confirmer d'abord, puis les décidés."""
         await self.repo.detecter_tensions(aujourdhui())
+        await self.repo.proposer_tensions_non_livrees(aujourdhui())
         await self.repo.commit()
         return await self.repo.tensions()
 

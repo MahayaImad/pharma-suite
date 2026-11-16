@@ -97,6 +97,12 @@ async def bon(id_commande: int, svc: CommandesService = Depends(_service)):
     return await _repondre(svc.bon(id_commande))
 
 
+@router.get("/suivi")
+async def suivi(jours: int = Query(30, ge=1, le=45), svc: CommandesService = Depends(_service)):
+    """Livraisons : commandes envoyées, rapprochées des réceptions d'EASYPHARM."""
+    return await _repondre(svc.suivi(jours))
+
+
 @router.get("/tensions")
 async def tensions(svc: CommandesService = Depends(_service)):
     """Produits en tension : détectés à confirmer, puis décidés par le titulaire."""

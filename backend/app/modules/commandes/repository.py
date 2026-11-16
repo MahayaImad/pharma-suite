@@ -3,13 +3,16 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Optional
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.modules.commandes.rapprochement import ATTENDUE, MANQUANTE, Ligne, Reception, rapprocher
+
+FENETRE_SUIVI = 45   # jours de commandes relus pour le rapprochement des livraisons
 _EXCLUS_ACHAT = "COALESCE(ep.type_entree, '') <> 'AV' AND COALESCE(ep.type_achat, '') <> 'E'"
 
 
@@ -96,20 +99,68 @@ class CommandesRepository:
                 modifie_le = now(), modifie_par = :qui
         """), {"id": id_fournisseur, "t": type_, "a": actif, "w": whatsapp, "qui": qui})
 
+    async def lignes_envoyees(self, depuis: date, jour: date) -> list[dict]:
+        """Lignes des commandes validées ou envoyées depuis une date, avec ce
+        qu'il faut pour les rapprocher des réceptions. `depuis_envoi` : jour
+        de l'envoi (la commande du samedi part le vendredi soir)."""
+        r = await self.db.execute(text("""
+            SELECT l.id, l.id_commande, l.id_nom, l.qte, l.prix_achat, n.nom,
+                   c.jour, c.id_fournisseur, c.statut, c.livraison_prevue, f.fournisseur,
+                   LEAST(c.jour, CAST(COALESCE(c.envoye_le, c.valide_le, c.cree_le)
+                                      AT TIME ZONE 'Africa/Algiers' AS date)) AS depuis_envoi
+            FROM commandes_lignes l JOIN commandes c ON c.id = l.id_commande
+            LEFT JOIN nomenclature n ON n.id = l.id_nom
+            LEFT JOIN fournisseurs f ON f.id = c.id_fournisseur
+            WHERE c.statut IN ('validee', 'envoyee') AND c.jour BETWEEN :depuis AND :jour
+            ORDER BY c.jour DESC, c.id, n.nom
+        """), {"depuis": depuis, "jour": jour})
+        return [dict(x._mapping) for x in r]
+
+    async def receptions(self, ids_nom: list[int], depuis: date, jour: date) -> list[Reception]:
+        """Entrées EASYPHARM (hors avoirs et échanges) de ces produits, par jour et par grossiste."""
+        if not ids_nom:
+            return []
+        r = await self.db.execute(text(f"""
+            SELECT ep.id_fournisseur, ep.id_nom, ep.date_entree, sum(ep.qte_entree) AS q
+            FROM entrees_produits ep
+            WHERE ep.id_nom = ANY(:ids) AND ep.date_entree > :depuis AND ep.date_entree <= :jour
+              AND ep.id_fournisseur IS NOT NULL AND {_EXCLUS_ACHAT}
+            GROUP BY ep.id_fournisseur, ep.id_nom, ep.date_entree
+            HAVING sum(ep.qte_entree) > 0
+        """), {"ids": ids_nom, "depuis": depuis, "jour": jour})
+        return [Reception(x.id_fournisseur, x.id_nom, x.date_entree, int(x.q)) for x in r]
+
+    async def suivi(self, depuis: date, jour: date) -> list[dict]:
+        """Lignes envoyées depuis une date, chacune avec son suivi de livraison
+        (`recu`, `recu_le`, `etat`, `reste`)."""
+        lignes = await self.lignes_envoyees(depuis, jour)
+        if not lignes:
+            return []
+        objets = [Ligne(l["id"], l["id_fournisseur"], l["id_nom"], l["qte"], l["depuis_envoi"],
+                        l["livraison_prevue"] or l["jour"]) for l in lignes]
+        recues = await self.receptions(sorted({l["id_nom"] for l in lignes}),
+                                       min(o.depuis for o in objets), jour)
+        suivis = rapprocher(objets, recues, jour)
+        for l, o in zip(lignes, objets):
+            s = suivis[l["id"]]
+            l.update(recu=s.recu, recu_le=s.recu_le, etat=s.etat, reste=s.reste(o))
+        return lignes
+
     async def en_cours(self, jour: date) -> dict[int, float]:
         """Boîtes commandées les jours précédents, validées ou envoyées, pas
-        encore livrées (livraison prévue aujourd'hui ou après) : elles ne
-        sont pas encore dans le stock."""
-        r = await self.db.execute(text("""
-            SELECT l.id_nom, sum(l.qte) AS q FROM commandes_lignes l JOIN commandes c ON c.id = l.id_commande
-            WHERE c.statut IN ('validee', 'envoyee') AND c.jour < :jour AND c.livraison_prevue >= :jour
-            GROUP BY l.id_nom
-        """), {"jour": jour})
-        return {x.id_nom: float(x.q) for x in r}
+        encore reçues et encore attendues (livraison prévue aujourd'hui ou
+        après) : elles ne sont pas dans le stock. Ce qui est déjà entré dans
+        EASYPHARM n'est plus compté ; ce qui n'est pas arrivé à la date
+        prévue ne l'est plus non plus : le produit est reproposé."""
+        en_cours: dict[int, float] = {}
+        for l in await self.suivi(jour - timedelta(days=FENETRE_SUIVI), jour):
+            if l["etat"] == ATTENDUE and l["jour"] < jour and l["reste"] > 0:
+                en_cours[l["id_nom"]] = en_cours.get(l["id_nom"], 0.0) + l["reste"]
+        return en_cours
 
     async def budget(self, jour: date) -> dict[str, Decimal]:
         """Budget du mois, achats reçus ce mois (EASYPHARM) et commandes
-        engagées pas encore livrées."""
+        engagées pas encore livrées (le reste à recevoir des lignes attendues)."""
         debut = jour.replace(day=1)
         budget = (await self.db.execute(text(
             "SELECT valeur FROM reglages_stock WHERE cle = 'budget_mensuel_commandes'"))).scalar()
@@ -117,13 +168,28 @@ class CommandesRepository:
             SELECT COALESCE(sum(ep.qte_entree * ep.prix_achat), 0) FROM entrees_produits ep
             WHERE ep.date_entree BETWEEN :debut AND :jour AND {_EXCLUS_ACHAT}
         """), {"debut": debut, "jour": jour})).scalar()
-        engage = (await self.db.execute(text("""
-            SELECT COALESCE(sum(l.qte * l.prix_achat), 0) FROM commandes_lignes l
-            JOIN commandes c ON c.id = l.id_commande
-            WHERE c.statut IN ('validee', 'envoyee') AND c.jour BETWEEN :debut AND :jour
-              AND c.livraison_prevue >= :jour
-        """), {"debut": debut, "jour": jour})).scalar()
-        return {"budget": Decimal(budget or 0), "recu": Decimal(recu or 0), "engage": Decimal(engage or 0)}
+        engage = sum((Decimal(l["reste"]) * l["prix_achat"] for l in await self.suivi(debut, jour)
+                      if l["etat"] == ATTENDUE), Decimal(0))
+        return {"budget": Decimal(budget or 0), "recu": Decimal(recu or 0), "engage": engage}
+
+    async def proposer_tensions_non_livrees(self, jour: date, fois: int = 2) -> int:
+        """Propose en tension les produits commandés au moins `fois` fois sur
+        la période de suivi sans qu'aucune boîte n'arrive."""
+        manques: dict[int, int] = {}
+        recus: set[int] = set()
+        for l in await self.suivi(jour - timedelta(days=FENETRE_SUIVI), jour):
+            if l["recu"] > 0:
+                recus.add(l["id_nom"])
+            elif l["etat"] == MANQUANTE:
+                manques[l["id_nom"]] = manques.get(l["id_nom"], 0) + 1
+        n = 0
+        for id_nom, k in manques.items():
+            if k >= fois and id_nom not in recus:
+                r = await self.db.execute(text("""
+                    INSERT INTO produits_tension (id_nom, motif) VALUES (:p, :m) ON CONFLICT (id_nom) DO NOTHING
+                """), {"p": id_nom, "m": f"Commandé {k} fois en {FENETRE_SUIVI} jours, jamais livré"})
+                n += r.rowcount or 0
+        return n
 
     # ── Valideurs ──
     async def valideurs(self) -> list[str]:
