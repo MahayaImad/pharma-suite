@@ -419,6 +419,28 @@ de la vue, et rendue par `GET /stock/resume` (`donnees_du`, UTC).
   titulaire force un groupe (toutes / quelques) ou une marque (garder /
   exclure) depuis la fiche produit. La case EASYPHARM « désactiver l'alerte
   rupture » n'est pas utilisée.
+- **Mini / maxi** (arrêté le 2026-11-16, remplace « de quoi tenir jusqu'à la
+  livraison suivante ») : on ne commande que sous le **mini**, et alors
+  jusqu'au **maxi**.
+  - mini = max(demande jusqu'à la livraison suivante + stock de sécurité,
+    **taille d'une ordonnance** : quantité vendue en une fois dans 80 % des
+    ventes, sur 12 mois) ;
+  - maxi = mini + demande prévue sur la **couverture visée** : A 15 j, B 21 j,
+    C 30 j, **en tension 60 j** (réglages `couverture_*_jours`), jamais plus
+    que 80 % de la durée de vie habituelle à réception ;
+  - quantité = maxi − stock − en cours, **au moins le lot habituel** (médiane
+    des réceptions sur 12 mois, hors UG, avoirs, échanges), sans que le lot
+    dépasse 90 jours de vente ;
+  - produit lent : mini = maxi = une ordonnance s'il s'est vendu dans les 6 mois ;
+  - **génériques interchangeables** : les marques gardées d'une DCI sont
+    calculées ensemble (ventes, stock, en cours), puis la quantité est
+    répartie selon leur part des ventes.
+- **Produits en tension** : détectés (rupture ≥ 14 jours sans livraison
+  alors qu'ils se vendaient ≥ 6 jours sur les 6 mois d'avant, ou
+  `disponibilite = 'quota'`), confirmés ou écartés par le titulaire
+  (Préférences › Produits en tension, ou case de la fiche). Un produit en
+  tension confirmé est complété jusqu'au maxi dès qu'il descend dessous, avec
+  la couverture de 60 jours, et marqué « Quota » dans le panier.
 
 ---
 

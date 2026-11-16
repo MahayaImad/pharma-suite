@@ -85,6 +85,32 @@ void main() {
       expect(reprise.explication, '3,1/j × 2 j + sécurité 2 − stock 0 · reprend Xydol 600');
     });
 
+    test('explication mini / maxi : lot, ordonnance, DCI, tension', () {
+      const clofenal = LigneCommande(
+        idNom: 1,
+        qte: 30,
+        stock: 2,
+        raison: Raison(type: 'regulier', rythme: 2, mini: 7.6, maxi: 33.4, couverture: 15, lot: 30, stock: 2),
+      );
+      expect(clofenal.explication, '2/j · mini 8 · maxi 33 − stock 2 · lot habituel 30');
+      const spiriva = LigneCommande(idNom: 2, qte: 3, raison: Raison(type: 'lent', mini: 3, maxi: 3, ordonnance: 3));
+      expect(spiriva.explication, 'Vente rare : une ordonnance de 3 en rayon − stock 0');
+      const xaria = LigneCommande(
+        idNom: 3,
+        qte: 27,
+        stock: 3,
+        raison: Raison(type: 'intermittent', rythme: 0.5, mini: 3, maxi: 30, couverture: 60, tension: true, stock: 3),
+      );
+      expect(xaria.enTension, isTrue);
+      expect(xaria.explication, endsWith('· en tension : 60 j'));
+      const sapofen = LigneCommande(
+        idNom: 4,
+        qte: 5,
+        raison: Raison(rythme: 2.4, mini: 6, maxi: 30, groupe: '04B044', part: 0.62, stockGroupe: 4, maxiGroupe: 48),
+      );
+      expect(sapofen.explication, '2,4/j · mini 6 · maxi 48 − stock DCI 4 · 62 % des ventes de la DCI');
+    });
+
     test('numéro WhatsApp et lien du bon', () {
       expect(numeroWhatsapp('0550 12 34 56'), '213550123456');
       expect(numeroWhatsapp('+213 550 12 34 56'), '213550123456');
@@ -329,5 +355,16 @@ void main() {
     expect(find.text('6 / jour'), findsOneWidget);
     expect(find.text('1 / jour'), findsOneWidget);
     expect(find.textContaining('6 fois la moyenne sur 12 mois'), findsOneWidget);
+  });
+
+  testWidgets('produits en tension : le titulaire confirme une détection', (tester) async {
+    final api = FausseCommandesApi();
+    await _lancer(tester, api, depart: '/preferences/tensions', role: 'admin');
+    expect(tester.takeException(), isNull);
+    expect(find.text('À confirmer (1)'), findsOneWidget);
+    expect(find.text('En tension (1)'), findsOneWidget);
+    await _toucher(tester, find.byKey(const ValueKey('confirmer-21')));
+    expect(api.appels.last, 'tension 21 true');
+    expect(find.text('En tension (2)'), findsOneWidget);
   });
 }

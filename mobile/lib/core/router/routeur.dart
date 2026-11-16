@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/commandes/presentation/ecran_commandes.dart';
 import '../../features/commandes/presentation/ecran_fournisseurs.dart';
+import '../../features/commandes/presentation/ecran_tensions.dart';
 import '../../features/connexion/presentation/ecran_connexion.dart';
 
 import '../../features/preferences/presentation/ecran_preferences.dart';
@@ -88,6 +89,12 @@ GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte,
           path: 'fournisseurs',
           pageBuilder: (context, etat) => const NoTransitionPage(
             child: Coquille(emplacement: '/preferences', child: EcranFournisseurs()),
+          ),
+        ),
+        GoRoute(
+          path: 'tensions',
+          pageBuilder: (context, etat) => const NoTransitionPage(
+            child: Coquille(emplacement: '/preferences', child: EcranTensions()),
           ),
         ),
         GoRoute(

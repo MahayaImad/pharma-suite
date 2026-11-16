@@ -39,6 +39,15 @@ abstract interface class CommandesApi {
   Future<void> ajouterValideur(String username);
   Future<void> retirerValideur(String username);
 
+  /// Produits en tension : détectés à confirmer, puis décidés.
+  Future<List<Tension>> tensions();
+
+  /// Tension d'un produit (non décidé : tension fausse, non confirmé).
+  Future<Tension> tension(int idNom);
+
+  /// Confirme ou écarte la tension d'un produit (titulaire).
+  Future<Tension> reglerTension(int idNom, bool tension);
+
   /// Pourquoi cette quantité : détail du calcul d'un produit.
   Future<DetailCalcul> calcul(int idNom);
 
@@ -149,6 +158,22 @@ class CommandesApiDio implements CommandesApi {
   @override
   Future<void> retirerValideur(String username) =>
       _appel(() => _dio.delete('/commandes/reglages/valideurs/${Uri.encodeComponent(username)}'), (_) {});
+
+  @override
+  Future<List<Tension>> tensions() => _appel(
+    () => _dio.get('/commandes/tensions'),
+    (d) => [for (final x in d as List) Tension.fromJson(x as Map<String, dynamic>)],
+  );
+
+  @override
+  Future<Tension> tension(int idNom) =>
+      _appel(() => _dio.get('/commandes/tensions/$idNom'), (d) => Tension.fromJson(d as Map<String, dynamic>));
+
+  @override
+  Future<Tension> reglerTension(int idNom, bool tension) => _appel(
+    () => _dio.put('/commandes/tensions/$idNom', data: {'tension': tension}),
+    (d) => Tension.fromJson(d as Map<String, dynamic>),
+  );
 
   @override
   Future<DetailCalcul> calcul(int idNom) => _appel(

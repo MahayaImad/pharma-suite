@@ -6,6 +6,7 @@ import '../../../core/theme/themes.dart';
 import '../../../core/widgets/coquille.dart';
 import '../../connexion/application/session_controller.dart';
 import '../../commandes/presentation/ecran_fournisseurs.dart';
+import '../../commandes/presentation/ecran_tensions.dart';
 import '../../reglages/presentation/ecran_consommables.dart';
 import '../../reglages/presentation/ecran_reglages.dart';
 import '../application/theme_controller.dart';
@@ -68,6 +69,8 @@ class EcranPreferences extends ConsumerWidget {
                   const EntreeConsommables(),
                   const SizedBox(height: 10),
                   const EntreeFournisseurs(),
+                  const SizedBox(height: 10),
+                  const EntreeTensions(),
                   const SizedBox(height: 28),
                   // Seul accès à la déconnexion sur portable (le menu latéral est sur PC).
                   Align(

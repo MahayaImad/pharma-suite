@@ -335,4 +335,27 @@ class FausseCommandesApi implements CommandesApi {
     moyenne12m: 1.0,
     cmm: 26,
   );
+
+  List<Tension> listeTensions = const [
+    Tension(idNom: 21, nom: 'XARIA 200 MG', stock: 3, motif: 'Marqué « quota » dans EASYPHARM'),
+    Tension(idNom: 22, nom: 'LEVOTHYROX 100', stock: 0, confirme: true, source: 'saisie'),
+  ];
+
+  @override
+  Future<List<Tension>> tensions() async => listeTensions;
+
+  @override
+  Future<Tension> tension(int idNom) async =>
+      listeTensions.firstWhere((t) => t.idNom == idNom, orElse: () => Tension(idNom: idNom, tension: false));
+
+  @override
+  Future<Tension> reglerTension(int idNom, bool tension) async {
+    appels.add('tension $idNom $tension');
+    final existe = listeTensions.any((t) => t.idNom == idNom);
+    listeTensions = [
+      for (final t in listeTensions) t.idNom == idNom ? t.copyWith(tension: tension, confirme: true) : t,
+      if (!existe) Tension(idNom: idNom, tension: tension, confirme: true, source: 'saisie'),
+    ];
+    return listeTensions.firstWhere((t) => t.idNom == idNom);
+  }
 }

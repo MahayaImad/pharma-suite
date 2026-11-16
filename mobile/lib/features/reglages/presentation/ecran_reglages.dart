@@ -822,6 +822,19 @@ const _reglagesConnus = {
     'jours ouvrés',
     'Pour un fournisseur sans délai saisi. Vendredi et samedi ne comptent pas.',
   ),
+  'couverture_a_jours': ('Couverture visée, classe A', 'jours', 'Stock maximum = mini + ventes prévues sur ces jours.'),
+  'couverture_b_jours': ('Couverture visée, classe B', 'jours', 'Stock maximum = mini + ventes prévues sur ces jours.'),
+  'couverture_c_jours': ('Couverture visée, classe C', 'jours', 'Stock maximum = mini + ventes prévues sur ces jours.'),
+  'couverture_tension_jours': (
+    'Couverture visée, produit en tension',
+    'jours',
+    'Pour un produit sous quota ou en pénurie confirmée : on complète dès que possible.',
+  ),
+  'generiques_gardes': (
+    'Marques gardées par DCI',
+    'marques',
+    'Pour une DCI non chronique, les plus vendues parmi les disponibles.',
+  ),
   'budget_mensuel_commandes': (
     'Budget mensuel des commandes',
     'DA',

@@ -12,6 +12,7 @@ import '../../reglages/application/reglages_providers.dart' show peutModifierPro
 import '../../../domain/format.dart';
 import '../../../domain/stock.dart';
 import '../../commandes/presentation/commander.dart';
+import '../../commandes/presentation/ecran_tensions.dart' show CaseTension;
 import '../../commandes/presentation/generiques_fiche.dart';
 import '../application/stock_providers.dart';
 import 'ecran_stock.dart' show bientotCommandes, nomLisible;
@@ -149,6 +150,8 @@ class _Contenu extends ConsumerWidget {
         const SizedBox(height: 22),
         if ((p.codeDci ?? '').trim().isNotEmpty) SectionGeneriques(idNom: p.id),
         _CaseConsommable(produit: p),
+        const SizedBox(height: 10),
+        CaseTension(idNom: p.id),
         const SizedBox(height: 22),
         const _Titre('Prix'),
         _Prix(produit: p),

@@ -107,3 +107,13 @@ final calculProvider = FutureProvider.family<DetailCalcul, int>(
   (ref, id) => ref.watch(commandesApiProvider).calcul(id),
   retry: (_, _) => null,
 );
+
+final tensionsProvider = FutureProvider<List<Tension>>(
+  (ref) => ref.watch(commandesApiProvider).tensions(),
+  retry: (_, _) => null,
+);
+
+final tensionProduitProvider = FutureProvider.family<Tension, int>(
+  (ref, id) => ref.watch(commandesApiProvider).tension(id),
+  retry: (_, _) => null,
+);

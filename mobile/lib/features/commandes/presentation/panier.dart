@@ -289,6 +289,17 @@ class LigneDuPanier extends ConsumerWidget {
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
           ),
         ),
+        if (l.enTension)
+          Container(
+            key: ValueKey('quota-${l.idNom}'),
+            margin: const EdgeInsets.only(left: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(color: context.etats.alerteDoux, borderRadius: BorderRadius.circular(6)),
+            child: Text(
+              'Quota',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.etats.alerte),
+            ),
+          ),
       ],
     );
     final raison = Text.rich(
@@ -730,6 +741,26 @@ class _DetailCalcul extends ConsumerWidget {
                       detail: '${decimal(d.ventes12m)} vendus · CMM ${decimal(d.cmm)}',
                     ),
                     const Divider(),
+                    if (d.decision != null && (d.decision!.maxi > 0 || d.decision!.mini > 0)) ...[
+                      l(
+                        'Point de commande (mini)',
+                        decimal(d.decision!.mini, chiffres: 0),
+                        detail: [
+                          'demande jusqu\'à la livraison suivante + sécurité',
+                          if (d.decision!.ordonnance > 1) 'au moins une ordonnance de ${d.decision!.ordonnance}',
+                        ].join(' · '),
+                      ),
+                      l(
+                        'Stock maximum',
+                        decimal(d.decision!.groupe != null ? d.decision!.maxiGroupe : d.decision!.maxi, chiffres: 0),
+                        detail: [
+                          '${d.decision!.couverture} jours de couverture${d.decision!.tension ? ' (en tension)' : ''}',
+                          if (d.decision!.groupe != null) 'pour toute la DCI ${d.decision!.groupe}',
+                        ].join(' · '),
+                      ),
+                      if (d.decision!.lot > 0) l('Lot habituel appliqué', '${d.decision!.lot}'),
+                      const Divider(),
+                    ],
                     l('Fenêtre', '${d.fenetreJours} jours', detail: '${d.joursOuverts} jours ouverts'),
                     l(
                       'Jours exclus (rupture)',

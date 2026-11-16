@@ -50,6 +50,21 @@ abstract class Raison with _$Raison {
 
     /// Générique remplacé à la main par ce produit.
     String? remplace,
+
+    // Mini / maxi (stratégie du 2026-11-16).
+    @Default(0) double mini,
+    @Default(0) double maxi,
+    @Default(0) int couverture,
+    @Default(0) int ordonnance,
+    @Default(0) int lot,
+    @Default(false) bool tension,
+
+    /// Génériques interchangeables calculés ensemble : code DCI, part de la
+    /// marque, stock et maxi du groupe.
+    String? groupe,
+    @Default(1) double part,
+    @JsonKey(name: 'stock_groupe') @Default(0) double stockGroupe,
+    @JsonKey(name: 'maxi_groupe') @Default(0) double maxiGroupe,
   }) = _Raison;
 
   factory Raison.fromJson(Map<String, dynamic> json) => _$RaisonFromJson(json);
@@ -80,6 +95,9 @@ abstract class LigneCommande with _$LigneCommande {
 
   bool get rupture => stock <= 0;
 
+  /// Produit en tension (quota chez les grossistes) confirmé.
+  bool get enTension => raison?.tension ?? false;
+
   /// Quantité changée à la main (ou produit ajouté à la main).
   bool get modifiee => qteProposee != qte;
 
@@ -92,6 +110,26 @@ abstract class LigneCommande with _$LigneCommande {
   String get explication {
     final r = raison;
     if (r == null) return ajoutManuel ? 'Ajouté à la main' : '';
+    final reprise = r.reprend.isEmpty ? '' : ' · reprend ${r.reprend.map(libelleProduit).join(', ')}';
+    final remplace = r.remplace == null ? '' : ' · à la place de ${libelleProduit(r.remplace!)}';
+    if (r.maxi > 0 || r.mini > 0) {
+      // Mini / maxi : « mini 8 · maxi 38 − stock 2 · lot habituel 30 ».
+      final groupe = r.groupe != null;
+      final stock = groupe ? r.stockGroupe : r.stock + r.enCours;
+      final debut = r.type == 'lent'
+          ? 'Vente rare : ${r.ordonnance > 1 ? 'une ordonnance de ${r.ordonnance}' : '1 boîte'} en rayon'
+          : '${decimal(r.rythme)}/j · mini ${decimal(r.mini, chiffres: 0)} · maxi '
+                '${decimal(groupe ? r.maxiGroupe : r.maxi, chiffres: 0)}';
+      final morceaux = [
+        debut,
+        '− ${groupe ? 'stock DCI' : 'stock'} ${entier(stock)}',
+        if (r.lot > 0) '· lot habituel ${r.lot}',
+        if (r.type != 'lent' && r.ordonnance > 1) '· ordonnance de ${r.ordonnance}',
+        if (groupe) '· ${(r.part * 100).round()} % des ventes de la DCI',
+        if (r.tension) '· en tension : ${r.couverture} j',
+      ];
+      return morceaux.join(' ') + reprise + remplace;
+    }
     if (r.type == 'lent') return 'Vente lente : garder 1 boîte en rayon';
     final morceaux = [
       '${decimal(r.rythme)}/j × ${r.joursCouverts} j',
@@ -99,8 +137,6 @@ abstract class LigneCommande with _$LigneCommande {
       '− stock ${entier(r.stock)}',
       if (r.enCours > 0) '− en cours ${entier(r.enCours)}',
     ];
-    final reprise = r.reprend.isEmpty ? '' : ' · reprend ${r.reprend.map(libelleProduit).join(', ')}';
-    final remplace = r.remplace == null ? '' : ' · à la place de ${libelleProduit(r.remplace!)}';
     return morceaux.join(' ') + reprise + remplace;
   }
 }
@@ -409,7 +445,27 @@ abstract class DetailCalcul with _$DetailCalcul {
     @JsonKey(name: 'plus_grosses_ventes')
     @Default(<Map<String, dynamic>>[])
     List<Map<String, dynamic>> plusGrossesVentes,
+
+    /// Décision du soir (mini, maxi, couverture, lot…).
+    Raison? decision,
   }) = _DetailCalcul;
 
   factory DetailCalcul.fromJson(Map<String, dynamic> json) => _$DetailCalculFromJson(json);
+}
+
+/// Produit en tension (`GET /commandes/tensions`) : détecté à confirmer, ou
+/// décidé par le titulaire.
+@freezed
+abstract class Tension with _$Tension {
+  const factory Tension({
+    @JsonKey(name: 'id_nom') required int idNom,
+    String? nom,
+    @Default(0) double stock,
+    @Default(true) bool tension,
+    @Default(false) bool confirme,
+    @Default('detection') String source,
+    String? motif,
+  }) = _Tension;
+
+  factory Tension.fromJson(Map<String, dynamic> json) => _$TensionFromJson(json);
 }
