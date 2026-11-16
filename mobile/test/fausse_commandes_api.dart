@@ -329,6 +329,8 @@ class FausseCommandesApi implements CommandesApi {
     venduFenetre: 156,
     venduJoursRetenus: 156,
     rythme: 6,
+    moyenneHorsRuptures: 6,
+    moyenneBrute: 1,
     ventes12m: 312,
     moyenne12m: 1.0,
     cmm: 26,

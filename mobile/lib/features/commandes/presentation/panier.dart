@@ -668,8 +668,9 @@ class _DetailCalcul extends ConsumerWidget {
             ),
             error: (e, _) => Padding(padding: const EdgeInsets.all(20), child: Text(ErreurApi.depuis(e).message)),
             data: (d) {
+              final lent = d.type == 'lent';
               final ecart = d.moyenne12m > 0 ? d.rythme / d.moyenne12m : 0.0;
-              final fort = ecart >= 1.8;
+              final fort = !lent && ecart >= 1.8;
               Widget l(String titre, String valeur, {String? detail, bool accent = false}) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
@@ -708,12 +709,21 @@ class _DetailCalcul extends ConsumerWidget {
                       style: TextStyle(fontSize: 12, color: context.couleurs.encre3),
                     ),
                     const SizedBox(height: 10),
-                    l(
-                      'Rythme utilisé',
-                      '${decimal(d.rythme, chiffres: 2)} / jour',
-                      detail: '${decimal(d.venduJoursRetenus)} vendus sur ${d.joursRetenus} jours retenus',
-                      accent: fort,
-                    ),
+                    if (lent)
+                      l(
+                        'Produit à vente rare',
+                        '1 boîte',
+                        detail: 'gardée en rayon s\'il s\'est vendu dans les 6 derniers mois',
+                      )
+                    else
+                      l(
+                        'Rythme utilisé',
+                        '${decimal(d.rythme, chiffres: 2)} / jour',
+                        detail:
+                            'hors ruptures ${decimal(d.moyenneHorsRuptures, chiffres: 2)} sur ${d.joursRetenus} j · '
+                            'brute ${decimal(d.moyenneBrute, chiffres: 2)} · ramené vers la brute (poids 14 j)',
+                        accent: fort,
+                      ),
                     l(
                       'Moyenne sur 12 mois',
                       '${decimal(d.moyenne12m, chiffres: 2)} / jour',

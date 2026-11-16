@@ -62,6 +62,10 @@ def proposer_tous(d: Donnees, stocks: dict[int, float], en_cours: dict[int, floa
     une marque remplacée (règle des génériques) reçoit une quantité nulle."""
     jour = len(d.dates) - 1
     produits = appliquer_generiques(d, stocks)[0] if generiques else d.produits
+    # Les ventes d'aujourd'hui ne sont pas finies : le jour ne compte ni dans
+    # le rythme ni dans sa moyenne brute.
+    ouvert = d.ouvert.copy()
+    ouvert[jour] = False
     resultat: dict[int, Decision] = {}
     for p in produits:
         if p.remplace:
@@ -73,7 +77,7 @@ def proposer_tous(d: Donnees, stocks: dict[int, float], en_cours: dict[int, floa
         ventes = np.flatnonzero(demande[:jour] > 0)
         premiere = int(ventes[0]) if ventes.size else None
         classe = m.classer(demande, cens, premiere, jour)
-        resultat[p.id] = decider(demande, cens, d.ouvert, d.dates, jour, classe, premiere, p.classe_abc,
+        resultat[p.id] = decider(demande, cens, ouvert, d.dates, jour, classe, premiere, p.classe_abc,
                                  p.delai_ouvres, d.calendrier, float(stocks.get(p.id, 0.0)),
                                  float(en_cours.get(p.id, 0.0)), p.saison, p.ramadan, politique)
     return resultat

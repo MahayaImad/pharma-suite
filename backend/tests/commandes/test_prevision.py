@@ -2,6 +2,7 @@
 from datetime import date, timedelta
 
 import numpy as np
+import pytest
 
 from app.services.prevision import modele as m
 from app.services.prevision.rejeu import Produit, censure, jour_de_commande_suivant, simuler
@@ -28,14 +29,30 @@ def test_classement_syntetos_boylan():
 
 
 def test_les_jours_en_rupture_ne_comptent_pas_comme_zero():
-    # 5 par jour, puis 10 jours de rupture (stock nul, rien vendu) : le rythme reste 5.
+    # 5 par jour, puis 10 jours de rupture (stock nul, rien vendu) : le rythme
+    # reste proche de 5 (150 + 14 × 3,75) / (30 + 14) = 4,6 ; sans la censure
+    # il tomberait à 3,75.
     demande = np.array([5.0] * 30 + [0.0] * 10)
     stock = np.array([20.0] * 29 + [0.0] * 11)
     cens = censure(demande, stock)
     assert cens[30:].all() and not cens[:30].any()
     ouvert = np.ones(40, dtype=bool)
-    assert m.rythme(demande, cens, ouvert, 40, "regulier") == 5.0
-    assert m.rythme(demande, np.zeros(40, dtype=bool), ouvert, 40, "regulier") == 150 / 40
+    assert m.rythme(demande, cens, ouvert, 40, "regulier") == pytest.approx((150 + 14 * 3.75) / 44)
+    assert m.rythme(demande, np.zeros(40, dtype=bool), ouvert, 40, "regulier") == pytest.approx(150 / 40)
+
+
+def test_presque_toujours_en_rupture_le_rythme_n_explose_pas():
+    """Cas réel (Zolify 10, 2026-11-16) : 6 boîtes vendues un jour, puis 37
+    jours de rupture. Avant : rythme 6 / jour. Le produit, vendu un seul jour,
+    est traité comme lent ; et même compté « nouveau », le rythme reste bas."""
+    n = 43
+    demande = np.zeros(n); demande[0] = 6.0
+    stock = np.zeros(n)
+    cens = censure(demande, stock)
+    ouvert = np.ones(n, dtype=bool)
+    assert m.classer(demande, cens, 0, n).type == "lent"
+    r = m.rythme(demande, cens, ouvert, n, "nouveau", premiere_vente=0)
+    assert r == pytest.approx((6 + 14 * 6 / 43) / (1 + 14))   # 0,53 / jour, pas 6
 
 
 def test_profil_semaine_et_garde():

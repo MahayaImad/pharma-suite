@@ -448,3 +448,21 @@ lots dont 4 310 avec stock.
   les retours.
 - Le moteur d'achat calcule les montants en `float`, contre la règle
   « Argent ».
+
+
+## Correctif du 2026-11-16 : produits presque toujours en rupture
+
+Cas réel : Zolify 10 mg, 6 boîtes vendues le 04/10 (une ordonnance), puis
+37 jours de rupture sur 38. Les jours de rupture étant exclus (demande
+inconnue), il ne restait qu'un jour : « 6 par jour ».
+
+- Le rythme est désormais **ramené vers la moyenne brute** (tous les jours
+  ouverts de la fenêtre, ruptures comprises) avec un poids de 14 jours :
+  `(ventes des jours retenus + 14 × moyenne brute) / (jours retenus + 14)`.
+  Sans rupture, rien ne change ; avec presque que des ruptures, le rythme ne
+  peut plus égaler les seuls jours de vente.
+- Un produit **nouveau vendu moins de 3 jours** est traité comme **lent** :
+  1 boîte en rayon s'il s'est vendu dans les 6 mois.
+- Le jour même n'entre plus dans le calcul du soir (ventes pas finies).
+
+À mesurer : relancer `scripts.rejouer_commandes` après ce changement.

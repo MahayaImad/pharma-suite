@@ -18,7 +18,10 @@ simple et explicable, mesurée par le rejeu avant tout usage.
 2. **Rythme de base** : vente moyenne par jour ouvert sur une fenêtre récente
    (8 semaines pour régulier et irrégulier, 26 semaines sinon), **sans les
    jours où le produit était en rupture** (stock nul au matin et rien vendu :
-   la demande y est inconnue, pas nulle).
+   la demande y est inconnue, pas nulle), ramenée vers la moyenne brute avec
+   un poids de 14 jours (sinon un produit presque toujours en rupture avait
+   un rythme égal à ses seuls jours de vente). Un « nouveau » vendu moins de
+   3 jours est traité comme lent.
 
 3. **Effets du calendrier**, multiplicatifs :
    - jour de la semaine (profil de toute l'officine) ;
@@ -41,6 +44,8 @@ ADI_SEUIL = 1.32
 CV2_SEUIL = 0.49
 JOURS_VENTE_LENT = 12
 JOURS_NOUVEAU = 90
+JOURS_VENTE_NOUVEAU_MIN = 3   # un « nouveau » vendu moins de 3 jours est traité comme lent
+JOURS_A_PRIORI = 14           # poids, en jours ouverts, de la moyenne brute dans le rythme
 FENETRE_COURTE = 56
 FENETRE_LONGUE = 182
 
@@ -64,6 +69,13 @@ def classer(demande: np.ndarray, censure: np.ndarray, premiere_vente: Optional[i
     ventes = observes[observes > 0]
     n_vente = int(ventes.size)
     if premiere_vente is None or jour - premiere_vente < JOURS_NOUVEAU:
+        # Vendu un ou deux jours seulement (une ordonnance, une commande
+        # ponctuelle) : rien ne dit qu'il se revendra au même rythme. On le
+        # traite comme un produit lent : 1 boîte en rayon s'il s'est vendu
+        # récemment (cas réel : 6 boîtes vendues d'un coup le 04/10, puis
+        # rupture, donnaient « 6 par jour »).
+        if premiere_vente is not None and n_vente < JOURS_VENTE_NOUVEAU_MIN:
+            return Classe("lent", float("inf"), 0.0, n_vente)
         return Classe("nouveau", 0.0, 0.0, n_vente)
     if n_vente < JOURS_VENTE_LENT:
         return Classe("lent", float("inf") if n_vente == 0 else observes.size / n_vente, 0.0, n_vente)
@@ -76,17 +88,28 @@ def classer(demande: np.ndarray, censure: np.ndarray, premiere_vente: Optional[i
 
 def rythme(demande: np.ndarray, censure: np.ndarray, ouvert: np.ndarray, jour: int, type_: str,
            premiere_vente: Optional[int] = None) -> float:
-    """Vente moyenne par jour ouvert, hors jours en rupture, sur la fenêtre du
-    type. Un produit nouveau n'est compté qu'à partir de sa première vente :
-    les semaines d'avant, il n'existait pas."""
+    """Vente moyenne par jour ouvert sur la fenêtre du type, les jours en
+    rupture mis à part, **ramenée vers la moyenne brute** (tous les jours
+    ouverts, ruptures comprises) avec un poids de [JOURS_A_PRIORI] jours :
+
+        rythme = (ventes des jours retenus + 14 × moyenne brute) / (jours retenus + 14)
+
+    Avec beaucoup de jours retenus, c'est la moyenne hors ruptures ; avec
+    très peu (produit presque toujours en rupture), le rythme ne peut plus
+    exploser sur les seuls jours de vente. Un produit nouveau n'est compté
+    qu'à partir de sa première vente."""
     fenetre = FENETRE_COURTE if type_ in ("regulier", "irregulier") else FENETRE_LONGUE
     debut = max(0, jour - fenetre)
     if type_ == "nouveau" and premiere_vente is not None:
         debut = max(debut, premiere_vente)
-    garde = (~censure[debut:jour]) & ouvert[debut:jour]
-    if not garde.any():
+    ouverts = ouvert[debut:jour]
+    if not ouverts.any():
         return 0.0
-    return float(demande[debut:jour][garde].mean())
+    d = demande[debut:jour]
+    garde = (~censure[debut:jour]) & ouverts
+    brute = float(d[ouverts].sum()) / int(ouverts.sum())
+    n = int(garde.sum())
+    return (float(d[garde].sum()) + JOURS_A_PRIORI * brute) / (n + JOURS_A_PRIORI)
 
 
 def ecart_type(demande: np.ndarray, censure: np.ndarray, ouvert: np.ndarray, jour: int) -> float:

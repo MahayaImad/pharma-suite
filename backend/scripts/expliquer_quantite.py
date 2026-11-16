@@ -51,7 +51,10 @@ async def main(motif: str) -> int:
             print(f"  jours retenus        : {c['jours_retenus']}")
             print(f"  vendu sur la fenêtre : {_d(c['vendu_fenetre'])} (dont jours retenus : "
                   f"{_d(c['vendu_jours_retenus'])}) ; repris de génériques : {_d(c['repris_generiques'])}")
-            print(f"  RYTHME               : {_d(c['rythme'])} / jour ouvert")
+            print(f"  RYTHME               : {_d(c['rythme'])} / jour ouvert  (hors ruptures "
+                  f"{_d(c['moyenne_hors_ruptures'])}, brute {_d(c['moyenne_brute'])}, ramené vers la brute "
+                  f"avec un poids de 14 jours)" if c["type"] != "lent" else
+                  "  RYTHME               : produit lent : 1 boîte en rayon s'il s'est vendu dans les 6 mois")
             print(f"  12 mois              : {_d(c['ventes_12m'])} vendus, CMM {_d(c['cmm'])}, "
                   f"soit {_d(c['moyenne_12m_jour_ouvert'])} / jour ouvert")
             print("  plus grosses ventes  : " + ", ".join(f"{v['date']} : {_d(v['qte'])}"

@@ -556,7 +556,10 @@ class CommandesService:
             "vendu_fenetre": float(propre[debut:n].sum()),
             "vendu_jours_retenus": float(propre[debut:n][garde].sum()),
             "repris_generiques": round(sum(reprises), 2),
-            "rythme": round(float(serie[debut:n][garde].mean()) if garde.any() else 0.0, 3),
+            "rythme": 0.0 if classe.type == "lent" else round(
+                m.rythme(serie, cens, donnees.ouvert, n, classe.type, premiere), 3),
+            "moyenne_hors_ruptures": round(float(serie[debut:n][garde].mean()) if garde.any() else 0.0, 3),
+            "moyenne_brute": round(float(serie[debut:n][ouv].mean()) if ouv.any() else 0.0, 3),
             "ventes_12m": ventes_an,
             "moyenne_12m_jour_ouvert": round(ventes_an / jours_ouverts_an, 3) if jours_ouverts_an else 0.0,
             "cmm": round(ventes_an / 12, 1),

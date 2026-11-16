@@ -401,6 +401,8 @@ abstract class DetailCalcul with _$DetailCalcul {
     @JsonKey(name: 'vendu_jours_retenus') @Default(0) double venduJoursRetenus,
     @JsonKey(name: 'repris_generiques') @Default(0) double reprisGeneriques,
     @Default(0) double rythme,
+    @JsonKey(name: 'moyenne_hors_ruptures') @Default(0) double moyenneHorsRuptures,
+    @JsonKey(name: 'moyenne_brute') @Default(0) double moyenneBrute,
     @JsonKey(name: 'ventes_12m') @Default(0) double ventes12m,
     @JsonKey(name: 'moyenne_12m_jour_ouvert') @Default(0) double moyenne12m,
     @Default(0) double cmm,
