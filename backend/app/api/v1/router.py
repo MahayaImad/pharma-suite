@@ -12,6 +12,7 @@ from app.api.v1.grh_employes import router as grh_employes_router
 from app.modules.alertes.router import router as alertes_router
 from app.modules.calendrier.router import router as calendrier_router
 from app.modules.commandes.router import router as commandes_router
+from app.modules.inventaire.router import router as inventaire_router
 
 router = APIRouter()
 router.include_router(auth.router)
@@ -35,3 +36,4 @@ router.include_router(grh_employes_router)
 router.include_router(alertes_router)
 router.include_router(calendrier_router)
 router.include_router(commandes_router)
+router.include_router(inventaire_router)

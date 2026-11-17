@@ -27,13 +27,14 @@ from app.modules.commandes import service
 from app.api.v1.stock import router as stock_router
 from app.modules.alertes.router import router as alertes_router
 from app.modules.commandes.router import router
+from app.modules.inventaire.router import router as inventaire_router
 
 JEUDI = date(2026, 11, 12)
 utilisateur = {"username": "titulaire", "role": "admin"}
 TABLES = ("commandes_lignes", "commandes", "fournisseurs_commande", "commandes_valideurs", "fournisseurs",
           "sorties_produits", "entrees_produits", "nomenclature", "familles", "sync_status",
           "historique_stock_jour", "produits_consommables", "gardes", "generiques_groupes", "generiques_choix",
-          "produits_tension", "produits_fournisseur_prefere")
+          "produits_tension", "produits_fournisseur_prefere", "inventaire_liste", "inventaire_comptages")
 
 
 @pytest_asyncio.fixture
@@ -82,6 +83,7 @@ async def api(monkeypatch):
         app.include_router(router)
         app.include_router(stock_router)
         app.include_router(alertes_router)
+        app.include_router(inventaire_router)
 
         async def _db():
             yield db
