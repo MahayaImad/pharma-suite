@@ -8,6 +8,7 @@ import '../../features/commandes/presentation/ecran_livraisons.dart';
 import '../../features/commandes/presentation/livraisons_commandes.dart';
 import '../../features/commandes/presentation/ecran_tensions.dart';
 import '../../features/connexion/presentation/ecran_connexion.dart';
+import '../../features/inventaire/presentation/ecran_inventaire.dart';
 
 import '../../features/preferences/presentation/ecran_preferences.dart';
 import '../../features/reglages/presentation/ecran_consommables.dart';
@@ -16,10 +17,7 @@ import '../../features/stock/presentation/ecran_stock.dart';
 import '../widgets/coquille.dart';
 import '../widgets/ecran_a_venir.dart';
 
-const _descriptions = <String, String>{
-  '/accueil': "La vue d'ensemble de l'officine.",
-  '/inventaire': "L'inventaire tournant et ses écarts.",
-};
+const _descriptions = <String, String>{'/accueil': "La vue d'ensemble de l'officine."};
 
 /// [connecte] dit si une session est ouverte ; [rafraichir] prévient le
 /// routeur quand elle change, pour qu'il réapplique la redirection.
@@ -85,7 +83,13 @@ GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte,
           path: '/alertes',
           pageBuilder: (context, etat) => const NoTransitionPage(child: EcranAlertes()),
         ),
-        for (final d in destinations.where((d) => !const ['/stock', '/commandes', '/alertes'].contains(d.chemin)))
+        GoRoute(
+          path: '/inventaire',
+          pageBuilder: (context, etat) => const NoTransitionPage(child: EcranInventaire()),
+        ),
+        for (final d in destinations.where(
+          (d) => !const ['/stock', '/commandes', '/alertes', '/inventaire'].contains(d.chemin),
+        ))
           GoRoute(
             path: d.chemin,
             pageBuilder: (context, etat) => NoTransitionPage(

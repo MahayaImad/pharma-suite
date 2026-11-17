@@ -57,9 +57,9 @@ void main() {
 
   testWidgets('la navigation change d\'écran', (tester) async {
     await _lancer(tester, taille: _portable);
-    await tester.tap(find.text('Inventaire'));
+    await tester.tap(find.text('Accueil'));
     await tester.pumpAndSettle();
-    expect(find.text("L'inventaire tournant et ses écarts."), findsOneWidget);
+    expect(find.text("La vue d'ensemble de l'officine."), findsOneWidget);
   });
 
   testWidgets('sur portable : les préférences s\'ouvrent en plein écran et se referment', (tester) async {

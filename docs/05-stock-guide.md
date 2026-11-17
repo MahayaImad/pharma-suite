@@ -247,10 +247,19 @@ quantité économique EOQ = √(2 × demande annuelle × coût de commande ÷ co
 - **Existe** : tables `inventaires` et `inventaires_produits` (miroir
   EASYPHARM), historique et instantané des psychotropes
   (`/stock/psychotropes/*`).
-- **À faire** : tout l'inventaire tournant (listes de comptage, saisie
-  mobile, écarts, causes) dans des tables propres à PharmaSuite, puisque
-  PharmaSuite n'écrit pas dans EASYPHARM ; exactitude et démarque ;
-  rapprochement stock fiche / somme des lots. *Phases 0 et 5.*
+- **Fait le 2026-11-17** (`app/modules/inventaire/`, migration 018) :
+  inventaire tournant. Liste du jour figée (20 produits par défaut) : d'abord
+  les suspects (à 0 dans EASYPHARM mais vendus dans les 30 jours, pas
+  recomptés depuis 14 jours, au plus la moitié), puis les produits dont le
+  dernier comptage dépasse la fréquence de leur classe (A 30, B 90, C 180
+  jours ; jamais comptés d'abord). Comptage par produit (pas par lot), stock
+  EASYPHARM figé au moment du comptage, écart valorisé au prix d'achat, cause
+  (casse, périmé, erreur de saisie, vol, inconnue). Les écarts restent « à
+  corriger dans EASYPHARM » jusqu'à ce qu'on les coche. Exactitude du mois =
+  part des comptages sans écart.
+- **À faire** : comptage par lot ; démarque (écarts valorisés ÷ valeur du
+  stock) ; rapprochement stock fiche / somme des lots ; psychotropes exclus
+  de la liste (registre à part).
 
 ### Bloc 6 — Mesurer
 

@@ -20,7 +20,7 @@ async def test_liste_figee_comptage_et_ecart_a_corriger(api):
     # Produits actifs, hors psychotrope (BETA) ; ruptures vendues hier (GAMMA, DELTA) suspectes.
     ids = [p["id_nom"] for p in j["a_compter"]]
     assert 2 not in ids and {1, 3, 4, 5} <= set(ids)
-    assert next(p for p in j["a_compter"] if p["id_nom"] == 3)["raison"].startswith("en rupture")
+    assert next(p for p in j["a_compter"] if p["id_nom"] == 3)["raison"].startswith("à 0")
     assert j["progression"] == {"total": len(ids), "comptes": 0, "ecarts": 0}
 
     # EPSILON : 100 dans EASYPHARM, 97 comptés → écart −3 valorisé au prix d'achat (100 DA).

@@ -1150,7 +1150,7 @@ Future<void> afficherBon(BuildContext context, BonCommande bon, {bool? whatsappO
 // ── Ajout manuel ────────────────────────────────────────────────────────────
 
 Future<void> _ajouterProduit(BuildContext context, WidgetRef ref, Panier panier) async {
-  final choisi = await showDialog<Produit>(context: context, builder: (_) => const _ChoixProduit());
+  final choisi = await showDialog<Produit>(context: context, builder: (_) => const ChoixProduit());
   if (choisi == null) return;
   try {
     final ctrl = ref.read(journeeProvider.notifier);
@@ -1161,14 +1161,16 @@ Future<void> _ajouterProduit(BuildContext context, WidgetRef ref, Panier panier)
   }
 }
 
-class _ChoixProduit extends ConsumerStatefulWidget {
-  const _ChoixProduit();
+/// Recherche d'un produit (nom, DCI ou code-barres), rendu à la fermeture.
+class ChoixProduit extends ConsumerStatefulWidget {
+  const ChoixProduit({super.key, this.titre = 'Ajouter un produit'});
+  final String titre;
 
   @override
-  ConsumerState<_ChoixProduit> createState() => _ChoixProduitState();
+  ConsumerState<ChoixProduit> createState() => _ChoixProduitState();
 }
 
-class _ChoixProduitState extends ConsumerState<_ChoixProduit> {
+class _ChoixProduitState extends ConsumerState<ChoixProduit> {
   final _champ = TextEditingController();
   Timer? _attente;
   Future<PageProduits>? _resultats;
@@ -1194,7 +1196,7 @@ class _ChoixProduitState extends ConsumerState<_ChoixProduit> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Ajouter un produit'),
+    title: Text(widget.titre),
     content: SizedBox(
       width: 420,
       height: 360,

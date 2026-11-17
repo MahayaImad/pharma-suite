@@ -45,7 +45,7 @@ def choisir(candidats: list[Candidat], jour: date, nombre: int, jours: dict[str,
                 if c.stock <= 0 and c.derniere_vente is not None and (jour - c.derniere_vente).days <= 30
                 and (depuis(c) is None or depuis(c) >= SUSPECT_RECOMPTE_JOURS)]
     suspects.sort(key=lambda c: (ordre.get((c.classe or "").upper(), 3), -(c.derniere_vente.toordinal()), c.id_nom))
-    choisis = [(c.id_nom, "en rupture dans EASYPHARM, vendu récemment : vérifier le rayon")
+    choisis = [(c.id_nom, "à 0 mais vendu récemment : vérifier le rayon")
                for c in suspects[:nombre // 2]]
     pris = {i for i, _ in choisis}
 
