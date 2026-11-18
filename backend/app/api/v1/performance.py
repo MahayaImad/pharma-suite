@@ -21,6 +21,9 @@ from app.models.caisse import Operation
 from app.models.performance import Employe, ObjectifMensuel, KpiDefinition, PerformanceMensuelle, PrimeTauxConfig
 from app.models.config_tables import Groupware
 
+from app.services.paie import repartition
+from app.services.paie.repartition import CENTIME
+
 router = APIRouter(tags=["performance"])
 
 # Utilisateurs exclus des primes (noms dans groupware.utilisateur)
@@ -951,7 +954,7 @@ async def calculer_primes(
     if not kpis_defs:
         raise HTTPException(status_code=400, detail="Aucun KPI actif avec poids > 0")
 
-    kpi_poids = {k.code: float(k.poids) for k in kpis_defs}
+    kpi_poids = {k.code: _d(k.poids) for k in kpis_defs}
 
     # 3. Employés éligibles
     emp_res = await db.execute(
@@ -966,20 +969,12 @@ async def calculer_primes(
     for emp in employes:
         emp_kpis[emp.id] = await _calc_kpis_employe(db, emp.username, annee, mois)
 
-    # 5. Pour chaque KPI, calculer le total de l'équipe puis le score relatif de chaque employé
-    # score_kpi_i = (valeur_i / total_equipe) * poids  — si total_equipe > 0, sinon 0
-    emp_scores: dict[int, float] = {emp.id: 0.0 for emp in employes}
-
-    for code, poids in kpi_poids.items():
-        team_total = sum(emp_kpis[emp.id].get(code, 0) for emp in employes)
-        if team_total <= 0:
-            continue
-        for emp in employes:
-            val = emp_kpis[emp.id].get(code, 0)
-            emp_scores[emp.id] += (val / team_total) * poids
-
-    # 6. Distribuer l'enveloppe proportionnellement aux scores totaux
-    total_score = sum(emp_scores.values()) or 1
+    # 5. Score distributif puis répartition, en Decimal de bout en bout
+    #    (app/services/paie/repartition.py, testé dans tests/paie/).
+    emp_scores = repartition.scores(emp_kpis, kpi_poids)
+    parts = repartition.repartir(enveloppe, emp_scores, [], taux_plancher=0)
+    totaux = {code: sum((repartition.en_decimal(emp_kpis[e.id].get(code)) for e in employes), Decimal(0))
+              for code in kpi_poids}
 
     # Sauvegarder l'enveloppe dans objectifs_mensuels si l'entrée existe
     await db.execute(
@@ -990,16 +985,16 @@ async def calculer_primes(
 
     results = []
     for emp in employes:
-        s = emp_scores.get(emp.id, 0.0)
-        pct = (s / total_score * 100) if total_score else 0
-        prime = enveloppe * Decimal(str(pct)) / 100
+        s = emp_scores[emp.id]
+        pct = parts[emp.id]["pct"]
+        prime = parts[emp.id]["prime"]
 
         kpis_data = {
             code: {
                 "valeur": emp_kpis[emp.id].get(code, 0),
-                "poids": poids,
-                "score": round((emp_kpis[emp.id].get(code, 0) /
-                                max(sum(emp_kpis[e.id].get(code, 0) for e in employes), 1)) * poids, 3),
+                "poids": str(poids),
+                "score": str((repartition.en_decimal(emp_kpis[emp.id].get(code)) / totaux[code] * poids
+                              ).quantize(Decimal("0.001")) if totaux[code] > 0 else Decimal(0)),
             }
             for code, poids in kpi_poids.items()
         }
@@ -1009,28 +1004,29 @@ async def calculer_primes(
             annee=annee,
             mois=mois,
             kpis=kpis_data,
-            score_global=round(s, 4),
-            pct_prime=round(pct, 4),
+            score_global=s.quantize(Decimal("0.0001")),
+            pct_prime=pct,
             prime_calculee=prime,
             valide=False,
         ).on_conflict_do_update(
             index_elements=["employe_id", "annee", "mois"],
             set_={
                 "kpis": kpis_data,
-                "score_global": round(s, 4),
-                "pct_prime": round(pct, 4),
+                "score_global": s.quantize(Decimal("0.0001")),
+                "pct_prime": pct,
                 "prime_calculee": prime,
                 "valide": False,
             },
         )
         await db.execute(stmt)
 
+        # Conversion en float au bord seulement, pour la réponse JSON.
         results.append({
             "employe_id": emp.id,
             "username": emp.username,
             "nom": emp.nom,
-            "score_global": round(s, 2),
-            "pct_prime": round(pct, 2),
+            "score_global": float(s.quantize(CENTIME)),
+            "pct_prime": float(pct.quantize(CENTIME)),
             "prime_calculee": float(prime),
         })
 
