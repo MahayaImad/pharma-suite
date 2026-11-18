@@ -39,6 +39,7 @@ class Coquille extends StatelessWidget {
   }
 
   bool get _dansPreferences => emplacement.startsWith('/preferences');
+  bool get _dansPaie => emplacement.startsWith('/paie');
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +51,10 @@ class Coquille extends StatelessWidget {
         body: Row(
           children: [
             _MenuLateral(
-              index: _dansPreferences ? null : _index,
+              index: _dansPreferences || _dansPaie ? null : _index,
               surChoix: aller,
               preferencesActives: _dansPreferences,
+              paieActive: _dansPaie,
             ),
             const VerticalDivider(),
             Expanded(child: child),
@@ -62,7 +64,7 @@ class Coquille extends StatelessWidget {
     }
     // Sur portable, les préférences s'ouvrent en plein écran, avec un retour :
     // elles ne sont pas une section de la barre du bas.
-    if (_dansPreferences) return child;
+    if (_dansPreferences || _dansPaie) return child;
     return Scaffold(
       body: child,
       bottomNavigationBar: NavigationBar(
@@ -78,15 +80,22 @@ class Coquille extends StatelessWidget {
   }
 }
 
-class _MenuLateral extends StatelessWidget {
-  const _MenuLateral({required this.index, required this.surChoix, required this.preferencesActives});
+class _MenuLateral extends ConsumerWidget {
+  const _MenuLateral({
+    required this.index,
+    required this.surChoix,
+    required this.preferencesActives,
+    this.paieActive = false,
+  });
 
   final int? index;
   final ValueChanged<int> surChoix;
   final bool preferencesActives;
+  final bool paieActive;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final titulaire = ref.watch(sessionProvider)?.profil.role == 'admin';
     return Container(
       width: 232,
       color: context.schema.surface,
@@ -121,6 +130,14 @@ class _MenuLateral extends StatelessWidget {
               icone: i == index ? d.iconeActive : d.icone,
               actif: i == index,
               surAppui: () => surChoix(i),
+            ),
+          // La paie est confidentielle : le titulaire seul la voit.
+          if (titulaire)
+            _Lien(
+              libelle: 'Paie',
+              icone: paieActive ? Icons.payments : Icons.payments_outlined,
+              actif: paieActive,
+              surAppui: () => context.go('/paie'),
             ),
           const Spacer(),
           const Divider(),

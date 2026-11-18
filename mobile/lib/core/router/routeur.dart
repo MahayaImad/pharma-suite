@@ -9,6 +9,7 @@ import '../../features/commandes/presentation/livraisons_commandes.dart';
 import '../../features/commandes/presentation/ecran_tensions.dart';
 import '../../features/connexion/presentation/ecran_connexion.dart';
 import '../../features/inventaire/presentation/ecran_inventaire.dart';
+import '../../features/paie/presentation/ecran_paie.dart';
 
 import '../../features/preferences/presentation/ecran_preferences.dart';
 import '../../features/reglages/presentation/ecran_consommables.dart';
@@ -101,6 +102,25 @@ GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte,
     // Hors du cadre commun : sur portable l'écran s'empile par-dessus la
     // barre du bas (plein écran, avec retour) ; sur PC la coquille lui
     // rend le menu latéral.
+    // Paie : titulaire seulement, hors de la barre du bas (ouverte depuis le
+    // menu latéral sur PC, depuis les Préférences sur portable).
+    GoRoute(
+      path: '/paie',
+      pageBuilder: (context, etat) => const NoTransitionPage(
+        child: Coquille(emplacement: '/paie', child: EcranPaie()),
+      ),
+      routes: [
+        GoRoute(
+          path: ':id',
+          pageBuilder: (context, etat) => NoTransitionPage(
+            child: Coquille(
+              emplacement: '/paie',
+              child: EcranPaie(selection: int.tryParse(etat.pathParameters['id']!)),
+            ),
+          ),
+        ),
+      ],
+    ),
     GoRoute(
       path: '/preferences',
       pageBuilder: (context, etat) => const NoTransitionPage(

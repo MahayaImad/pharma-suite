@@ -119,3 +119,14 @@ Arrondi au centime, la somme des primes vaut toujours l'enveloppe.
   saisissent dans Préférences › Calendrier et réglages, rubrique jours fériés.
 - Les employés non éligibles à la prime (comptes non nominatifs) ne sont pas
   dans la paie.
+
+## 6. À l'écran (`/paie`)
+
+Titulaire seulement. Pour chaque employé : la part fixe ligne par ligne avec
+son détail (« 24 jours × 300 »), le plancher et le mérite de la prime, et un
+**radar des critères** de son poste. Sur chaque axe, l'employé est comparé à
+la moyenne de l'équipe (100 = moyenne, cercle pointillé), à partir des
+valeurs ramenées aux jours de présence ; l'axe s'arrête à 200. Le radar ne
+reflète pas les poids : le tableau sous le radar les donne, avec la valeur du
+mois et l'écart à la moyenne.
+

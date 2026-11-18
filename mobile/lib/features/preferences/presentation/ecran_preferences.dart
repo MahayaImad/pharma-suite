@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../paie/presentation/entree_paie.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -71,6 +74,11 @@ class EcranPreferences extends ConsumerWidget {
                   const EntreeFournisseurs(),
                   const SizedBox(height: 10),
                   const EntreeTensions(),
+                  // Paie : titulaire seulement ; seul accès sur portable.
+                  if (ref.watch(sessionProvider)?.profil.role == 'admin') ...[
+                    const SizedBox(height: 10),
+                    const EntreePaie(),
+                  ],
                   const SizedBox(height: 28),
                   // Seul accès à la déconnexion sur portable (le menu latéral est sur PC).
                   Align(

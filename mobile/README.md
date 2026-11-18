@@ -51,6 +51,12 @@ Android en priorité, et web pour le poste de l'officine. Pensée d'abord pour
   recompter selon leur classe), saisie de la quantité (− / + ou clavier), cause
   de l'écart, « Compter un autre produit », exactitude du mois et écarts à
   reporter dans EASYPHARM.
+- **Paie** (`/paie`, `/paie/:id`, titulaire seulement : menu latéral sur PC,
+  Préférences sur portable) : mois, masse salariale brute, employés avec leur
+  état (prête, jours à confirmer, à compléter) ; bulletin : part fixe ligne par
+  ligne, heures supplémentaires, prime (plancher, mérite), radar des critères
+  face à la moyenne de l'équipe et tableau des critères ; recalcul des primes et
+  validation du mois.
 - Accueil affiche encore « Bientôt disponible ».
 
 Adresse de l'API : `--dart-define=API_URL=…` si fourni ; sinon, en web,
