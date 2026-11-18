@@ -110,3 +110,18 @@ class PaieRepository:
             WHERE employe_id = :e AND annee = :a AND mois = :m ORDER BY version DESC
         """), {"e": employe_id, "a": annee, "m": mois})
         return [dict(x._mapping) for x in r]
+
+    async def dernier_calcul_primes(self, annee: int, mois: int) -> dict[int, dict]:
+        """Lignes du dernier calcul de primes du mois : plancher, mérite, KPIs (poids, valeur retenue)."""
+        r = await self.db.execute(text("""
+            SELECT l.employe_id, l.plancher, l.merite, l.prime, l.kpis, c.calcule_le, c.enveloppe
+            FROM primes_calculs_lignes l
+            JOIN primes_calculs c ON c.id = l.id_calcul
+            WHERE c.id = (SELECT max(id) FROM primes_calculs WHERE annee = :a AND mois = :m)
+        """), {"a": annee, "m": mois})
+        return {x.employe_id: dict(x._mapping) for x in r}
+
+    async def kpis(self) -> dict[str, dict]:
+        r = await self.db.execute(text("SELECT code, libelle, unite FROM kpi_definitions"))
+        return {x.code: {"libelle": x.libelle, "unite": x.unite} for x in r}
+

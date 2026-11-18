@@ -34,7 +34,7 @@ async def api():
         await engine.dispose()
         pytest.skip(f"base de test injoignable : {str(erreur).splitlines()[0][:80]}")
     async with AsyncSession(engine, expire_on_commit=False) as db:
-        await db.execute(text("TRUNCATE performance_mensuelle, employes, paie_heures_sup, paie_bulletins, "
+        await db.execute(text("TRUNCATE performance_mensuelle, primes_calculs, employes, paie_heures_sup, paie_bulletins, "
                               "presences_overrides, demandes_conge RESTART IDENTITY CASCADE"))
         await db.execute(text("DELETE FROM sorties WHERE utilisateur IN ('ana', 'chafia')"))
         await db.execute(text("""
@@ -200,3 +200,27 @@ async def test_feries_saisis_dans_le_calendrier_et_aid(api):
         await api.db.execute(text("DELETE FROM holidays WHERE date = '2026-11-05'"))
         await api.db.execute(text("DELETE FROM evenements_calendrier WHERE date_debut = '2026-11-11'"))
         await api.db.commit()
+
+
+async def test_criteres_du_radar_face_a_la_moyenne(api):
+    """Après un calcul des primes, chaque employé a ses critères et son indice (100 = moyenne)."""
+    await api.db.execute(text(
+        "INSERT INTO primes_calculs (id, annee, mois, enveloppe, calcule_par) VALUES (1, 2026, 11, 50000, 't')"))
+    await api.db.execute(text("""
+        INSERT INTO primes_calculs_lignes (id_calcul, employe_id, kpis, score_global, plancher, merite, prime)
+        SELECT 1, id, CASE username
+            WHEN 'ana' THEN '{"ca_realise": {"valeur": 300, "valeur_retenue": "300.00", "poids": "20.00"},
+                              "nb_ventes": {"valeur": 10, "valeur_retenue": "10.00", "poids": "0"},
+                              "_presence": {"a_confirmer": 0}}'
+            ELSE '{"ca_realise": {"valeur": 100, "valeur_retenue": "100.00", "poids": "20.00"}}' END::jsonb,
+            1, 12500, CASE username WHEN 'ana' THEN 20000 ELSE 5000 END,
+            CASE username WHEN 'ana' THEN 32500 ELSE 17500 END
+        FROM employes WHERE username IN ('ana', 'chafia');
+    """))
+    await api.db.commit()
+    m = await _mois(api)
+    p = m["Ana"]["prime"]
+    assert (p["plancher"], p["merite"]) == (12500.0, 20000.0)
+    assert [(c["code"], c["indice"], c["libelle"]) for c in p["criteres"]] == [("ca_realise", 150, "CA réalisé")]
+    assert m["Chafia"]["prime"]["criteres"][0]["indice"] == 50
+    assert m["Nadir"]["prime"] is None

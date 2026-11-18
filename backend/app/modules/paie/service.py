@@ -33,6 +33,32 @@ LIBELLES = {
 }
 
 
+def _criteres(calcul: dict[int, dict], kpis: dict[str, dict]) -> dict[int, list[dict]]:
+    """Critères notés de chaque employé (poids > 0 pour son poste), avec son
+    indice face à la moyenne de l'équipe : valeur retenue ÷ moyenne × 100
+    (100 = moyenne ; la valeur retenue est ramenée aux jours de présence).
+    La moyenne se calcule sur tous les employés du calcul."""
+    valeurs: dict[str, list[Decimal]] = {}
+    for ligne in calcul.values():
+        for code, k in (ligne["kpis"] or {}).items():
+            if not code.startswith("_") and isinstance(k, dict):
+                valeurs.setdefault(code, []).append(Decimal(str(k.get("valeur_retenue") or 0)))
+    moyennes = {c: sum(v, Decimal(0)) / len(v) for c, v in valeurs.items() if v}
+    resultat: dict[int, list[dict]] = {}
+    for e, ligne in calcul.items():
+        liste = []
+        for code, k in (ligne["kpis"] or {}).items():
+            if code.startswith("_") or not isinstance(k, dict) or Decimal(str(k.get("poids") or 0)) <= 0:
+                continue
+            retenue, moy = Decimal(str(k.get("valeur_retenue") or 0)), moyennes.get(code, Decimal(0))
+            liste.append({"code": code, "libelle": (kpis.get(code) or {}).get("libelle", code),
+                          "unite": (kpis.get(code) or {}).get("unite"), "valeur": k.get("valeur"),
+                          "poids": Decimal(str(k.get("poids"))),
+                          "indice": int((retenue / moy * 100).quantize(Decimal(1))) if moy > 0 else None})
+        resultat[e] = sorted(liste, key=lambda x: -x["poids"])
+    return resultat
+
+
 class PaieService:
     def __init__(self, repo: PaieRepository, utilisateur: dict):
         self.repo = repo
@@ -59,6 +85,8 @@ class PaieService:
         hs = await self.repo.heures_sup(annee, mois)
         variables = await self.repo.parts_variables(annee, mois)
         bulletins = await self.repo.derniers_bulletins(annee, mois)
+        calcul = await self.repo.dernier_calcul_primes(annee, mois)
+        criteres_de = _criteres(calcul, await self.repo.kpis())
         fin = date(annee, mois, calendar.monthrange(annee, mois)[1])
 
         lignes = []
@@ -92,6 +120,11 @@ class PaieService:
                 "lignes": [{"code": k, "libelle": LIBELLES[k], "montant": m} for k, m in p.lignes.items()],
                 "part_fixe": p.total,
                 "part_variable": pv,
+                "prime": None if e["id"] not in calcul else {
+                    "plancher": calcul[e["id"]]["plancher"], "merite": calcul[e["id"]]["merite"],
+                    "calculee_le": calcul[e["id"]]["calcule_le"], "enveloppe": calcul[e["id"]]["enveloppe"],
+                    "criteres": criteres_de.get(e["id"], []),
+                },
                 "prime_validee": bool(v and v["valide"]),
                 "brut": p.total + pv,
                 "a_verifier": a_verifier,
@@ -99,8 +132,9 @@ class PaieService:
                                                     "valide_le": b["valide_le"], "valide_par": b["valide_par"],
                                                     "a_jour": b["brut"] == p.total + pv},
             })
+        enveloppe = next(iter(calcul.values()))["enveloppe"] if calcul else None
         return {
-            "annee": annee, "mois": mois, "employes": lignes,
+            "annee": annee, "mois": mois, "employes": lignes, "enveloppe": enveloppe,
             "totaux": {"part_fixe": sum((l["part_fixe"] for l in lignes), Decimal(0)),
                        "part_variable": sum((l["part_variable"] for l in lignes), Decimal(0)),
                        "brut": sum((l["brut"] for l in lignes), Decimal(0))},
