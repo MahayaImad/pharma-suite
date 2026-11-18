@@ -28,7 +28,8 @@ _COLONNES_POSTGRES_SEULEMENT = {
     # Calculées ou saisies dans PharmaSuite : segmentation ABC/XYZ et
     # disponibilité (services/stock_segmentation.py), catégorie de prime et
     # étagère (stock.py).
-    "nomenclature": {"archive", "categorie", "disponibilite", "etagere", "segment_abc", "segment_xyz"},
+    "nomenclature": {"archive", "categorie", "categorie_manuelle", "disponibilite", "etagere", "segment_abc",
+                     "segment_xyz"},
     "laboratoires": {"is_generique"},
     "clients": {"is_archive", "date_archive", "motif_archive"},
     "groupware": {"droits", "nom", "prenom", "role", "actif"},

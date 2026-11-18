@@ -69,7 +69,9 @@ générique 1 %, générique++ 3 % (`prime_taux_config`). La catégorie est cell
 de `nomenclature.categorie`, propre à PharmaSuite (EASYPHARM ne la fournit
 pas). **Un produit sans catégorie, ou absent de la nomenclature, compte au
 taux princeps** (arbitrage du 2026-11-18) : l'enveloppe n'est jamais nulle
-faute de classement.
+faute de classement. Le classement se fait dans Préférences › Catégories de
+prime (module `categories`) : laboratoires génériques, seuil de marge pour
+générique++, choix à la main par produit.
 
 **Score de chaque employé** (distributif) :
 

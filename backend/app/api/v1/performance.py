@@ -729,7 +729,7 @@ def _ca_sql_pour_filtre(filtre: Optional[str]) -> tuple[str, dict]:
     Valeurs reconnues :
       None / ""                 → tous les produits
       'gentype:princeps'        → nomenclature.categorie = 'princeps', ou sans
-                                  catégorie (arbitrage du 2026-11-18 : un produit
+                                  catégorie (ou valeur inconnue) (arbitrage du 2026-11-18 : un produit
                                   non classé compte au taux le plus bas, plutôt
                                   que de sortir de l'enveloppe)
       'gentype:generique'       → nomenclature.categorie = 'generique'
@@ -739,7 +739,7 @@ def _ca_sql_pour_filtre(filtre: Optional[str]) -> tuple[str, dict]:
     if not filtre:
         return _BASE_CA_SQL, {}
     if filtre == "gentype:princeps":
-        return _BASE_CA_SQL + " AND (n.categorie = 'princeps' OR n.categorie IS NULL)", {}
+        return _BASE_CA_SQL + " AND COALESCE(n.categorie, 'princeps') NOT IN ('generique', 'generique++')", {}
     if filtre == "gentype:generique":
         return _BASE_CA_SQL + " AND n.categorie = 'generique'", {}
     if filtre == "gentype:generique_remb":

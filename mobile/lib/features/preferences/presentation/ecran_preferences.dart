@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../categories/presentation/entree_categories.dart';
 import '../../paie/presentation/entree_paie.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,10 +75,12 @@ class EcranPreferences extends ConsumerWidget {
                   const EntreeFournisseurs(),
                   const SizedBox(height: 10),
                   const EntreeTensions(),
-                  // Paie : titulaire seulement ; seul accès sur portable.
+                  // Paie et catégories de prime : titulaire seulement.
                   if (ref.watch(sessionProvider)?.profil.role == 'admin') ...[
                     const SizedBox(height: 10),
                     const EntreePaie(),
+                    const SizedBox(height: 10),
+                    const EntreeCategories(),
                   ],
                   const SizedBox(height: 28),
                   // Seul accès à la déconnexion sur portable (le menu latéral est sur PC).

@@ -50,7 +50,8 @@ class Nomenclature(Base):
     segment_abc  = Column(String(1),  nullable=True)   # A / B / C
     segment_xyz  = Column(String(1),  nullable=True)   # X / Y / Z
     disponibilite = Column(String(10), nullable=False, default='oui', server_default="'oui'")
-    categorie    = Column(String(20), nullable=True)   # princeps | generique | promotion
+    categorie    = Column(String(20), nullable=True)   # princeps | generique | generique++
+    categorie_manuelle = Column(Boolean, nullable=False, default=False, server_default='false')  # choisie à la main
 
 
 class Famille(Base):

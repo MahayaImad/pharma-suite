@@ -130,7 +130,7 @@ def test_conversion_ne_degrade_pas_un_decimal_existant():
 # ── Construction du SQL ───────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("filtre, fragment", [
-    ("gentype:princeps", "(n.categorie = 'princeps' OR n.categorie IS NULL)"),
+    ("gentype:princeps", "COALESCE(n.categorie, 'princeps') NOT IN ('generique', 'generique++')"),
     ("gentype:generique", "n.categorie = 'generique'"),
     ("gentype:generique_remb", "n.categorie = 'generique++'"),
 ])
@@ -202,21 +202,23 @@ async def test_produit_sans_categorie_compte_au_taux_princeps():
                 await db.execute(text("SELECT 1"))
             except Exception as erreur:
                 pytest.skip(f"base de test injoignable : {str(erreur).splitlines()[0][:80]}")
-            await db.execute(text("DELETE FROM sorties_produits WHERE id BETWEEN 990001 AND 990004"))
+            await db.execute(text("DELETE FROM sorties_produits WHERE id BETWEEN 990001 AND 990005"))
             await db.execute(text("DELETE FROM sorties WHERE id = 990000"))
-            await db.execute(text("DELETE FROM nomenclature WHERE id BETWEEN 990001 AND 990003"))
+            await db.execute(text("DELETE FROM nomenclature WHERE id BETWEEN 990001 AND 990004"))
             await db.execute(text("""
                 INSERT INTO nomenclature (id, nom, categorie) VALUES
-                (990001, 'P', 'princeps'), (990002, 'G', 'generique'), (990003, 'X', NULL)
+                (990001, 'P', 'princeps'), (990002, 'G', 'generique'), (990003, 'X', NULL), (990004, 'Y', 'promotion')
             """))
             await db.execute(text("INSERT INTO sorties (id, date, type) VALUES (990000, DATE '2031-03-05', 'V')"))
             await db.execute(text("""
                 INSERT INTO sorties_produits (id, id_sortie, id_nom, qte_sortie, prix_vente) VALUES
                 (990001, 990000, 990001, 1, 10000), (990002, 990000, 990002, 1, 20000),
-                (990003, 990000, 990003, 1, 5000),  (990004, 990000, 999999, 1, 1000)
+                (990003, 990000, 990003, 1, 5000),  (990004, 990000, 999999, 1, 1000),
+                (990005, 990000, 990004, 1, 2000)
             """))
-            # princeps (10 000 + 5 000 non classé + 1 000 hors nomenclature) × 0,5 % + générique 20 000 × 1 %
-            assert await _calc_enveloppe_prime(db, 2031, 3) == Decimal("280.00")
+            # princeps (10 000 + 5 000 non classé + 1 000 hors nomenclature + 2 000 ancienne valeur)
+            # × 0,5 % + générique 20 000 × 1 %
+            assert await _calc_enveloppe_prime(db, 2031, 3) == Decimal("290.00")
             await db.rollback()
     finally:
         await engine.dispose()

@@ -11,6 +11,7 @@ import '../../features/connexion/presentation/ecran_connexion.dart';
 import '../../features/inventaire/presentation/ecran_inventaire.dart';
 import '../../features/paie/presentation/ecran_paie.dart';
 
+import '../../features/categories/presentation/ecran_categories.dart';
 import '../../features/preferences/presentation/ecran_preferences.dart';
 import '../../features/reglages/presentation/ecran_consommables.dart';
 import '../../features/reglages/presentation/ecran_reglages.dart';
@@ -143,6 +144,12 @@ GoRouter construireRouteur({String depart = '/stock', bool Function()? connecte,
           path: 'tensions',
           pageBuilder: (context, etat) => const NoTransitionPage(
             child: Coquille(emplacement: '/preferences', child: EcranTensions()),
+          ),
+        ),
+        GoRoute(
+          path: 'categories',
+          pageBuilder: (context, etat) => const NoTransitionPage(
+            child: Coquille(emplacement: '/preferences', child: EcranCategories()),
           ),
         ),
         GoRoute(
