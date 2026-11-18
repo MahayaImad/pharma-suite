@@ -65,7 +65,11 @@ Tous ces montants sont des réglages (`reglages_stock`, clés `paie_*`).
 ## 3. Part variable (`app/api/v1/performance.py`, `app/services/paie/`)
 
 **Enveloppe** = Σ (CA du mois de la catégorie × taux) : princeps 0,5 %,
-générique 1 %, générique++ 3 % (`prime_taux_config`).
+générique 1 %, générique++ 3 % (`prime_taux_config`). La catégorie est celle
+de `nomenclature.categorie`, propre à PharmaSuite (EASYPHARM ne la fournit
+pas). **Un produit sans catégorie, ou absent de la nomenclature, compte au
+taux princeps** (arbitrage du 2026-11-18) : l'enveloppe n'est jamais nulle
+faute de classement.
 
 **Score de chaque employé** (distributif) :
 

@@ -358,6 +358,8 @@ Valables dans les deux parties, sans exception.
 - `prime_taux_config` : enveloppe = Σ (CA de la catégorie × `taux_pct`).
   Catégories seedées par la migration 038 :
   Princeps **0,5 %** · Générique **1 %** · Générique++ **3 %**.
+  Un produit sans catégorie (`nomenclature.categorie` vide) compte au taux
+  princeps (arbitrage du 2026-11-18).
   Configurable via `GET/POST/PATCH/DELETE /performance/prime-config`.
 - `objectifs_mensuels` : mode `yoy` ou `fixe`, `pct_enveloppe_prime`.
 - `kpi_definitions` : les critères et leurs poids (`poids`, en % du score)

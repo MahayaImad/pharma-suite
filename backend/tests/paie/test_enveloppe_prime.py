@@ -130,7 +130,7 @@ def test_conversion_ne_degrade_pas_un_decimal_existant():
 # ── Construction du SQL ───────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("filtre, fragment", [
-    ("gentype:princeps", "n.categorie = 'princeps'"),
+    ("gentype:princeps", "(n.categorie = 'princeps' OR n.categorie IS NULL)"),
     ("gentype:generique", "n.categorie = 'generique'"),
     ("gentype:generique_remb", "n.categorie = 'generique++'"),
 ])
@@ -181,3 +181,42 @@ async def test_periode_toujours_transmise_en_parametres(configs_officine):
     for _, params in db.sql_executes:
         assert params["annee"] == 2026
         assert params["mois"] == 7
+
+
+# ── Sur une vraie base : produit sans catégorie compté au taux princeps ──────
+
+async def test_produit_sans_categorie_compte_au_taux_princeps():
+    """Arbitrage du 2026-11-18 : une vente de produit non classé (ou absent de
+    la nomenclature) entre dans l'enveloppe au taux princeps."""
+    from sqlalchemy import text
+    from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+    from sqlalchemy.pool import NullPool
+    from app.core.config import settings
+
+    if not settings.db_name.endswith("_test"):
+        pytest.skip("base de test absente (DB_NAME doit se terminer par _test)")
+    engine = create_async_engine(settings.database_url, poolclass=NullPool)
+    try:
+        async with AsyncSession(engine) as db:
+            try:
+                await db.execute(text("SELECT 1"))
+            except Exception as erreur:
+                pytest.skip(f"base de test injoignable : {str(erreur).splitlines()[0][:80]}")
+            await db.execute(text("DELETE FROM sorties_produits WHERE id BETWEEN 990001 AND 990004"))
+            await db.execute(text("DELETE FROM sorties WHERE id = 990000"))
+            await db.execute(text("DELETE FROM nomenclature WHERE id BETWEEN 990001 AND 990003"))
+            await db.execute(text("""
+                INSERT INTO nomenclature (id, nom, categorie) VALUES
+                (990001, 'P', 'princeps'), (990002, 'G', 'generique'), (990003, 'X', NULL)
+            """))
+            await db.execute(text("INSERT INTO sorties (id, date, type) VALUES (990000, DATE '2031-03-05', 'V')"))
+            await db.execute(text("""
+                INSERT INTO sorties_produits (id, id_sortie, id_nom, qte_sortie, prix_vente) VALUES
+                (990001, 990000, 990001, 1, 10000), (990002, 990000, 990002, 1, 20000),
+                (990003, 990000, 990003, 1, 5000),  (990004, 990000, 999999, 1, 1000)
+            """))
+            # princeps (10 000 + 5 000 non classé + 1 000 hors nomenclature) × 0,5 % + générique 20 000 × 1 %
+            assert await _calc_enveloppe_prime(db, 2031, 3) == Decimal("280.00")
+            await db.rollback()
+    finally:
+        await engine.dispose()
