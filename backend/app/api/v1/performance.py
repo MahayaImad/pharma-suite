@@ -1,6 +1,7 @@
 """
 Module Performance — Bénéfice mensuel, KPIs employés, Primes de rendement
 """
+import json
 from datetime import date as PyDate
 from typing import Optional, List
 from decimal import Decimal, ROUND_HALF_UP
@@ -1033,6 +1034,11 @@ async def calculer_primes(
         .values(enveloppe_calculee=enveloppe)
     )
 
+    # Historique : chaque calcul est gardé, le dernier reste dans performance_mensuelle.
+    id_calcul = (await db.execute(text(
+        "INSERT INTO primes_calculs (annee, mois, enveloppe, calcule_par) VALUES (:a, :m, :e, :qui) RETURNING id"),
+        {"a": annee, "m": mois, "e": enveloppe, "qui": current.get("username")})).scalar()
+
     results = []
     for emp in employes:
         s = emp_scores[emp.id]
@@ -1079,6 +1085,11 @@ async def calculer_primes(
             },
         )
         await db.execute(stmt)
+        await db.execute(text("""
+            INSERT INTO primes_calculs_lignes (id_calcul, employe_id, kpis, score_global, plancher, merite, prime)
+            VALUES (:c, :e, CAST(:k AS jsonb), :s, :pl, :me, :pr)
+        """), {"c": id_calcul, "e": emp.id, "k": json.dumps(kpis_data, default=str), "s": s.quantize(Decimal("0.0001")),
+               "pl": parts[emp.id]["plancher"], "me": parts[emp.id]["merite"], "pr": prime})
 
         # Conversion en float au bord seulement, pour la réponse JSON.
         results.append({
@@ -1104,9 +1115,37 @@ async def calculer_primes(
         "annee": annee,
         "mois": mois,
         "enveloppe_da": float(enveloppe),
+        "id_calcul": id_calcul,
         "nb_employes": len(employes),
         "resultats": results,
     }
+
+
+@router.get("/performance/primes/{annee}/{mois}/historique")
+async def historique_primes(
+    annee: int,
+    mois: int,
+    db: AsyncSession = Depends(get_db),
+    current: dict = Depends(get_current_user),
+):
+    """Tous les calculs du mois, du plus récent au plus ancien, avec la prime de chacun."""
+    if current.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Réservé aux administrateurs")
+    calculs = (await db.execute(text("""
+        SELECT id, enveloppe, calcule_le, calcule_par FROM primes_calculs
+        WHERE annee = :a AND mois = :m ORDER BY calcule_le DESC, id DESC
+    """), {"a": annee, "m": mois})).all()
+    lignes: dict[int, list] = {}
+    for r in await db.execute(text("""
+        SELECT l.id_calcul, l.employe_id, e.nom, e.prenom, l.plancher, l.merite, l.prime
+        FROM primes_calculs_lignes l LEFT JOIN employes e ON e.id = l.employe_id
+        WHERE l.id_calcul = ANY(:ids) ORDER BY l.prime DESC
+    """), {"ids": [c.id for c in calculs]}):
+        lignes.setdefault(r.id_calcul, []).append({
+            "employe_id": r.employe_id, "nom": " ".join(x for x in (r.prenom, r.nom) if x),
+            "plancher": float(r.plancher), "merite": float(r.merite), "prime": float(r.prime)})
+    return [{"id": c.id, "enveloppe": float(c.enveloppe), "calcule_le": c.calcule_le.isoformat(),
+             "calcule_par": c.calcule_par, "lignes": lignes.get(c.id, [])} for c in calculs]
 
 
 @router.get("/performance/primes/{annee}/{mois}")

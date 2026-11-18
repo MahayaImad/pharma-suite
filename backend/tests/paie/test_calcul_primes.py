@@ -45,7 +45,7 @@ async def api(monkeypatch):
     monkeypatch.setattr(performance, "_calc_kpis_employe", kpis)
     monkeypatch.setattr(performance, "_calc_enveloppe_prime", enveloppe)
     async with AsyncSession(engine, expire_on_commit=False) as db:
-        await db.execute(text("TRUNCATE performance_mensuelle, employes RESTART IDENTITY CASCADE"))
+        await db.execute(text("TRUNCATE performance_mensuelle, primes_calculs, employes RESTART IDENTITY CASCADE"))
         await db.execute(text("""
             INSERT INTO employes (username, nom, poste, actif, eligible_prime) VALUES
             ('ana', 'Ana', 'Caissier', true, true), ('brahim', 'Brahim', 'Caissier', true, true),
@@ -161,3 +161,21 @@ async def test_un_conge_ne_fait_pas_baisser_la_prime(api):
         KPIS.update(avant)
     r = {x["username"]: x["prime_calculee"] for x in d["resultats"]}
     assert r["ana"] == r["brahim"] == 25000.0
+
+
+async def test_chaque_recalcul_est_garde(api):
+    """Contestation : un recalcul n'efface plus le précédent."""
+    await _presences(api, {"ana": 20, "brahim": 20})
+    premier = (await api.post("/performance/primes/2026/10/calculer")).json()
+    avant = dict(KPIS)
+    KPIS["brahim"] = {"ca_realise": 300000, "nb_ventes": 600}
+    try:
+        second = (await api.post("/performance/primes/2026/10/calculer")).json()
+    finally:
+        KPIS.update(avant)
+    h = (await api.get("/performance/primes/2026/10/historique")).json()
+    assert [c["id"] for c in h] == [second["id_calcul"], premier["id_calcul"]]
+    ana = lambda c: next(l["prime"] for l in c["lignes"] if l["nom"] == "Ana")  # noqa: E731
+    assert ana(h[1]) == 27261.9 and ana(h[0]) < ana(h[1])     # le premier calcul est intact
+    assert all(round(sum(l["prime"] for l in c["lignes"]), 2) == 50000.0 for c in h)
+    assert h[0]["calcule_par"] == "titulaire"

@@ -389,7 +389,8 @@ ancienneté calculée, demandes de congé avec workflow d'approbation.
 - **Contestation** : l'historique des recalculs doit être conservé. Seule la
   validation est tracée aujourd'hui (`valide_par`, `valide_le`) ;
   `performance_mensuelle` est unique par (employé, année, mois) et écrase le
-  calcul précédent. L'historisation reste à faire.
+  calcul précédent ; chaque calcul est aussi gardé dans `primes_calculs`
+  (migration 020).
 
 ## ✅ Règles arbitrées (2026-08-19)
 
@@ -525,7 +526,8 @@ Dans l'ordre de dépendance :
 3. ~~KPIs `taches_completees` et `ponctualite`, nouveaux poids~~ — fait
    (migration 019, avec `comptages_inventaire` et les poids par poste).
 4. ~~Plancher (règle 4)~~ — fait le 2026-11-18.
-5. Historiser les recalculs de `performance_mensuelle` (aujourd'hui écrasés).
+5. ~~Historiser les recalculs~~ — fait le 2026-11-18 (migration 020 :
+   `primes_calculs` et `primes_calculs_lignes`, `GET /performance/primes/{a}/{m}/historique`).
 6. Assainir `chatbot.py` (règle 6).
 7. Part fixe (règle 7) : tables, migration, endpoints, calcul.
 
