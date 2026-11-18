@@ -14,15 +14,22 @@ Elle vient de la grille GRH (`app/api/v1/grh_presence.py`), un statut par jour :
 | Statut | D'où il vient |
 |---|---|
 | présent | au moins une vente ce jour-là (`sorties.utilisateur`) |
-| retard | saisi par le titulaire (retard de plus de 45 minutes) |
+| retard | première vente plus de 45 minutes après l'heure de début (postes au comptoir), ou saisi par le titulaire |
 | absent | aucune vente, poste qui vend au comptoir |
 | à confirmer | aucune vente, poste qui ne vend pas (préparateur) |
 | congé | demande de congé approuvée |
 | maladie | saisi par le titulaire |
-| férié | jours fériés fixes (1/1, 1/5, 19/6, 5/7, 1/11) |
+| férié | jours fériés fixes (1/1, 1/5, 19/6, 5/7, 1/11), jours saisis dans Préférences › Calendrier et réglages, Aïd el-Fitr et Aïd el-Adha du Calendrier |
 | repos | vendredi |
 
 Une saisie du titulaire remplace toujours le statut automatique.
+
+**Heure de début** (arbitrage du 2026-11-18, en attendant une pointeuse) :
+celle de l'employé (`employes.heure_debut`) si elle est renseignée, sinon le
+réglage général `paie_heure_debut` (8 h 30) ; pendant le Ramadan, le réglage
+`paie_heure_debut_ramadan`. Tolérance : `paie_tolerance_retard_min` (45).
+C'est une approximation : un employé arrivé à l'heure peut faire sa première
+vente plus tard. Le titulaire corrige le jour dans la grille.
 
 ## 2. Part fixe (`app/services/paie/part_fixe.py`)
 
@@ -106,9 +113,9 @@ Arrondi au centime, la somme des primes vaut toujours l'enveloppe.
 
 ## 5. Limites connues
 
-- La ponctualité dépend des retards saisis : la grille ne connaît pas l'heure
-  d'arrivée, seulement l'heure de la première vente.
-- Les jours fériés religieux (Aïd, Mawlid, Achoura…) ne sont pas encore pris
-  de la page Calendrier : à saisir comme « férié » dans la grille.
+- Le retard est déduit de la première vente, pas de l'heure d'arrivée ; il
+  n'est pas détecté pour le préparateur. Une pointeuse est prévue.
+- Les fériés religieux autres que l'Aïd (Mawlid, Achoura, 1er Moharram…) se
+  saisissent dans Préférences › Calendrier et réglages, rubrique jours fériés.
 - Les employés non éligibles à la prime (comptes non nominatifs) ne sont pas
   dans la paie.

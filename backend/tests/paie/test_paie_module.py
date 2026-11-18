@@ -134,3 +134,69 @@ async def test_reserve_au_titulaire(api):
     r = await api.get("/paie/2026/11")
     assert r.status_code == 403 and "titulaire" in r.json()["error"]["message"]
     assert (await api.post("/paie/2026/11/valider")).status_code == 403
+
+
+# ── Grille de présence : retard d'après la première vente, fériés du Calendrier ──
+
+from app.api.v1.grh_presence import grille_presence  # noqa: E402
+
+
+async def _jours_ana(api):
+    g = await grille_presence(api.db, 2026, 11)
+    return next(e for e in g["employes"] if e["username"] == "ana")["jours"]
+
+
+async def test_retard_detecte_d_apres_la_premiere_vente(api):
+    # Première vente à 9 h 20 le 3 (50 min après 8 h 30) et à 9 h 10 le 4 (40 min : toléré).
+    await api.db.execute(text("UPDATE sorties SET heure = '09:20:00' WHERE utilisateur = 'ana' AND date = '2026-11-03'"))
+    await api.db.execute(text("UPDATE sorties SET heure = '09:10:00' WHERE utilisateur = 'ana' AND date = '2026-11-04'"))
+    await api.db.commit()
+    j = await _jours_ana(api)
+    assert (j["2026-11-03"]["statut"], j["2026-11-03"]["retard_min"]) == ("retard", 50)
+    assert j["2026-11-04"]["statut"] == "present"
+    # Retard : payé comme présent (transport, panier), sans retenue.
+    ana = (await _mois(api))["Ana"]
+    assert ana["jours"]["presence"] == 24 and {l["code"]: l["montant"] for l in ana["lignes"]}["transport"] == 7200
+
+    # Heure de début propre à l'employée : 9 h → le 3 n'est plus un retard.
+    await api.db.execute(text("UPDATE employes SET heure_debut = '09:00' WHERE username = 'ana'"))
+    await api.db.commit()
+    assert (await _jours_ana(api))["2026-11-03"]["statut"] == "present"
+
+    # Une correction du titulaire l'emporte toujours.
+    await api.db.execute(text("UPDATE employes SET heure_debut = NULL WHERE username = 'ana'"))
+    await api.db.execute(text("""
+        INSERT INTO presences_overrides (employe_id, date, statut, created_by)
+        SELECT id, DATE '2026-11-03', 'present', 'titulaire' FROM employes WHERE username = 'ana'"""))
+    await api.db.commit()
+    assert (await _jours_ana(api))["2026-11-03"]["statut"] == "present"
+
+
+async def test_heure_de_ramadan(api):
+    await api.db.execute(text("UPDATE sorties SET heure = '10:00:00' WHERE utilisateur = 'ana' AND date = '2026-11-03'"))
+    await api.db.execute(text("UPDATE reglages_stock SET valeur = 570 WHERE cle = 'paie_heure_debut_ramadan'"))
+    await api.db.execute(text("""
+        INSERT INTO evenements_calendrier (type, date_debut, date_fin) VALUES ('ramadan', '2026-11-03', '2026-11-03')"""))
+    await api.db.commit()
+    try:
+        assert (await _jours_ana(api))["2026-11-03"]["statut"] == "present"     # 9 h 30 + 45 min
+    finally:
+        await api.db.execute(text("DELETE FROM evenements_calendrier WHERE date_debut = '2026-11-03'"))
+        await api.db.execute(text("UPDATE reglages_stock SET valeur = 510 WHERE cle = 'paie_heure_debut_ramadan'"))
+        await api.db.commit()
+
+
+async def test_feries_saisis_dans_le_calendrier_et_aid(api):
+    await api.db.execute(text("INSERT INTO holidays (date, label) VALUES ('2026-11-05', 'Jour férié de test')"))
+    await api.db.execute(text("""
+        INSERT INTO evenements_calendrier (type, date_debut, date_fin) VALUES ('aid_fitr', '2026-11-11', '2026-11-12')"""))
+    await api.db.commit()
+    try:
+        j = await _jours_ana(api)
+        assert [j[d]["statut"] for d in ("2026-11-05", "2026-11-11", "2026-11-12")] == ["ferie"] * 3
+        # Pas de transport ni de panier ces jours-là, pas de retenue non plus.
+        assert (await _mois(api))["Ana"]["jours"]["presence"] == 21
+    finally:
+        await api.db.execute(text("DELETE FROM holidays WHERE date = '2026-11-05'"))
+        await api.db.execute(text("DELETE FROM evenements_calendrier WHERE date_debut = '2026-11-11'"))
+        await api.db.commit()

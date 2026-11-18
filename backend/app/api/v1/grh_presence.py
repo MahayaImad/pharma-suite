@@ -61,7 +61,7 @@ async def grille_presence(db: AsyncSession, a: int, m: int) -> dict:
 
     # ── Employés actifs ────────────────────────────────────────────────────────
     emp_rows = (await db.execute(text("""
-        SELECT e.id, e.username, e.nom, e.prenom, e.poste,
+        SELECT e.id, e.username, e.nom, e.prenom, e.poste, e.heure_debut,
                COALESCE(pt.vend_au_comptoir, true) AS vend_au_comptoir
         FROM employes e LEFT JOIN postes_travail pt ON pt.code = e.poste_code
         WHERE e.actif = TRUE AND e.eligible_prime = TRUE
@@ -127,8 +127,35 @@ async def grille_presence(db: AsyncSession, a: int, m: int) -> dict:
             conges_approuves.add((r.employe_id, cur))
             cur += _dt.timedelta(days=1)
 
-    # ── Construction de la grille ──────────────────────────────────────────────
+    # ── Jours fériés : fixes, saisis dans le Calendrier, et l'Aïd ───────────────
     feries_mois = {PyDate(a, mm, dd) for (mm, dd) in _FERIES_FIXES if mm == m}
+    feries_mois |= {r.date for r in await db.execute(text(
+        "SELECT date FROM holidays WHERE date BETWEEN :date_min AND :date_max"),
+        {"date_min": date_min, "date_max": date_max})}
+    ramadan: set[PyDate] = set()
+    for r in await db.execute(text("""
+        SELECT type, date_debut, date_fin FROM evenements_calendrier
+        WHERE type IN ('aid_fitr', 'aid_adha', 'ramadan') AND date_fin >= :date_min AND date_debut <= :date_max
+    """), {"date_min": date_min, "date_max": date_max}):
+        jours_evt = {d for d in dates if r.date_debut <= d <= r.date_fin}
+        (ramadan if r.type == "ramadan" else feries_mois).update(jours_evt)
+
+    # ── Retard d'après la première vente (en attendant une pointeuse) ──────────
+    reglages = {r.cle: int(r.valeur) for r in await db.execute(text(
+        "SELECT cle, valeur FROM reglages_stock WHERE cle IN "
+        "('paie_heure_debut', 'paie_heure_debut_ramadan', 'paie_tolerance_retard_min')"))}
+    debut_general = reglages.get("paie_heure_debut", 510)
+    debut_ramadan = reglages.get("paie_heure_debut_ramadan", debut_general)
+    tolerance = reglages.get("paie_tolerance_retard_min", 45)
+
+    def _minutes(heure: Optional[str]) -> Optional[int]:
+        try:
+            h, mn = (heure or "")[:5].split(":")
+            return int(h) * 60 + int(mn)
+        except ValueError:
+            return None
+
+    # ── Construction de la grille ──────────────────────────────────────────────
 
     result = []
     for emp in emp_rows:
@@ -161,8 +188,18 @@ async def grille_presence(db: AsyncSession, a: int, m: int) -> dict:
             else:
                 act = activity.get((uname, jour))
                 if act:
-                    cell = {"statut": "present", "source": "auto", **act}
-                    totaux["present"] += 1
+                    # Heure de début : celle de l'employé, sinon le réglage (Ramadan à part).
+                    if emp.heure_debut is not None and jour not in ramadan:
+                        debut = emp.heure_debut.hour * 60 + emp.heure_debut.minute
+                    else:
+                        debut = debut_ramadan if jour in ramadan else debut_general
+                    arrivee = _minutes(act.get("premiere_vente"))
+                    if emp.vend_au_comptoir and arrivee is not None and arrivee > debut + tolerance:
+                        cell = {"statut": "retard", "source": "auto", "retard_min": arrivee - debut, **act}
+                        totaux["retard"] += 1
+                    else:
+                        cell = {"statut": "present", "source": "auto", **act}
+                        totaux["present"] += 1
                 elif not emp.vend_au_comptoir:
                     # Poste qui ne vend pas : pas de vente ne veut pas dire absent.
                     cell = {"statut": "a_confirmer", "source": "auto"}

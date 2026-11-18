@@ -220,6 +220,11 @@ router au passage.
 - **Paie en `Decimal` de bout en bout** (corrigé le 2026-11-18) : enveloppe
   (`_calc_enveloppe_prime`) et répartition (`app/services/paie/repartition.py`).
   Les montants ne passent en `float` qu'au bord, dans la réponse JSON.
+- **Retard déduit de la première vente** (migration 022, en attendant une
+  pointeuse) : première vente plus de 45 minutes après l'heure de début
+  (`employes.heure_debut`, sinon les réglages `paie_heure_debut` et
+  `paie_heure_debut_ramadan`). Les jours fériés de la grille viennent aussi
+  de `holidays` (saisis dans le Calendrier) et des Aïd d'`evenements_calendrier`.
 - **La présence est déduite des ventes** (`sorties.utilisateur`). Pour un poste
   qui ne vend pas au comptoir (`postes_travail.vend_au_comptoir = false`,
   préparateur), un jour sans vente est « à confirmer », pas « absent » : la
@@ -366,7 +371,9 @@ Valables dans les deux parties, sans exception.
 - Présence auto-détectée depuis `sorties.utilisateur` (les lignes de vente font
   foi en cas d'oubli de badge), corrigeable par override manuel horodaté et
   attribué. Statuts : `present`, `absent`, `conge`, `retard`, `maladie`.
-- Jours fériés fixes algériens en dur : 1/1, 1/5, 19/6, 5/7, 1/11.
+- Jours fériés fixes algériens en dur : 1/1, 1/5, 19/6, 5/7, 1/11 ; plus ceux
+  saisis dans le Calendrier (`holidays`) et les Aïd (`evenements_calendrier`).
+- Retard détecté d'après la première vente (migration 022).
 
 **Fiches employés** (`app/api/v1/grh_employes.py`) : poste, `date_entree`,
 ancienneté calculée, demandes de congé avec workflow d'approbation.

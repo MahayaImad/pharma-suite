@@ -3,7 +3,7 @@ Modèles SQLAlchemy — Module Performance & Primes
 Tables: employes, objectifs_mensuels, kpi_definitions, performance_mensuelle
 """
 from sqlalchemy import (
-    BigInteger, Boolean, Column, Date, Integer,
+    BigInteger, Boolean, Column, Date, Integer, Time,
     Numeric, String, Text, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -24,6 +24,7 @@ class Employe(Base):
     poste_code = Column(String(30))               # postes_travail.code (migration 019) : salaire, poids des KPIs
     date_entree = Column(Date)
     date_sortie = Column(Date)                    # départ (migration 021) : part fixe au prorata
+    heure_debut = Column(Time)                    # heure de début propre (migration 022), sinon le réglage
     actif = Column(Boolean, default=True)
     eligible_prime = Column(Boolean, default=True)  # False pour VENTE, amine, azzedine, administrateur
     created_at = Column(DateTime(timezone=True), server_default=func.now())
