@@ -21,7 +21,8 @@ from app.models.caisse import Operation
 from app.models.performance import Employe, ObjectifMensuel, KpiDefinition, PerformanceMensuelle, PrimeTauxConfig
 from app.models.config_tables import Groupware
 
-from app.services.paie import repartition
+from app.api.v1 import grh_presence
+from app.services.paie import presence, repartition
 from app.services.paie.repartition import CENTIME
 
 router = APIRouter(tags=["performance"])
@@ -922,6 +923,12 @@ async def debug_primes(
     }
 
 
+async def _bilans_presence(db: AsyncSession, annee: int, mois: int) -> dict[int, presence.Bilan]:
+    """Bilan de présence du mois de chaque employé, d'après la grille GRH."""
+    grille = await grh_presence.grille_presence(db, annee, mois)
+    return {e["id"]: presence.bilan(j["statut"] for j in e["jours"].values()) for e in grille["employes"]}
+
+
 @router.post("/performance/primes/{annee}/{mois}/calculer")
 async def calculer_primes(
     annee: int,
@@ -932,7 +939,8 @@ async def calculer_primes(
     """
     Calcule les primes de rendement pour tous les employés éligibles du mois.
     Enveloppe = Σ (CA par catégorie × taux%) depuis prime_taux_config.
-    Distribution = relative KPI scoring pondéré par kpi_definitions.poids.
+    Distribution = plancher de 50 % de la part égalitaire aux présents, puis le
+    reste au mérite (score distributif pondéré par kpi_definitions.poids).
     """
     if current.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Réservé aux administrateurs")
@@ -972,7 +980,11 @@ async def calculer_primes(
     # 5. Score distributif puis répartition, en Decimal de bout en bout
     #    (app/services/paie/repartition.py, testé dans tests/paie/).
     emp_scores = repartition.scores(emp_kpis, kpi_poids)
-    parts = repartition.repartir(enveloppe, emp_scores, [], taux_plancher=0)
+    # Plancher (règle 4) : 50 % de la part égalitaire aux éligibles présents
+    # sur le mois (au moins un jour de présence effective).
+    bilans = await _bilans_presence(db, annee, mois)
+    presents = [e.id for e in employes if bilans.get(e.id) is not None and bilans[e.id].present_sur_le_mois]
+    parts = repartition.repartir(enveloppe, emp_scores, presents)
     totaux = {code: sum((repartition.en_decimal(emp_kpis[e.id].get(code)) for e in employes), Decimal(0))
               for code in kpi_poids}
 
@@ -1025,6 +1037,8 @@ async def calculer_primes(
             "employe_id": emp.id,
             "username": emp.username,
             "nom": emp.nom,
+            "plancher": float(parts[emp.id]["plancher"]),
+            "merite": float(parts[emp.id]["merite"]),
             "score_global": float(s.quantize(CENTIME)),
             "pct_prime": float(pct.quantize(CENTIME)),
             "prime_calculee": float(prime),

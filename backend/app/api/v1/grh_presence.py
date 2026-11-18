@@ -49,9 +49,12 @@ async def get_presence_mois(
     _: dict = Depends(get_current_user),
 ):
     today = PyDate.today()
-    a = annee or today.year
-    m = mois or today.month
+    return await grille_presence(db, annee or today.year, mois or today.month)
 
+
+async def grille_presence(db: AsyncSession, a: int, m: int) -> dict:
+    """Grille du mois : statut de chaque jour pour chaque employé actif
+    éligible. Utilisée aussi par la paie (`performance.calculer_primes`)."""
     nb_jours = calendar.monthrange(a, m)[1]
     dates = [PyDate(a, m, d) for d in range(1, nb_jours + 1)]
     date_min, date_max = dates[0], dates[-1]

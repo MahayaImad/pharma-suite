@@ -88,3 +88,26 @@ def test_enveloppe_nulle_ou_sans_employe():
 @pytest.mark.parametrize("v, attendu", [(None, D(0)), (3, D(3)), ("1.10", D("1.10")), (0.1, D("0.1"))])
 def test_en_decimal_sans_imprecision(v, attendu):
     assert en_decimal(v) == attendu
+
+
+# ── Présence du mois ──────────────────────────────────────────────────────────
+
+from app.services.paie.presence import bilan, ramener_aux_jours  # noqa: E402
+
+
+def test_bilan_de_presence():
+    b = bilan(["present"] * 18 + ["retard"] * 2 + ["conge"] * 3 + ["maladie", "ferie", "absent"] + ["weekend"] * 4)
+    assert (b.presence_effective, b.a_l_heure, b.retards, b.absences) == (20, 18, 2, 1)
+    assert b.travailles_variable == 25 and b.present_sur_le_mois
+    assert not bilan(["conge"] * 26 + ["weekend"] * 4).present_sur_le_mois
+
+
+def test_un_conge_ne_fait_pas_baisser_un_kpi_de_volume():
+    """Même rythme de vente (10 000 DA par jour), l'un en congé 10 jours : même valeur ramenée."""
+    plein = bilan(["present"] * 26)
+    conge = bilan(["present"] * 16 + ["conge"] * 10)
+    assert ramener_aux_jours(260000, plein) == ramener_aux_jours(160000, conge) == D(260000)
+    # Une absence injustifiée, elle, n'est pas compensée.
+    absent = bilan(["present"] * 16 + ["absent"] * 10)
+    assert ramener_aux_jours(160000, absent) == D(160000)
+    assert ramener_aux_jours(5000, bilan(["conge"] * 26)) == 0
