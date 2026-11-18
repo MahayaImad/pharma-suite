@@ -111,3 +111,19 @@ def test_un_conge_ne_fait_pas_baisser_un_kpi_de_volume():
     absent = bilan(["present"] * 16 + ["absent"] * 10)
     assert ramener_aux_jours(160000, absent) == D(160000)
     assert ramener_aux_jours(5000, bilan(["conge"] * 26)) == 0
+
+
+# ── Poids par poste ───────────────────────────────────────────────────────────
+
+def test_chaque_employe_est_note_avec_les_poids_de_son_poste():
+    """Le caissier est noté sur le CA, le préparateur sur les tâches ; les totaux
+    d'équipe se calculent sur tout le monde."""
+    valeurs = {"caissier": {"ca": 300000, "taches": 2}, "prep": {"ca": 0, "taches": 8}}
+    s = scores(valeurs, {"ca": 100}, {"prep": {"taches": 100}})
+    assert s == {"caissier": D(100), "prep": D(80)}     # 100 % du CA ; 8/10 des tâches
+
+
+def test_jours_a_confirmer_comptes_presents_a_l_heure_et_signales():
+    b = bilan(["a_confirmer"] * 20 + ["present"] * 4 + ["weekend"] * 4)
+    assert (b.presence_effective, b.a_l_heure, b.a_confirmer, b.absences) == (24, 24, 20, 0)
+    assert b.present_sur_le_mois

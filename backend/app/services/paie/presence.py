@@ -2,7 +2,12 @@
 
 Entrée : le statut de chaque jour, tel que le calcule la grille de présence
 (`app/api/v1/grh_presence.py`) : present, retard, absent, conge, maladie,
-ferie, weekend.
+ferie, weekend, a_confirmer.
+
+« a_confirmer » : jour sans vente d'un employé dont le poste ne vend pas au
+comptoir (préparateur). Sa présence ne se déduit pas des ventes ; tant que le
+titulaire ne l'a pas corrigé, le jour compte comme présent à l'heure pour la
+part variable (bénéfice du doute), et il est signalé.
 
 Ce que la paie en tire (règles arbitrées du 2026-08-19, CLAUDE.md partie 4) :
 
@@ -24,7 +29,7 @@ from typing import Iterable
 
 from app.services.paie.repartition import en_decimal
 
-TRAVAILLES_VARIABLE = {"present", "retard", "conge", "maladie", "ferie"}
+TRAVAILLES_VARIABLE = {"present", "retard", "conge", "maladie", "ferie", "a_confirmer"}
 
 
 @dataclass(frozen=True)
@@ -37,6 +42,7 @@ class Bilan:
     maladie: int
     feries: int
     travailles_variable: int    # présence effective + congé + maladie + férié
+    a_confirmer: int = 0        # jours sans vente d'un poste qui ne vend pas, comptés présents
 
     @property
     def present_sur_le_mois(self) -> bool:
@@ -46,9 +52,10 @@ class Bilan:
 def bilan(statuts: Iterable[str]) -> Bilan:
     s = list(statuts)
     n = s.count
-    return Bilan(presence_effective=n("present") + n("retard"), a_l_heure=n("present"), retards=n("retard"),
+    return Bilan(presence_effective=n("present") + n("retard") + n("a_confirmer"),
+                 a_l_heure=n("present") + n("a_confirmer"), retards=n("retard"),
                  absences=n("absent"), conges=n("conge"), maladie=n("maladie"), feries=n("ferie"),
-                 travailles_variable=sum(1 for x in s if x in TRAVAILLES_VARIABLE))
+                 travailles_variable=sum(1 for x in s if x in TRAVAILLES_VARIABLE), a_confirmer=n("a_confirmer"))
 
 
 def ramener_aux_jours(valeur, b: Bilan) -> Decimal:

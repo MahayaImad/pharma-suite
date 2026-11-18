@@ -61,10 +61,11 @@ async def grille_presence(db: AsyncSession, a: int, m: int) -> dict:
 
     # ── Employés actifs ────────────────────────────────────────────────────────
     emp_rows = (await db.execute(text("""
-        SELECT id, username, nom, prenom, poste
-        FROM employes
-        WHERE actif = TRUE AND eligible_prime = TRUE
-        ORDER BY nom, prenom
+        SELECT e.id, e.username, e.nom, e.prenom, e.poste,
+               COALESCE(pt.vend_au_comptoir, true) AS vend_au_comptoir
+        FROM employes e LEFT JOIN postes_travail pt ON pt.code = e.poste_code
+        WHERE e.actif = TRUE AND e.eligible_prime = TRUE
+        ORDER BY e.nom, e.prenom
     """))).fetchall()
 
     if not emp_rows:
@@ -132,7 +133,7 @@ async def grille_presence(db: AsyncSession, a: int, m: int) -> dict:
     result = []
     for emp in emp_rows:
         jours: dict[str, dict] = {}
-        totaux = {s: 0 for s in ("present", "absent", "conge", "retard", "maladie", "weekend", "ferie")}
+        totaux = {s: 0 for s in ("present", "absent", "conge", "retard", "maladie", "weekend", "ferie", "a_confirmer")}
         uname = (emp.username or "").lower()
 
         for jour in dates:
@@ -162,6 +163,10 @@ async def grille_presence(db: AsyncSession, a: int, m: int) -> dict:
                 if act:
                     cell = {"statut": "present", "source": "auto", **act}
                     totaux["present"] += 1
+                elif not emp.vend_au_comptoir:
+                    # Poste qui ne vend pas : pas de vente ne veut pas dire absent.
+                    cell = {"statut": "a_confirmer", "source": "auto"}
+                    totaux["a_confirmer"] += 1
                 else:
                     cell = {"statut": "absent", "source": "auto"}
                     totaux["absent"] += 1

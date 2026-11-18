@@ -215,8 +215,16 @@ router au passage.
   `ANTHROPIC_API_KEY` vide désactive le chatbot. **La clé Anthropic committée
   dans le commit initial reste dans l'historique Git : elle doit être
   révoquée dans la console Anthropic.**
-- **`_calc_enveloppe_prime` renvoie un `float`** (`performance.py`), alors que
-  tout le reste de la chaîne est en `Decimal`.
+- **Paie en `Decimal` de bout en bout** (corrigé le 2026-11-18) : enveloppe
+  (`_calc_enveloppe_prime`) et répartition (`app/services/paie/repartition.py`).
+  Les montants ne passent en `float` qu'au bord, dans la réponse JSON.
+- **La présence est déduite des ventes** (`sorties.utilisateur`). Pour un poste
+  qui ne vend pas au comptoir (`postes_travail.vend_au_comptoir = false`,
+  préparateur), un jour sans vente est « à confirmer », pas « absent » : la
+  paie le compte présent à l'heure (bénéfice du doute) et le signale.
+- **Deux tables « postes »** : `postes` est le miroir des postes de caisse
+  d'EASYPHARM (ordinateurs) ; les postes de travail (salaire de base, poids
+  des KPIs) sont dans `postes_travail` (migration 019).
 - **Le score de prime est *distributif*, pas absolu.** `performance.py` calcule
   `score_kpi = (valeur_employé / total_équipe) × poids`, puis
   `part = score / Σ scores`. Trois conséquences contre-intuitives :
@@ -225,7 +233,13 @@ router au passage.
   2. la somme des poids **n'a pas besoin de faire 100** : le facteur d'échelle
      s'annule à la normalisation (aujourd'hui les 8 KPIs actifs totalisent 95) ;
   3. l'enveloppe est **toujours distribuée en entier**, même si toute l'équipe
-     sous-performe. Il n'y a pas de mécanisme d'enveloppe non consommée.
+     sous-performe. Il n'y a pas de mécanisme d'enveloppe non consommée
+     (l'enveloppe suit déjà le CA du mois).
+  Depuis le 2026-11-18, chaque employé est noté avec les poids de **son poste**
+  (`kpi_poids_poste`, sinon `kpi_definitions.poids`), et les KPIs de volume
+  (`kpi_definitions.volume`) sont **ramenés aux jours de présence** puis
+  étendus aux jours comptés comme travaillés (congé, maladie, férié) avant le
+  score.
 - **Docstring fausse dans `_calc_enveloppe_prime`** : elle annonce
   `'gentype:generique_remb' → generique = 1 AND remb_cvm = 1`, alors que le SQL
   filtre sur `nomenclature.categorie = 'generique++'`.
@@ -486,18 +500,31 @@ Rien de tout cela n'existe aujourd'hui : ni table, ni migration, ni endpoint.
 
 ---
 
+## Arbitrages du 2026-11-18
+
+- **Brut seulement** : PharmaSuite calcule le salaire brut ; cotisations CNAS
+  et IRG restent au comptable.
+- **Heures supplémentaires saisies à la main** par le titulaire (rien ne
+  mesure les heures).
+- **Retard de plus de 45 minutes** : un jour de ponctualité en moins, aucune
+  retenue en argent (pas de double sanction).
+- **Poids des KPIs par poste** (`kpi_poids_poste`, migration 019). Comptoir
+  (pharmacien assistant, caissier) : poids de la règle 3, recouvrement compté
+  en montant encaissé (`encaissements_mois`, 3) au lieu du taux — un
+  pourcentage ne s'additionne pas entre employés. Préparateur : tâches 40,
+  ponctualité 25, produits comptés à l'inventaire 35.
+- **KPIs de volume ramenés aux jours de présence** : valeur ÷ jours de
+  présence effective × jours comptés comme travaillés.
+
 ## Travaux induits par ces arbitrages
 
-Aucun n'est fait. Dans l'ordre de dépendance :
+Dans l'ordre de dépendance :
 
-1. **Créer `backend/tests/paie/`** — préalable non négociable à tout le reste
-   (voir Partie 3). La première modification de calcul l'accompagne, pas
-   l'inverse.
-2. Corriger `_calc_enveloppe_prime` : `Decimal` de bout en bout, plus de
-   `float`.
-3. Migration : KPIs `taches_completees` et `ponctualite`, plus les nouveaux
-   poids du tableau de la règle 3.
-4. Implémenter le plancher (règle 4) dans la distribution de `performance.py`.
+1. ~~Créer `backend/tests/paie/`~~ — fait.
+2. ~~`Decimal` de bout en bout~~ — fait le 2026-11-18 (enveloppe et répartition).
+3. ~~KPIs `taches_completees` et `ponctualite`, nouveaux poids~~ — fait
+   (migration 019, avec `comptages_inventaire` et les poids par poste).
+4. ~~Plancher (règle 4)~~ — fait le 2026-11-18.
 5. Historiser les recalculs de `performance_mensuelle` (aujourd'hui écrasés).
 6. Assainir `chatbot.py` (règle 6).
 7. Part fixe (règle 7) : tables, migration, endpoints, calcul.

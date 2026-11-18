@@ -20,7 +20,8 @@ class Employe(Base):
     username = Column(String(50), unique=True)    # copie du groupware.utilisateur
     nom = Column(String(100), nullable=False)
     prenom = Column(String(100))
-    poste = Column(String(100))                   # ex: "Pharmacien", "Caissier"
+    poste = Column(String(100))                   # ex: "Pharmacien", "Caissier" (texte libre)
+    poste_code = Column(String(30))               # postes_travail.code (migration 019) : salaire, poids des KPIs
     date_entree = Column(Date)
     actif = Column(Boolean, default=True)
     eligible_prime = Column(Boolean, default=True)  # False pour VENTE, amine, azzedine, administrateur
@@ -50,8 +51,9 @@ class KpiDefinition(Base):
     description = Column(Text)
     categorie = Column(String(30))   # 'ventes', 'productivite', 'stock', 'audit'
     unite = Column(String(20))       # '%', 'DA', 'nb', 'score'
-    poids = Column(Numeric(5, 2), default=0)   # % du score total (ex: 30 = 30 %)
+    poids = Column(Numeric(5, 2), default=0)   # poids global ; kpi_poids_poste le remplace par poste
     actif = Column(Boolean, default=True)
+    volume = Column(Boolean, default=False)    # ramené aux jours de présence avant le score (migration 019)
 
 
 class PrimeTauxConfig(Base):

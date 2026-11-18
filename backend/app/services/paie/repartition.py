@@ -43,18 +43,24 @@ def en_decimal(valeur) -> Decimal:
     return Decimal(str(valeur))
 
 
-def scores(valeurs: Mapping[K, Mapping[str, object]], poids: Mapping[str, object]) -> dict[K, Decimal]:
-    """Score distributif de chaque employé (voir l'en-tête)."""
+def scores(valeurs: Mapping[K, Mapping[str, object]], poids: Mapping[str, object],
+           poids_par_employe: Mapping[K, Mapping[str, object]] | None = None) -> dict[K, Decimal]:
+    """Score distributif de chaque employé (voir l'en-tête).
+
+    `poids_par_employe` : poids propres à chacun (ceux de son poste) ; sans
+    entrée pour un employé, les poids globaux `poids` s'appliquent. Le total
+    d'équipe d'un KPI se calcule toujours sur toute l'équipe."""
     resultat = {e: Decimal(0) for e in valeurs}
-    for code, p in poids.items():
-        p = en_decimal(p)
-        if p <= 0:
-            continue
+    poids_de = {e: (poids_par_employe or {}).get(e, poids) for e in valeurs}
+    codes = dict.fromkeys([*poids, *(c for p in poids_de.values() for c in p)])
+    for code in codes:
         total = sum((en_decimal(v.get(code)) for v in valeurs.values()), Decimal(0))
         if total <= 0:
             continue
         for e, v in valeurs.items():
-            resultat[e] += en_decimal(v.get(code)) / total * p
+            p = en_decimal(poids_de[e].get(code))
+            if p > 0:
+                resultat[e] += en_decimal(v.get(code)) / total * p
     return resultat
 
 

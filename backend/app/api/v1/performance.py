@@ -668,6 +668,24 @@ async def _calc_kpis_employe(db: AsyncSession, username: str, annee: int, mois: 
     """), {"annee": annee, "mois": mois, "username": username})
     kpis["score_crm_ald"] = int(ald.scalar() or 0)
 
+    # Tâches terminées dans les délais (task_assignments.assigned_to = users.id)
+    # et produits comptés dans l'inventaire tournant.
+    autres = (await db.execute(text("""
+        SELECT
+            (SELECT count(*) FROM task_assignments t
+             JOIN employes e ON e.user_id = t.assigned_to AND e.username = :username
+             WHERE EXTRACT(YEAR FROM t.assigned_date) = :annee AND EXTRACT(MONTH FROM t.assigned_date) = :mois
+               AND t.status = 'done' AND t.completed_at IS NOT NULL
+               AND CAST(t.completed_at AT TIME ZONE 'Africa/Algiers' AS date) <= t.assigned_date
+            ) AS taches,
+            (SELECT count(*) FROM inventaire_comptages c
+             WHERE c.compte_par = :username
+               AND EXTRACT(YEAR FROM c.jour) = :annee AND EXTRACT(MONTH FROM c.jour) = :mois
+            ) AS comptages
+    """), {"annee": annee, "mois": mois, "username": username})).one()
+    kpis["taches_completees"] = int(autres.taches or 0)
+    kpis["comptages_inventaire"] = int(autres.comptages or 0)
+
     return kpis
 
 
@@ -963,6 +981,14 @@ async def calculer_primes(
         raise HTTPException(status_code=400, detail="Aucun KPI actif avec poids > 0")
 
     kpi_poids = {k.code: _d(k.poids) for k in kpis_defs}
+    volumes = {r.code for r in await db.execute(text("SELECT code FROM kpi_definitions WHERE volume"))}
+    poids_postes: dict[str, dict[str, Decimal]] = {}
+    for r in await db.execute(text("""
+        SELECT p.poste_code, p.kpi_code, p.poids FROM kpi_poids_poste p
+        JOIN kpi_definitions k ON k.code = p.kpi_code AND k.actif WHERE p.poids > 0
+    """)):
+        poids_postes.setdefault(r.poste_code, {})[r.kpi_code] = _d(r.poids)
+    postes = {r.id: r.poste_code for r in await db.execute(text("SELECT id, poste_code FROM employes"))}
 
     # 3. Employés éligibles
     emp_res = await db.execute(
@@ -972,21 +998,33 @@ async def calculer_primes(
     if not employes:
         raise HTTPException(status_code=400, detail="Aucun employé éligible trouvé")
 
-    # 4. Calculer les KPIs réels pour chaque employé
+    # 4. KPIs réels de chaque employé. La ponctualité vient de la grille de
+    #    présence (jours à l'heure) ; les KPIs de volume sont ramenés aux
+    #    jours de présence puis étendus aux jours comptés comme travaillés
+    #    (arbitrage du 2026-11-18 : un congé ne fait pas baisser la prime).
+    bilans = await _bilans_presence(db, annee, mois)
+    vide = presence.bilan([])
+    emp_bruts: dict[int, dict] = {}
     emp_kpis: dict[int, dict] = {}
     for emp in employes:
-        emp_kpis[emp.id] = await _calc_kpis_employe(db, emp.username, annee, mois)
+        bruts = await _calc_kpis_employe(db, emp.username, annee, mois)
+        bruts["ponctualite"] = bilans.get(emp.id, vide).a_l_heure
+        emp_bruts[emp.id] = bruts
+        emp_kpis[emp.id] = {code: (presence.ramener_aux_jours(v, bilans.get(emp.id, vide)) if code in volumes else v)
+                            for code, v in bruts.items()}
+    # Poids de chaque employé : ceux de son poste, sinon les poids globaux.
+    poids_emp = {e.id: poids_postes.get(postes.get(e.id) or "", kpi_poids) for e in employes}
+    codes = list(dict.fromkeys([*kpi_poids, *(c for p in poids_postes.values() for c in p)]))
 
     # 5. Score distributif puis répartition, en Decimal de bout en bout
     #    (app/services/paie/repartition.py, testé dans tests/paie/).
-    emp_scores = repartition.scores(emp_kpis, kpi_poids)
+    emp_scores = repartition.scores(emp_kpis, kpi_poids, poids_emp)
     # Plancher (règle 4) : 50 % de la part égalitaire aux éligibles présents
     # sur le mois (au moins un jour de présence effective).
-    bilans = await _bilans_presence(db, annee, mois)
     presents = [e.id for e in employes if bilans.get(e.id) is not None and bilans[e.id].present_sur_le_mois]
     parts = repartition.repartir(enveloppe, emp_scores, presents)
     totaux = {code: sum((repartition.en_decimal(emp_kpis[e.id].get(code)) for e in employes), Decimal(0))
-              for code in kpi_poids}
+              for code in codes}
 
     # Sauvegarder l'enveloppe dans objectifs_mensuels si l'entrée existe
     await db.execute(
@@ -1001,14 +1039,24 @@ async def calculer_primes(
         pct = parts[emp.id]["pct"]
         prime = parts[emp.id]["prime"]
 
+        b = bilans.get(emp.id, vide)
         kpis_data = {
             code: {
-                "valeur": emp_kpis[emp.id].get(code, 0),
-                "poids": str(poids),
-                "score": str((repartition.en_decimal(emp_kpis[emp.id].get(code)) / totaux[code] * poids
-                              ).quantize(Decimal("0.001")) if totaux[code] > 0 else Decimal(0)),
+                "valeur": emp_bruts[emp.id].get(code, 0),
+                # Valeur retenue pour le score (ramenée aux jours de présence si volume).
+                "valeur_retenue": str(repartition.en_decimal(emp_kpis[emp.id].get(code)).quantize(Decimal("0.01"))),
+                "poids": str(poids_emp[emp.id].get(code, Decimal(0))),
+                "score": str((repartition.en_decimal(emp_kpis[emp.id].get(code)) / totaux[code]
+                              * poids_emp[emp.id].get(code, Decimal(0))).quantize(Decimal("0.001"))
+                             if totaux[code] > 0 else Decimal(0)),
             }
-            for code, poids in kpi_poids.items()
+            for code in codes
+        }
+        kpis_data["_presence"] = {
+            "presence_effective": b.presence_effective, "a_l_heure": b.a_l_heure, "retards": b.retards,
+            "absences": b.absences, "conges": b.conges, "maladie": b.maladie, "feries": b.feries,
+            "a_confirmer": b.a_confirmer, "travailles_variable": b.travailles_variable,
+            "poste": postes.get(emp.id),
         }
 
         stmt = pg_insert(PerformanceMensuelle.__table__).values(
@@ -1037,6 +1085,8 @@ async def calculer_primes(
             "employe_id": emp.id,
             "username": emp.username,
             "nom": emp.nom,
+            "poste": postes.get(emp.id),
+            "jours_a_confirmer": b.a_confirmer,
             "plancher": float(parts[emp.id]["plancher"]),
             "merite": float(parts[emp.id]["merite"]),
             "score_global": float(s.quantize(CENTIME)),
