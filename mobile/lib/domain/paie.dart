@@ -26,11 +26,17 @@ abstract class EmployePaie with _$EmployePaie {
     String? poste,
     @JsonKey(name: 'date_entree') DateTime? dateEntree,
     @JsonKey(name: 'date_sortie') DateTime? dateSortie,
+
+    /// « 08:30:00 » ; absente, l'heure de début générale des réglages.
+    @JsonKey(name: 'heure_debut') String? heureDebut,
   }) = _EmployePaie;
 
   factory EmployePaie.fromJson(Map<String, dynamic> json) => _$EmployePaieFromJson(json);
 
   String get nomComplet => [if (prenom != null && prenom!.isNotEmpty) prenom!, nom].join(' ');
+
+  /// « 08:30 », ou null.
+  String? get heureDebutCourte => heureDebut == null || heureDebut!.length < 5 ? null : heureDebut!.substring(0, 5);
 
   String get initiales {
     final p = (prenom ?? '').trim(), n = nom.trim();
@@ -218,4 +224,17 @@ String detailLigne(PaieEmploye p, String code, ReglesPaie r) {
       j.absences == 0 ? 'aucune absence' : '${j.absences} jour${j.absences > 1 ? 's' : ''} × 1/30ᵉ du salaire',
     _ => '',
   };
+}
+
+/// Un poste de travail (salaire de base, poids des critères).
+@freezed
+abstract class PosteTravail with _$PosteTravail {
+  const factory PosteTravail({
+    required String code,
+    required String libelle,
+    @JsonKey(name: 'salaire_base') @Default(0) double salaireBase,
+    @JsonKey(name: 'vend_au_comptoir') @Default(true) bool vendAuComptoir,
+  }) = _PosteTravail;
+
+  factory PosteTravail.fromJson(Map<String, dynamic> json) => _$PosteTravailFromJson(json);
 }

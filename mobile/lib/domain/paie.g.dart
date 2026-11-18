@@ -14,6 +14,7 @@ _EmployePaie _$EmployePaieFromJson(Map<String, dynamic> json) => _EmployePaie(
   poste: json['poste'] as String?,
   dateEntree: json['date_entree'] == null ? null : DateTime.parse(json['date_entree'] as String),
   dateSortie: json['date_sortie'] == null ? null : DateTime.parse(json['date_sortie'] as String),
+  heureDebut: json['heure_debut'] as String?,
 );
 
 Map<String, dynamic> _$EmployePaieToJson(_EmployePaie instance) => <String, dynamic>{
@@ -24,6 +25,7 @@ Map<String, dynamic> _$EmployePaieToJson(_EmployePaie instance) => <String, dyna
   'poste': instance.poste,
   'date_entree': instance.dateEntree?.toIso8601String(),
   'date_sortie': instance.dateSortie?.toIso8601String(),
+  'heure_debut': instance.heureDebut,
 };
 
 _JoursPaie _$JoursPaieFromJson(Map<String, dynamic> json) => _JoursPaie(
@@ -182,4 +184,18 @@ Map<String, dynamic> _$PaieMoisToJson(_PaieMois instance) => <String, dynamic>{
   'totaux': instance.totaux,
   'enveloppe': instance.enveloppe,
   'regles': instance.regles,
+};
+
+_PosteTravail _$PosteTravailFromJson(Map<String, dynamic> json) => _PosteTravail(
+  code: json['code'] as String,
+  libelle: json['libelle'] as String,
+  salaireBase: (json['salaire_base'] as num?)?.toDouble() ?? 0,
+  vendAuComptoir: json['vend_au_comptoir'] as bool? ?? true,
+);
+
+Map<String, dynamic> _$PosteTravailToJson(_PosteTravail instance) => <String, dynamic>{
+  'code': instance.code,
+  'libelle': instance.libelle,
+  'salaire_base': instance.salaireBase,
+  'vend_au_comptoir': instance.vendAuComptoir,
 };

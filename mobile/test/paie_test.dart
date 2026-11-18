@@ -70,8 +70,10 @@ final _chafia = PaieEmploye(
 );
 
 class FaussePaieApi implements PaieApi {
-  FaussePaieApi({this.panne = false});
+  FaussePaieApi({this.panne = false, this.vide = false});
   bool panne;
+  bool vide;
+  Map<String, Object?>? modifie;
   final appels = <String>[];
   double hs = 0;
   BulletinValide? bulletin;
@@ -84,7 +86,7 @@ class FaussePaieApi implements PaieApi {
     return PaieMois(
       annee: annee,
       mois: mois,
-      employes: [a, _chafia],
+      employes: vide ? const [] : [a, _chafia],
       totaux: TotauxPaie(partFixe: a.partFixe + 17500, partVariable: 18198.69, brut: a.brut + 17500),
     );
   }
@@ -97,6 +99,25 @@ class FaussePaieApi implements PaieApi {
 
   @override
   Future<void> recalculerPrimes(int annee, int mois) async => appels.add('primes $annee/$mois');
+
+  @override
+  Future<int> importerEmployes() async {
+    appels.add('importer');
+    vide = false;
+    return 2;
+  }
+
+  @override
+  Future<List<PosteTravail>> postes() async => const [
+    PosteTravail(code: 'caissier', libelle: 'Caissier', salaireBase: 40000),
+    PosteTravail(code: 'preparateur', libelle: 'Préparateur', salaireBase: 35000, vendAuComptoir: false),
+  ];
+
+  @override
+  Future<void> modifierEmploye(int id, Map<String, Object?> champs) async {
+    appels.add('fiche $id');
+    modifie = champs;
+  }
 
   @override
   Future<void> valider(int annee, int mois) async {
@@ -192,6 +213,30 @@ void main() {
     await _toucher(tester, find.byKey(const ValueKey('confirmer-validation')));
     expect(api.appels.any((a) => a.startsWith('valider ')), isTrue);
     expect(find.textContaining('Bulletin validé (version 1)'), findsOneWidget);
+  });
+
+  testWidgets('aucun employé : importer depuis EASYPHARM remplit la liste', (tester) async {
+    final api = FaussePaieApi(vide: true);
+    await _lancer(tester, api);
+    expect(find.text('Aucun employé'), findsOneWidget);
+    await _toucher(tester, find.byKey(const ValueKey('importer-employes')));
+    expect(api.appels, contains('importer'));
+    expect(find.byKey(const ValueKey('employe-paie-1')), findsOneWidget);
+    expect(find.textContaining('2 fiches à jour'), findsOneWidget);
+  });
+
+  testWidgets('fiche employé : poste et retrait de la paie, seuls les changements partent', (tester) async {
+    final api = FaussePaieApi();
+    await _lancer(tester, api, depart: '/paie/2');
+    await _toucher(tester, find.byKey(const ValueKey('modifier-fiche')));
+    expect(find.text('Préparateur · ${dinars(35000)}'), findsOneWidget);
+    await _toucher(tester, find.byKey(const ValueKey('choix-poste')));
+    await _toucher(tester, find.text('Caissier · ${dinars(40000)}').last);
+    await _toucher(tester, find.byKey(const ValueKey('dans-la-paie')));
+    await _toucher(tester, find.byKey(const ValueKey('enregistrer-fiche')));
+    expect(api.appels, contains('fiche 2'));
+    expect(api.modifie, {'poste_code': 'caissier', 'eligible_prime': false});
+    expect(find.textContaining('n\'est plus dans la paie'), findsOneWidget);
   });
 
   testWidgets('changer de mois relit la paie', (tester) async {

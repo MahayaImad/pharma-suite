@@ -38,7 +38,7 @@ class PaieRepository:
     async def employes(self) -> dict[int, dict]:
         r = await self.db.execute(text("""
             SELECT e.id, e.username, e.nom, e.prenom, e.poste, e.poste_code, e.date_entree, e.date_sortie,
-                   pt.libelle AS poste_libelle, pt.salaire_base
+                   e.heure_debut, pt.libelle AS poste_libelle, pt.salaire_base
             FROM employes e LEFT JOIN postes_travail pt ON pt.code = e.poste_code
             WHERE e.actif AND e.eligible_prime
         """))
@@ -52,7 +52,8 @@ class PaieRepository:
         return bool((await self.db.execute(text("SELECT 1 FROM postes_travail WHERE code = :c"), {"c": code})).scalar())
 
     async def modifier_employe(self, id_: int, valeurs: dict[str, Any]) -> None:
-        colonnes = {k: v for k, v in valeurs.items() if k in ("poste_code", "date_entree", "date_sortie")}
+        colonnes = {k: v for k, v in valeurs.items()
+                    if k in ("poste_code", "date_entree", "date_sortie", "heure_debut", "eligible_prime")}
         if not colonnes:
             return
         # Noms de colonnes tirés d'une liste fermée ; les valeurs restent des paramètres liés.
@@ -124,4 +125,18 @@ class PaieRepository:
     async def kpis(self) -> dict[str, dict]:
         r = await self.db.execute(text("SELECT code, libelle, unite FROM kpi_definitions"))
         return {x.code: {"libelle": x.libelle, "unite": x.unite} for x in r}
+
+    async def importer_depuis_easypharm(self, exclus: set[str]) -> int:
+        """Crée ou met à jour une fiche par utilisateur d'EASYPHARM (`groupware`).
+        Une fiche existante garde son poste, ses dates et son choix « dans la
+        paie » ; seuls le nom et l'état actif suivent EASYPHARM. Les comptes
+        non nominatifs (`exclus`) sont créés hors de la paie."""
+        r = await self.db.execute(text("""
+            INSERT INTO employes (username, nom, prenom, actif, eligible_prime)
+            SELECT g.utilisateur, COALESCE(NULLIF(trim(g.nom), ''), g.utilisateur), NULLIF(trim(g.prenom), ''),
+                   COALESCE(g.actif, 1) = 1, NOT (g.utilisateur = ANY(:exclus))
+            FROM groupware g WHERE NULLIF(trim(g.utilisateur), '') IS NOT NULL
+            ON CONFLICT (username) DO UPDATE SET nom = EXCLUDED.nom, prenom = EXCLUDED.prenom, actif = EXCLUDED.actif
+        """), {"exclus": sorted(exclus)})
+        return r.rowcount or 0
 

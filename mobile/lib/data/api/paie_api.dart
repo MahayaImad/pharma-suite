@@ -12,6 +12,15 @@ abstract interface class PaieApi {
 
   /// Recalcule les primes de rendement du mois (`/performance/primes/…/calculer`).
   Future<void> recalculerPrimes(int annee, int mois);
+
+  /// Crée ou met à jour les fiches depuis les utilisateurs d'EASYPHARM ; rend leur nombre.
+  Future<int> importerEmployes();
+
+  Future<List<PosteTravail>> postes();
+
+  /// Champs de la fiche à changer (`poste_code`, `date_entree`, `date_sortie`,
+  /// `heure_debut`, `eligible_prime`) ; une valeur null efface.
+  Future<void> modifierEmploye(int id, Map<String, Object?> champs);
 }
 
 class PaieApiDio implements PaieApi {
@@ -52,6 +61,20 @@ class PaieApiDio implements PaieApi {
   @override
   Future<void> recalculerPrimes(int annee, int mois) =>
       _appel(() => _dio.post('/performance/primes/$annee/$mois/calculer', options: _long), (_) {});
+
+  @override
+  Future<int> importerEmployes() =>
+      _appel(() => _dio.post('/paie/employes/importer'), (d) => ((d as Map)['employes'] as num?)?.toInt() ?? 0);
+
+  @override
+  Future<List<PosteTravail>> postes() => _appel(
+    () => _dio.get('/paie/postes'),
+    (d) => [for (final p in d as List) PosteTravail.fromJson(p as Map<String, dynamic>)],
+  );
+
+  @override
+  Future<void> modifierEmploye(int id, Map<String, Object?> champs) =>
+      _appel(() => _dio.put('/paie/employes/$id', data: champs), (_) {});
 }
 
 final paieApiProvider = Provider<PaieApi>((ref) => PaieApiDio(ref.watch(dioProvider)));

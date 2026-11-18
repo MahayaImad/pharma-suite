@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EmployePaie {
 
- int get id; String get nom; String? get prenom;@JsonKey(name: 'poste_code') String? get posteCode; String? get poste;@JsonKey(name: 'date_entree') DateTime? get dateEntree;@JsonKey(name: 'date_sortie') DateTime? get dateSortie;
+ int get id; String get nom; String? get prenom;@JsonKey(name: 'poste_code') String? get posteCode; String? get poste;@JsonKey(name: 'date_entree') DateTime? get dateEntree;@JsonKey(name: 'date_sortie') DateTime? get dateSortie;/// « 08:30:00 » ; absente, l'heure de début générale des réglages.
+@JsonKey(name: 'heure_debut') String? get heureDebut;
 /// Create a copy of EmployePaie
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +31,20 @@ $EmployePaieCopyWith<EmployePaie> get copyWith => _$EmployePaieCopyWithImpl<Empl
 @override
 bool operator ==(Object other) {
   final _this = this as EmployePaie;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmployePaie&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.prenom, _this.prenom) || other.prenom == _this.prenom)&&(identical(other.posteCode, _this.posteCode) || other.posteCode == _this.posteCode)&&(identical(other.poste, _this.poste) || other.poste == _this.poste)&&(identical(other.dateEntree, _this.dateEntree) || other.dateEntree == _this.dateEntree)&&(identical(other.dateSortie, _this.dateSortie) || other.dateSortie == _this.dateSortie));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmployePaie&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.nom, _this.nom) || other.nom == _this.nom)&&(identical(other.prenom, _this.prenom) || other.prenom == _this.prenom)&&(identical(other.posteCode, _this.posteCode) || other.posteCode == _this.posteCode)&&(identical(other.poste, _this.poste) || other.poste == _this.poste)&&(identical(other.dateEntree, _this.dateEntree) || other.dateEntree == _this.dateEntree)&&(identical(other.dateSortie, _this.dateSortie) || other.dateSortie == _this.dateSortie)&&(identical(other.heureDebut, _this.heureDebut) || other.heureDebut == _this.heureDebut));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as EmployePaie;
-  return Object.hash(runtimeType,_this.id,_this.nom,_this.prenom,_this.posteCode,_this.poste,_this.dateEntree,_this.dateSortie);
+  return Object.hash(runtimeType,_this.id,_this.nom,_this.prenom,_this.posteCode,_this.poste,_this.dateEntree,_this.dateSortie,_this.heureDebut);
 }
 
 @override
 String toString() {
   final _this = this as EmployePaie;
-  return 'EmployePaie(id: ${_this.id}, nom: ${_this.nom}, prenom: ${_this.prenom}, posteCode: ${_this.posteCode}, poste: ${_this.poste}, dateEntree: ${_this.dateEntree}, dateSortie: ${_this.dateSortie})';
+  return 'EmployePaie(id: ${_this.id}, nom: ${_this.nom}, prenom: ${_this.prenom}, posteCode: ${_this.posteCode}, poste: ${_this.poste}, dateEntree: ${_this.dateEntree}, dateSortie: ${_this.dateSortie}, heureDebut: ${_this.heureDebut})';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $EmployePaieCopyWith<$Res>  {
   factory $EmployePaieCopyWith(EmployePaie value, $Res Function(EmployePaie) _then) = _$EmployePaieCopyWithImpl;
 @useResult
 $Res call({
- int id, String nom, String? prenom,@JsonKey(name: 'poste_code') String? posteCode, String? poste,@JsonKey(name: 'date_entree') DateTime? dateEntree,@JsonKey(name: 'date_sortie') DateTime? dateSortie
+ int id, String nom, String? prenom,@JsonKey(name: 'poste_code') String? posteCode, String? poste,@JsonKey(name: 'date_entree') DateTime? dateEntree,@JsonKey(name: 'date_sortie') DateTime? dateSortie,@JsonKey(name: 'heure_debut') String? heureDebut
 });
 
 
@@ -71,7 +72,7 @@ class _$EmployePaieCopyWithImpl<$Res>
 
 /// Create a copy of EmployePaie
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = null,Object? prenom = freezed,Object? posteCode = freezed,Object? poste = freezed,Object? dateEntree = freezed,Object? dateSortie = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nom = null,Object? prenom = freezed,Object? posteCode = freezed,Object? poste = freezed,Object? dateEntree = freezed,Object? dateSortie = freezed,Object? heureDebut = freezed,}) {
   return _then(EmployePaie(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -80,7 +81,8 @@ as String?,posteCode: freezed == posteCode ? _self.posteCode : posteCode // igno
 as String?,poste: freezed == poste ? _self.poste : poste // ignore: cast_nullable_to_non_nullable
 as String?,dateEntree: freezed == dateEntree ? _self.dateEntree : dateEntree // ignore: cast_nullable_to_non_nullable
 as DateTime?,dateSortie: freezed == dateSortie ? _self.dateSortie : dateSortie // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,heureDebut: freezed == heureDebut ? _self.heureDebut : heureDebut // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -165,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nom,  String? prenom, @JsonKey(name: 'poste_code')  String? posteCode,  String? poste, @JsonKey(name: 'date_entree')  DateTime? dateEntree, @JsonKey(name: 'date_sortie')  DateTime? dateSortie)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String nom,  String? prenom, @JsonKey(name: 'poste_code')  String? posteCode,  String? poste, @JsonKey(name: 'date_entree')  DateTime? dateEntree, @JsonKey(name: 'date_sortie')  DateTime? dateSortie, @JsonKey(name: 'heure_debut')  String? heureDebut)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EmployePaie() when $default != null:
-return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_that.dateEntree,_that.dateSortie);case _:
+return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_that.dateEntree,_that.dateSortie,_that.heureDebut);case _:
   return orElse();
 
 }
@@ -186,10 +188,10 @@ return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nom,  String? prenom, @JsonKey(name: 'poste_code')  String? posteCode,  String? poste, @JsonKey(name: 'date_entree')  DateTime? dateEntree, @JsonKey(name: 'date_sortie')  DateTime? dateSortie)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String nom,  String? prenom, @JsonKey(name: 'poste_code')  String? posteCode,  String? poste, @JsonKey(name: 'date_entree')  DateTime? dateEntree, @JsonKey(name: 'date_sortie')  DateTime? dateSortie, @JsonKey(name: 'heure_debut')  String? heureDebut)  $default,) {final _that = this;
 switch (_that) {
 case _EmployePaie():
-return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_that.dateEntree,_that.dateSortie);case _:
+return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_that.dateEntree,_that.dateSortie,_that.heureDebut);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +208,10 @@ return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nom,  String? prenom, @JsonKey(name: 'poste_code')  String? posteCode,  String? poste, @JsonKey(name: 'date_entree')  DateTime? dateEntree, @JsonKey(name: 'date_sortie')  DateTime? dateSortie)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String nom,  String? prenom, @JsonKey(name: 'poste_code')  String? posteCode,  String? poste, @JsonKey(name: 'date_entree')  DateTime? dateEntree, @JsonKey(name: 'date_sortie')  DateTime? dateSortie, @JsonKey(name: 'heure_debut')  String? heureDebut)?  $default,) {final _that = this;
 switch (_that) {
 case _EmployePaie() when $default != null:
-return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_that.dateEntree,_that.dateSortie);case _:
+return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_that.dateEntree,_that.dateSortie,_that.heureDebut);case _:
   return null;
 
 }
@@ -221,7 +223,7 @@ return $default(_that.id,_that.nom,_that.prenom,_that.posteCode,_that.poste,_tha
 @JsonSerializable()
 
 class _EmployePaie extends EmployePaie {
-  const _EmployePaie({required this.id, this.nom = '', this.prenom, @JsonKey(name: 'poste_code') this.posteCode, this.poste, @JsonKey(name: 'date_entree') this.dateEntree, @JsonKey(name: 'date_sortie') this.dateSortie}): super._();
+  const _EmployePaie({required this.id, this.nom = '', this.prenom, @JsonKey(name: 'poste_code') this.posteCode, this.poste, @JsonKey(name: 'date_entree') this.dateEntree, @JsonKey(name: 'date_sortie') this.dateSortie, @JsonKey(name: 'heure_debut') this.heureDebut}): super._();
   factory _EmployePaie.fromJson(Map<String, dynamic> json) => _$EmployePaieFromJson(json);
 
 @override final  int id;
@@ -231,6 +233,8 @@ class _EmployePaie extends EmployePaie {
 @override final  String? poste;
 @override@JsonKey(name: 'date_entree') final  DateTime? dateEntree;
 @override@JsonKey(name: 'date_sortie') final  DateTime? dateSortie;
+/// « 08:30:00 » ; absente, l'heure de début générale des réglages.
+@override@JsonKey(name: 'heure_debut') final  String? heureDebut;
 
 /// Create a copy of EmployePaie
 /// with the given fields replaced by the non-null parameter values.
@@ -245,18 +249,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EmployePaie&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.prenom, prenom) || other.prenom == prenom)&&(identical(other.posteCode, posteCode) || other.posteCode == posteCode)&&(identical(other.poste, poste) || other.poste == poste)&&(identical(other.dateEntree, dateEntree) || other.dateEntree == dateEntree)&&(identical(other.dateSortie, dateSortie) || other.dateSortie == dateSortie));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EmployePaie&&(identical(other.id, id) || other.id == id)&&(identical(other.nom, nom) || other.nom == nom)&&(identical(other.prenom, prenom) || other.prenom == prenom)&&(identical(other.posteCode, posteCode) || other.posteCode == posteCode)&&(identical(other.poste, poste) || other.poste == poste)&&(identical(other.dateEntree, dateEntree) || other.dateEntree == dateEntree)&&(identical(other.dateSortie, dateSortie) || other.dateSortie == dateSortie)&&(identical(other.heureDebut, heureDebut) || other.heureDebut == heureDebut));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,nom,prenom,posteCode,poste,dateEntree,dateSortie);
+    return Object.hash(runtimeType,id,nom,prenom,posteCode,poste,dateEntree,dateSortie,heureDebut);
 }
 
 @override
 String toString() {
-    return 'EmployePaie(id: $id, nom: $nom, prenom: $prenom, posteCode: $posteCode, poste: $poste, dateEntree: $dateEntree, dateSortie: $dateSortie)';
+    return 'EmployePaie(id: $id, nom: $nom, prenom: $prenom, posteCode: $posteCode, poste: $poste, dateEntree: $dateEntree, dateSortie: $dateSortie, heureDebut: $heureDebut)';
 }
 
 
@@ -267,7 +271,7 @@ abstract mixin class _$EmployePaieCopyWith<$Res> implements $EmployePaieCopyWith
   factory _$EmployePaieCopyWith(_EmployePaie value, $Res Function(_EmployePaie) _then) = __$EmployePaieCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String nom, String? prenom,@JsonKey(name: 'poste_code') String? posteCode, String? poste,@JsonKey(name: 'date_entree') DateTime? dateEntree,@JsonKey(name: 'date_sortie') DateTime? dateSortie
+ int id, String nom, String? prenom,@JsonKey(name: 'poste_code') String? posteCode, String? poste,@JsonKey(name: 'date_entree') DateTime? dateEntree,@JsonKey(name: 'date_sortie') DateTime? dateSortie,@JsonKey(name: 'heure_debut') String? heureDebut
 });
 
 
@@ -284,7 +288,7 @@ class __$EmployePaieCopyWithImpl<$Res>
 
 /// Create a copy of EmployePaie
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = null,Object? prenom = freezed,Object? posteCode = freezed,Object? poste = freezed,Object? dateEntree = freezed,Object? dateSortie = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nom = null,Object? prenom = freezed,Object? posteCode = freezed,Object? poste = freezed,Object? dateEntree = freezed,Object? dateSortie = freezed,Object? heureDebut = freezed,}) {
   return _then(_EmployePaie(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,nom: null == nom ? _self.nom : nom // ignore: cast_nullable_to_non_nullable
@@ -293,7 +297,8 @@ as String?,posteCode: freezed == posteCode ? _self.posteCode : posteCode // igno
 as String?,poste: freezed == poste ? _self.poste : poste // ignore: cast_nullable_to_non_nullable
 as String?,dateEntree: freezed == dateEntree ? _self.dateEntree : dateEntree // ignore: cast_nullable_to_non_nullable
 as DateTime?,dateSortie: freezed == dateSortie ? _self.dateSortie : dateSortie // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,heureDebut: freezed == heureDebut ? _self.heureDebut : heureDebut // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -2990,6 +2995,285 @@ $ReglesPaieCopyWith<$Res> get regles {
     return _then(_self.copyWith(regles: value));
   });
 }
+}
+
+
+/// @nodoc
+mixin _$PosteTravail {
+
+ String get code; String get libelle;@JsonKey(name: 'salaire_base') double get salaireBase;@JsonKey(name: 'vend_au_comptoir') bool get vendAuComptoir;
+/// Create a copy of PosteTravail
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PosteTravailCopyWith<PosteTravail> get copyWith => _$PosteTravailCopyWithImpl<PosteTravail>(this as PosteTravail, _$identity);
+
+  /// Serializes this PosteTravail to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PosteTravail;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PosteTravail&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.libelle, _this.libelle) || other.libelle == _this.libelle)&&(identical(other.salaireBase, _this.salaireBase) || other.salaireBase == _this.salaireBase)&&(identical(other.vendAuComptoir, _this.vendAuComptoir) || other.vendAuComptoir == _this.vendAuComptoir));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as PosteTravail;
+  return Object.hash(runtimeType,_this.code,_this.libelle,_this.salaireBase,_this.vendAuComptoir);
+}
+
+@override
+String toString() {
+  final _this = this as PosteTravail;
+  return 'PosteTravail(code: ${_this.code}, libelle: ${_this.libelle}, salaireBase: ${_this.salaireBase}, vendAuComptoir: ${_this.vendAuComptoir})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PosteTravailCopyWith<$Res>  {
+  factory $PosteTravailCopyWith(PosteTravail value, $Res Function(PosteTravail) _then) = _$PosteTravailCopyWithImpl;
+@useResult
+$Res call({
+ String code, String libelle,@JsonKey(name: 'salaire_base') double salaireBase,@JsonKey(name: 'vend_au_comptoir') bool vendAuComptoir
+});
+
+
+
+
+}
+/// @nodoc
+class _$PosteTravailCopyWithImpl<$Res>
+    implements $PosteTravailCopyWith<$Res> {
+  _$PosteTravailCopyWithImpl(this._self, this._then);
+
+  final PosteTravail _self;
+  final $Res Function(PosteTravail) _then;
+
+/// Create a copy of PosteTravail
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? libelle = null,Object? salaireBase = null,Object? vendAuComptoir = null,}) {
+  return _then(PosteTravail(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,libelle: null == libelle ? _self.libelle : libelle // ignore: cast_nullable_to_non_nullable
+as String,salaireBase: null == salaireBase ? _self.salaireBase : salaireBase // ignore: cast_nullable_to_non_nullable
+as double,vendAuComptoir: null == vendAuComptoir ? _self.vendAuComptoir : vendAuComptoir // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [PosteTravail].
+extension PosteTravailPatterns on PosteTravail {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PosteTravail value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PosteTravail() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PosteTravail value)  $default,){
+final _that = this;
+switch (_that) {
+case _PosteTravail():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PosteTravail value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PosteTravail() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String libelle, @JsonKey(name: 'salaire_base')  double salaireBase, @JsonKey(name: 'vend_au_comptoir')  bool vendAuComptoir)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PosteTravail() when $default != null:
+return $default(_that.code,_that.libelle,_that.salaireBase,_that.vendAuComptoir);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String libelle, @JsonKey(name: 'salaire_base')  double salaireBase, @JsonKey(name: 'vend_au_comptoir')  bool vendAuComptoir)  $default,) {final _that = this;
+switch (_that) {
+case _PosteTravail():
+return $default(_that.code,_that.libelle,_that.salaireBase,_that.vendAuComptoir);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String libelle, @JsonKey(name: 'salaire_base')  double salaireBase, @JsonKey(name: 'vend_au_comptoir')  bool vendAuComptoir)?  $default,) {final _that = this;
+switch (_that) {
+case _PosteTravail() when $default != null:
+return $default(_that.code,_that.libelle,_that.salaireBase,_that.vendAuComptoir);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _PosteTravail implements PosteTravail {
+  const _PosteTravail({required this.code, required this.libelle, @JsonKey(name: 'salaire_base') this.salaireBase = 0, @JsonKey(name: 'vend_au_comptoir') this.vendAuComptoir = true});
+  factory _PosteTravail.fromJson(Map<String, dynamic> json) => _$PosteTravailFromJson(json);
+
+@override final  String code;
+@override final  String libelle;
+@override@JsonKey(name: 'salaire_base') final  double salaireBase;
+@override@JsonKey(name: 'vend_au_comptoir') final  bool vendAuComptoir;
+
+/// Create a copy of PosteTravail
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PosteTravailCopyWith<_PosteTravail> get copyWith => __$PosteTravailCopyWithImpl<_PosteTravail>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$PosteTravailToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PosteTravail&&(identical(other.code, code) || other.code == code)&&(identical(other.libelle, libelle) || other.libelle == libelle)&&(identical(other.salaireBase, salaireBase) || other.salaireBase == salaireBase)&&(identical(other.vendAuComptoir, vendAuComptoir) || other.vendAuComptoir == vendAuComptoir));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,code,libelle,salaireBase,vendAuComptoir);
+}
+
+@override
+String toString() {
+    return 'PosteTravail(code: $code, libelle: $libelle, salaireBase: $salaireBase, vendAuComptoir: $vendAuComptoir)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PosteTravailCopyWith<$Res> implements $PosteTravailCopyWith<$Res> {
+  factory _$PosteTravailCopyWith(_PosteTravail value, $Res Function(_PosteTravail) _then) = __$PosteTravailCopyWithImpl;
+@override @useResult
+$Res call({
+ String code, String libelle,@JsonKey(name: 'salaire_base') double salaireBase,@JsonKey(name: 'vend_au_comptoir') bool vendAuComptoir
+});
+
+
+
+
+}
+/// @nodoc
+class __$PosteTravailCopyWithImpl<$Res>
+    implements _$PosteTravailCopyWith<$Res> {
+  __$PosteTravailCopyWithImpl(this._self, this._then);
+
+  final _PosteTravail _self;
+  final $Res Function(_PosteTravail) _then;
+
+/// Create a copy of PosteTravail
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? libelle = null,Object? salaireBase = null,Object? vendAuComptoir = null,}) {
+  return _then(_PosteTravail(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,libelle: null == libelle ? _self.libelle : libelle // ignore: cast_nullable_to_non_nullable
+as String,salaireBase: null == salaireBase ? _self.salaireBase : salaireBase // ignore: cast_nullable_to_non_nullable
+as double,vendAuComptoir: null == vendAuComptoir ? _self.vendAuComptoir : vendAuComptoir // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
 }
 
 // dart format on

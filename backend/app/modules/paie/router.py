@@ -35,6 +35,12 @@ async def postes(svc: PaieService = Depends(_service)):
     return await _repondre(svc.postes())
 
 
+@router.post("/employes/importer")
+async def importer(svc: PaieService = Depends(_service)):
+    """Crée ou met à jour les fiches employés depuis les utilisateurs d'EASYPHARM."""
+    return await _repondre(svc.importer())
+
+
 @router.get("/{annee}/{mois}")
 async def paie_du_mois(annee: int, mois: int, svc: PaieService = Depends(_service)):
     """Brut de chaque employé : part fixe ligne par ligne, prime de rendement, points à vérifier."""
@@ -62,5 +68,5 @@ async def bulletins(annee: int, mois: int, employe_id: int, svc: PaieService = D
 
 @router.put("/employes/{employe_id}")
 async def fiche(employe_id: int, saisie: s.FicheEmploye, svc: PaieService = Depends(_service)):
-    """Poste, date d'entrée et date de sortie d'un employé."""
+    """Poste, dates d'entrée et de sortie, heure de début, présence dans la paie."""
     return await _repondre(svc.modifier_employe(employe_id, saisie.model_dump(exclude_unset=True)))

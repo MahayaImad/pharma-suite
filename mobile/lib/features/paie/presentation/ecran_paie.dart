@@ -10,6 +10,7 @@ import '../../../domain/format.dart';
 import '../../../domain/paie.dart';
 import '../../stock/presentation/elements_stock.dart' show MessageErreur, MessageVide;
 import '../application/paie_providers.dart';
+import 'fiche_employe.dart';
 import 'radar_criteres.dart';
 
 /// Largeur à partir de laquelle le bulletin s'ouvre à côté de la liste.
@@ -98,7 +99,15 @@ class EcranPaie extends ConsumerWidget {
 
   List<Widget> _employes(BuildContext context, PaieMois p, int? choisi) {
     if (p.employes.isEmpty) {
-      return const [MessageVide(titre: 'Aucun employé', texte: 'Aucun employé actif et éligible pour ce mois.')];
+      return const [
+        MessageVide(
+          titre: 'Aucun employé',
+          texte:
+              'Aucun employé actif dans la paie pour ce mois. Importez les utilisateurs d\'EASYPHARM, '
+              'puis choisissez le poste et la date d\'entrée de chacun.',
+          action: _BoutonImporter(),
+        ),
+      ];
     }
     Widget tuile(String valeur, String texte, String cle) => Expanded(
       child: Container(
@@ -193,10 +202,13 @@ class _EnTete extends ConsumerWidget {
                   children: [
                     fleche(Icons.chevron_left, -1, 'mois-precedent'),
                     const SizedBox(width: 10),
-                    Text(
-                      mois[0].toUpperCase() + mois.substring(1),
-                      key: const ValueKey('mois-paie'),
-                      style: const TextStyle(fontFamily: 'Sora', fontSize: 15, fontWeight: FontWeight.w700),
+                    Flexible(
+                      child: Text(
+                        mois[0].toUpperCase() + mois.substring(1),
+                        key: const ValueKey('mois-paie'),
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontFamily: 'Sora', fontSize: 15, fontWeight: FontWeight.w700),
+                      ),
                     ),
                     const SizedBox(width: 10),
                     fleche(Icons.chevron_right, 1, 'mois-suivant'),
@@ -204,6 +216,20 @@ class _EnTete extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            key: const ValueKey('reimporter-employes'),
+            tooltip: 'Importer les employés d\'EASYPHARM',
+            icon: const Icon(Icons.person_add_alt_outlined),
+            onPressed: () async {
+              final messager = ScaffoldMessenger.of(context);
+              try {
+                final n = await ref.read(paieProvider.notifier).importerEmployes();
+                messager.showSnackBar(SnackBar(content: Text('$n fiche${n > 1 ? 's' : ''} EASYPHARM à jour.')));
+              } catch (e) {
+                messager.showSnackBar(SnackBar(content: Text(ErreurApi.depuis(e).message)));
+              }
+            },
           ),
           if (MediaQuery.sizeOf(context).width < largeurPc)
             IconButton(
@@ -215,6 +241,49 @@ class _EnTete extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// « Importer les employés d'EASYPHARM » : une fiche par utilisateur, puis relecture.
+class _BoutonImporter extends ConsumerStatefulWidget {
+  const _BoutonImporter();
+
+  @override
+  ConsumerState<_BoutonImporter> createState() => _EtatImporter();
+}
+
+class _EtatImporter extends ConsumerState<_BoutonImporter> {
+  bool _occupe = false;
+
+  Future<void> _importer() async {
+    final messager = ScaffoldMessenger.of(context);
+    setState(() => _occupe = true);
+    try {
+      final n = await ref.read(paieProvider.notifier).importerEmployes();
+      messager.showSnackBar(
+        SnackBar(
+          content: Text(
+            n == 0
+                ? 'Aucun utilisateur trouvé dans EASYPHARM : la synchronisation a-t-elle tourné ?'
+                : '$n fiche${n > 1 ? 's' : ''} à jour. Choisissez maintenant le poste de chacun.',
+          ),
+        ),
+      );
+    } catch (e) {
+      messager.showSnackBar(SnackBar(content: Text(ErreurApi.depuis(e).message)));
+    } finally {
+      if (mounted) setState(() => _occupe = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => FilledButton.icon(
+    key: const ValueKey('importer-employes'),
+    onPressed: _occupe ? null : _importer,
+    icon: _occupe
+        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+        : const Icon(Icons.download_rounded, size: 18),
+    label: const Text('Importer les employés d\'EASYPHARM'),
+  );
 }
 
 class _CarteEmploye extends StatelessWidget {
@@ -358,9 +427,23 @@ class _Bulletin extends ConsumerWidget {
     final titre = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          e.nomComplet,
-          style: const TextStyle(fontFamily: 'Sora', fontSize: 21, fontWeight: FontWeight.w700),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                e.nomComplet,
+                style: const TextStyle(fontFamily: 'Sora', fontSize: 21, fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(width: 6),
+            IconButton(
+              key: const ValueKey('modifier-fiche'),
+              tooltip: 'Poste, dates, heure de début',
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              onPressed: () => ouvrirFicheEmploye(context, e),
+            ),
+          ],
         ),
         const SizedBox(height: 3),
         Text(sousTitre, style: TextStyle(fontSize: 13, color: context.couleurs.encre3)),

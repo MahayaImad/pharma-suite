@@ -224,3 +224,26 @@ async def test_criteres_du_radar_face_a_la_moyenne(api):
     assert [(c["code"], c["indice"], c["libelle"]) for c in p["criteres"]] == [("ca_realise", 150, "CA réalisé")]
     assert m["Chafia"]["prime"]["criteres"][0]["indice"] == 50
     assert m["Nadir"]["prime"] is None
+
+
+async def test_importer_depuis_easypharm_et_retirer_de_la_paie(api):
+    await api.db.execute(text("DELETE FROM groupware WHERE id IN (901, 902, 903)"))
+    await api.db.execute(text("""
+        INSERT INTO groupware (id, utilisateur, nom, prenom, actif) VALUES
+        (901, 'ana', 'Benali', 'Ana', 1), (902, 'samir', 'Haddad', 'Samir', 1), (903, 'VENTE', NULL, NULL, 1)
+    """))
+    await api.db.commit()
+    try:
+        r = await api.post("/paie/employes/importer")
+        assert r.status_code == 200 and r.json()["data"]["employes"] == 3
+        m = await _mois(api)
+        assert m["Samir"]["employe"]["poste_code"] is None and "VENTE" not in [x["employe"]["nom"] for x in m.values()]
+        assert m["Ana"]["employe"]["poste_code"] == "caissier"          # la fiche existante garde son poste
+        samir = m["Samir"]["employe"]["id"]
+        r = await api.put(f"/paie/employes/{samir}", json={"eligible_prime": False})
+        assert r.status_code == 200 and "Samir" not in await _mois(api)
+        r = await api.put(f"/paie/employes/{m['Ana']['employe']['id']}", json={"heure_debut": "09:00"})
+        assert (await _mois(api))["Ana"]["employe"]["heure_debut"] == "09:00:00"
+    finally:
+        await api.db.execute(text("DELETE FROM groupware WHERE id IN (901, 902, 903)"))
+        await api.db.commit()

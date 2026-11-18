@@ -112,7 +112,7 @@ class PaieService:
             lignes.append({
                 "employe": {"id": e["id"], "nom": e["nom"], "prenom": e["prenom"], "poste_code": e["poste_code"],
                             "poste": e["poste_libelle"] or e["poste"], "date_entree": e["date_entree"],
-                            "date_sortie": e["date_sortie"]},
+                            "date_sortie": e["date_sortie"], "heure_debut": e["heure_debut"]},
                 "jours": {"mois": p.jours_mois, "contrat": p.jours_contrat, "presence": p.presence_effective,
                           "absences": p.absences, "a_confirmer": p.a_confirmer},
                 "anciennete_annees": p.annees_anciennete,
@@ -165,6 +165,14 @@ class PaieService:
             raise ErreurPaie("dates", "La date de sortie précède la date d'entrée.", 422)
         await self.repo.modifier_employe(employe_id, valeurs)
         await self.repo.commit()
+
+    async def importer(self) -> dict:
+        """Fiches employés depuis les utilisateurs d'EASYPHARM (poste à choisir ensuite)."""
+        self._titulaire()
+        from app.api.v1.performance import EXCLUS_PRIME
+        n = await self.repo.importer_depuis_easypharm(set(EXCLUS_PRIME))
+        await self.repo.commit()
+        return {"employes": n}
 
     async def postes(self) -> list[dict]:
         self._titulaire()

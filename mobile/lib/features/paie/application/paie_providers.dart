@@ -47,6 +47,17 @@ class PaieController extends AsyncNotifier<PaieMois> {
     await _relire();
   }
 
+  Future<int> importerEmployes() async {
+    final n = await _api.importerEmployes();
+    await _relire();
+    return n;
+  }
+
+  Future<void> modifierEmploye(int id, Map<String, Object?> champs) async {
+    await _api.modifierEmploye(id, champs);
+    await _relire();
+  }
+
   Future<void> valider() async {
     final m = ref.read(moisPaieProvider);
     await _api.valider(m.annee, m.mois);
@@ -55,3 +66,9 @@ class PaieController extends AsyncNotifier<PaieMois> {
 }
 
 final paieProvider = AsyncNotifierProvider<PaieController, PaieMois>(PaieController.new, retry: (_, _) => null);
+
+/// Les postes de travail (choix de la fiche employé).
+final postesTravailProvider = FutureProvider<List<PosteTravail>>(
+  (ref) => ref.watch(paieApiProvider).postes(),
+  retry: (_, _) => null,
+);
