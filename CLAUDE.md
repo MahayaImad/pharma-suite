@@ -48,6 +48,7 @@ backend/
 
 docs/
 ├── 02-sync-contrat.md        # contrat de l'agent EASYPHARM, reconstitué depuis le code
+├── 04-paie-regles.md         # paie : présence, part fixe, part variable, traçabilité
 ├── 05-stock-guide.md         # indicateurs du stock, méthode de prévision
 └── 06-commandes.md           # module Commandes : cycle, mini / maxi, génériques, tensions
 ```
@@ -194,6 +195,7 @@ router au passage.
 | `modules/calendrier` | gardes, Ramadan et Aïd, jours fériés — **premier module au format cible** (`app/modules/calendrier/` : router, service, repository, schemas ; réponses `{data, error}`) |
 | `modules/alertes` | `GET /alertes` : ce qui demande une action, par urgence (aujourd'hui, cette semaine, à surveiller), recalculé à chaque lecture depuis le Stock, le suivi des livraisons, les tensions et les propositions à confirmer ; rien n'est stocké. Chaque alerte porte une action (commander, ouvrir un écran, confirmer une tension). Écran mobile `/alertes` (design « par priorité » : filtres par famille, « En bref » à droite sur PC). |
 | `modules/inventaire` | Inventaire tournant (migration 018) : liste du jour figée (`inventaire_liste`, 20 produits par défaut) — suspects d'abord (à 0 dans EASYPHARM mais vendus dans les 30 jours), puis les produits dont le dernier comptage dépasse la fréquence de leur classe (A 30, B 90, C 180 jours, réglages `inventaire_*`) ; comptages (`inventaire_comptages`, un par produit et par jour, stock EASYPHARM figé, écart valorisé, cause) ; « à corriger dans EASYPHARM » jusqu'à ce qu'on coche (PharmaSuite n'écrit jamais dans EASYPHARM) ; exactitude du mois. Écran mobile `/inventaire` (design « liste du jour » : − / + ou saisie, ✓, cause de l'écart, « Compter un autre produit »). |
+| `modules/paie` | Salaire **brut** du mois (titulaire seulement) : part fixe (`services/paie/part_fixe.py`, règle 7 : base et ancienneté au prorata, transport et panier par jour de présence effective, heures sup saisies, retenue d'absence) + prime de rendement (`performance_mensuelle`). `GET /paie/{a}/{m}`, `PUT /paie/{a}/{m}/heures-sup/{id}`, `POST /paie/{a}/{m}/valider` (bulletin versionné, `paie_bulletins`), `PUT /paie/employes/{id}` (poste, entrée, sortie). Migration 021. Règles : `docs/04-paie-regles.md`. Pas encore d'écran. |
 | `modules/commandes` | proposition du soir par fournisseur (méthode du rejeu, `services/prevision/`), brouillons, validation (titulaire ou employé désigné), bon WhatsApp, budget du mois — format cible. Tables `commandes`, `commandes_lignes`, `fournisseurs_commande`, `commandes_valideurs` (migration 012). Écran mobile `/commandes` (design « épuré, deux volets » : grossistes en lignes compactes à gauche, panier à droite avec filtres, ⇄ changer de générique, glisser une ligne sur un autre grossiste sur PC, volet d'actions sur portable ; barre fixe du bas). Préférences › Fournisseurs et validation : tous les fournisseurs (inactif par défaut sans commande depuis 30 jours), type, WhatsApp, employés valideurs. Génériques par code DCI (`services/prevision/generiques.py`, migration 013) : classe chronique (`classe_maladie`) → toutes les marques, sinon les plus vendues ; section « Génériques » de la fiche produit. Stratégie **mini / maxi** (`proposition.decider_minmax`, migration 014) : taille d'ordonnance, lot habituel minimal, couverture par classe ABC, DCI interchangeables calculées ensemble ; produits en tension détectés puis confirmés (`produits_tension`, Préférences › Produits en tension). « Pourquoi cette quantité ? » (`GET /commandes/calcul/{id}`, `scripts.expliquer_quantite`). Suivi des livraisons (`rapprochement.py`, `GET /commandes/suivi`) : réceptions EASYPHARM rapprochées des lignes envoyées (attendue, livrée, partielle, manquante), « en cours » et budget engagé réduits au reste à recevoir, taux de service par grossiste ; écran `/commandes/livraisons` (onglet « Livraisons », vue « par produit » avec bouton « Autre grossiste ») et `/commandes/livraisons/commandes[/:id]` (vue « par commande », deux volets, « Recommander chez un autre grossiste »). Grossiste préféré par produit (`produits_fournisseur_prefere`, migration 016, `PUT /commandes/preferes/{id}`) : proposé après un changement de grossiste, il remplace le fournisseur du dernier achat. Écran Stock aligné sur ce mini / maxi quand le calcul est prêt (`service.seuils_si_prets`, non bloquant ; bloc `commande` de `/stock/{id}/indicateurs`, `aligne_commandes` de `/stock/a-traiter`), seuils simples sinon. « Commander » (écran Stock, fiche) : `POST /commandes/ajouter`, ajoute au brouillon du jour du fournisseur principal (son panier proposé est préparé au besoin). |
 
 ## Pièges connus (ne pas se faire avoir)
@@ -308,8 +310,8 @@ part entière, pas des effets de bord.
 
 - `Makefile` : `make dev`, `make test`, `make api-client`.
 - `backend/tests/` avec pytest, dont `backend/tests/paie/`.
-- `docs/` : `00-domaine.md`, `01-schema-db.md`, `03-chifa-integration.md`,
-  `04-paie-regles.md`. Le numéro **02** est pris par `02-sync-contrat.md`, qui
+- `docs/` : `00-domaine.md`, `01-schema-db.md`, `03-chifa-integration.md`
+  (`04-paie-regles.md` existe depuis le 2026-11-18). Le numéro **02** est pris par `02-sync-contrat.md`, qui
   existe déjà (Partie 1) — l'intégration Chifa et les règles de paie sont
   décalées d'un cran. Tant que ces quatre fichiers n'existent pas, la référence
   métier est la Partie 3 de ce fichier.
@@ -497,7 +499,8 @@ maladie et jour férié comptent comme travaillés pour la part variable — mai
 **pas** comme jours ouvrant droit à transport et panier, qui rémunèrent une
 présence effective.
 
-Rien de tout cela n'existe aujourd'hui : ni table, ni migration, ni endpoint.
+Implémenté le 2026-11-18 : `app/services/paie/part_fixe.py` et le module
+`app/modules/paie/` (voir `docs/04-paie-regles.md`).
 
 ---
 
@@ -529,7 +532,8 @@ Dans l'ordre de dépendance :
 5. ~~Historiser les recalculs~~ — fait le 2026-11-18 (migration 020 :
    `primes_calculs` et `primes_calculs_lignes`, `GET /performance/primes/{a}/{m}/historique`).
 6. Assainir `chatbot.py` (règle 6).
-7. Part fixe (règle 7) : tables, migration, endpoints, calcul.
+7. ~~Part fixe (règle 7)~~ — fait le 2026-11-18 (module `paie`, migration 021).
+8. Écran Paie dans l'application (maquettes d'abord).
 
 ## Étiquette Git
 

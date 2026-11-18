@@ -1,0 +1,114 @@
+# Paie : règles de calcul
+
+Ce document décrit ce que PharmaSuite calcule aujourd'hui. Les arbitrages
+d'origine sont dans `CLAUDE.md` (partie 4, 2026-08-19 et 2026-11-18). En cas
+de contradiction, `CLAUDE.md` fait foi.
+
+PharmaSuite calcule le **salaire brut** : part fixe + part variable. Les
+cotisations CNAS et l'IRG restent au comptable.
+
+## 1. Présence du mois
+
+Elle vient de la grille GRH (`app/api/v1/grh_presence.py`), un statut par jour :
+
+| Statut | D'où il vient |
+|---|---|
+| présent | au moins une vente ce jour-là (`sorties.utilisateur`) |
+| retard | saisi par le titulaire (retard de plus de 45 minutes) |
+| absent | aucune vente, poste qui vend au comptoir |
+| à confirmer | aucune vente, poste qui ne vend pas (préparateur) |
+| congé | demande de congé approuvée |
+| maladie | saisi par le titulaire |
+| férié | jours fériés fixes (1/1, 1/5, 19/6, 5/7, 1/11) |
+| repos | vendredi |
+
+Une saisie du titulaire remplace toujours le statut automatique.
+
+## 2. Part fixe (`app/services/paie/part_fixe.py`)
+
+```
+part_fixe = salaire de base × jours sous contrat ÷ jours du mois
+          + ancienneté      × jours sous contrat ÷ jours du mois
+          + 300 DA × jours de présence effective          (transport)
+          + 600 DA × jours de présence effective          (panier)
+          + heures sup × (salaire de base ÷ 173,33) × 1,5
+          − salaire de base ÷ 30 × jours d'absence injustifiée
+```
+
+- **Salaire de base** : celui du poste (`postes_travail`) : pharmacien
+  assistant 42 000, caissier 40 000, préparateur 35 000 DA.
+- **Jours sous contrat** : entre la date d'entrée et la date de sortie. Un
+  jour « absent » avant l'arrivée n'est pas une absence.
+- **Ancienneté** : 1 000 DA par année révolue au dernier jour du mois,
+  plafond 15 000 DA.
+- **Présence effective** : présent ou en retard. Congé, maladie, férié et
+  jours « à confirmer » n'ouvrent droit ni au transport ni au panier.
+- **Retard** : aucune retenue en argent ; il coûte un jour de ponctualité dans
+  la part variable.
+- **Heures supplémentaires** : saisies par le titulaire, arrondies au quart
+  d'heure. 173,33 h = 40 h × 52 semaines ÷ 12 mois.
+- **Absence injustifiée** : retenue de 1/30ᵉ du salaire de base par jour, sur
+  le seul salaire de base.
+
+Tous ces montants sont des réglages (`reglages_stock`, clés `paie_*`).
+
+**Exemple** : caissier, 6 ans d'ancienneté, 24 jours présents, 1 absence.
+40 000 + 6 000 + 7 200 + 14 400 − 1 333,33 = **66 266,67 DA**.
+
+## 3. Part variable (`app/api/v1/performance.py`, `app/services/paie/`)
+
+**Enveloppe** = Σ (CA du mois de la catégorie × taux) : princeps 0,5 %,
+générique 1 %, générique++ 3 % (`prime_taux_config`).
+
+**Score de chaque employé** (distributif) :
+
+```
+score_i = Σ_kpi (valeur_i ÷ total de l'équipe) × poids du KPI pour le poste de i
+```
+
+- Poids par poste (`kpi_poids_poste`), sinon les poids globaux
+  (`kpi_definitions.poids`).
+- Les KPIs de volume (CA, nombre de ventes, clients, tâches, jours à l'heure,
+  produits comptés…) sont **ramenés aux jours de présence** :
+  valeur ÷ jours de présence effective × jours comptés comme travaillés
+  (présence + congé + maladie + férié). Un congé ne fait pas baisser la prime.
+
+| KPI | Comptoir | Préparateur |
+|---|---|---|
+| CA réalisé | 20 | |
+| Tâches terminées dans les délais | 20 | 40 |
+| Nombre de ventes | 12 | |
+| Jours à l'heure | 10 | 25 |
+| Panier moyen | 7 | |
+| CA compléments / parapharmacie | 7 | |
+| Boîtes vendues à moins de 3 mois de péremption | 7 | |
+| Nouveaux clients | 7 | |
+| Clients récupérés | 7 | |
+| Montant encaissé (recouvrement) | 3 | |
+| Produits comptés à l'inventaire | | 35 |
+
+**Répartition** :
+
+```
+part_egalitaire = enveloppe ÷ nombre d'éligibles présents
+plancher        = 50 % de la part égalitaire        (présents seulement)
+prime_i         = plancher + score_i ÷ Σ scores × (enveloppe − Σ planchers)
+```
+
+Arrondi au centime, la somme des primes vaut toujours l'enveloppe.
+
+## 4. Traçabilité
+
+- Chaque calcul de primes est gardé (`primes_calculs`) ; le dernier est dans
+  `performance_mensuelle`.
+- Chaque validation de la paie ajoute une version du bulletin brut
+  (`paie_bulletins`) ; aucune n'est écrasée.
+
+## 5. Limites connues
+
+- La ponctualité dépend des retards saisis : la grille ne connaît pas l'heure
+  d'arrivée, seulement l'heure de la première vente.
+- Les jours fériés religieux (Aïd, Mawlid, Achoura…) ne sont pas encore pris
+  de la page Calendrier : à saisir comme « férié » dans la grille.
+- Les employés non éligibles à la prime (comptes non nominatifs) ne sont pas
+  dans la paie.

@@ -23,6 +23,7 @@ class Employe(Base):
     poste = Column(String(100))                   # ex: "Pharmacien", "Caissier" (texte libre)
     poste_code = Column(String(30))               # postes_travail.code (migration 019) : salaire, poids des KPIs
     date_entree = Column(Date)
+    date_sortie = Column(Date)                    # départ (migration 021) : part fixe au prorata
     actif = Column(Boolean, default=True)
     eligible_prime = Column(Boolean, default=True)  # False pour VENTE, amine, azzedine, administrateur
     created_at = Column(DateTime(timezone=True), server_default=func.now())
